@@ -1018,7 +1018,7 @@ end textReplaceRawInVariable
 #   This is the raw replacement operation that performs a mutation on the script field without
 #   saving any undo information. This should be called only from inside textReplace, when doing an undo or a redo
 #   and when setting the script when a new object is loaded.
-private command textReplaceRaw pOffset, @pOldText, @pNewText, pDontUpdateBreakpoints
+private command textReplaceRaw pOffset, @pOldText, @pNewText, pDontUpdateBreakpoints, pUpdateBreakpointsNow
    lock screen
    lock messages
    
@@ -1044,14 +1044,13 @@ private command textReplaceRaw pOffset, @pOldText, @pNewText, pDontUpdateBreakpo
          add 1 to tNewLines
       end if
    end if
+   unlock messages
    
    if pDontUpdateBreakpoints then
-      updateGutterRequest empty, empty, tOldLines, tNewLines, false, false
+      updateGutterRequest empty, empty, tOldLines, tNewLines, false, false, false, pUpdateBreakpointsNow
    else
-      updateGutterRequest pOffset, tSelectedLine, tOldLines, tNewLines, true, false
+      updateGutterRequest pOffset, tSelectedLine, tOldLines, tNewLines, true, false, false, pUpdateBreakpointsNow
    end if
-   
-   unlock messages
    
    # OK-2008-09-10 : Bug 7132 - Update the panes  and handler list everytime the text of the field is changed.
    # OK-2009-01-19 : Don't do this here as it slows down the script editor on OS X. Instead do it in the individual
@@ -1086,12 +1085,13 @@ on textUndo
    
    local tOperations
    put sTextGroupLengths[sObjectId,sTextGroupIndex[sObjectId]] into tOperations
+   
    lock screen
    repeat with tIndex = sTextOperationIndex[sObjectId] down to sTextOperationIndex[sObjectId] - tOperations + 1
       local tNewText, tOldText
       put sTextOperationNewTexts[sObjectId,tIndex] into tNewText
       put sTextOperationOldTexts[sObjectId,tIndex] into tOldText
-      textReplaceRaw sTextOperationOffsets[sObjectId,tIndex], tNewText, tOldText
+      textReplaceRaw sTextOperationOffsets[sObjectId,tIndex], tNewText, tOldText, false, true
    end repeat
    unlock screen
    
@@ -1123,7 +1123,7 @@ on textRedo
       local tNewText, tOldText
       put sTextOperationOldTexts[sObjectId,tIndex] into tOldText
       put sTextOperationNewTexts[sObjectId,tIndex] into tNewText
-      textReplaceRaw sTextOperationOffsets[sObjectId,tIndex], tOldText, tNewText
+      textReplaceRaw sTextOperationOffsets[sObjectId,tIndex], tOldText, tNewText, false, true
    end repeat
    unlock screen
    
@@ -1235,6 +1235,12 @@ end getUpdateGutterRequestDetails
 #  mutable objects (the breakpoint / compilation error images). These are show again when the update is
 #  actually carried out.
 command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw, pNow
+   if sGutterUpdateRequestDetails["offset"] is not empty and \
+         pOffset is not sGutterUpdateRequestDetails["offset"] then
+      -- if the offset is different we can't merge
+      updateGutterDo
+   end if
+   
    updateGutterMergeRequestDetails pOffset, pSelectedLine, pOldLines, pNewLines, pTextChanged, pUpdateCompilationErrors, pForceBreakpointRedraw
    if sGutterUpdateRequest is not empty then
       cancel sGutterUpdateRequest
@@ -1248,7 +1254,7 @@ command updateGutterRequest pOffset, pSelectedLine, pOldLines, pNewLines, pTextC
       set the vScroll of field "Numbers" of group "Gutter" to the vScroll of field "Script" of me
    end if
    
-   if pNow then
+   if pNow or (pOldLines is not 1 or pNewLines is not 1) then
       updateGutterDo
    else
       send "updateGutterDo" to me in 200 milliseconds
@@ -2071,7 +2077,7 @@ on scrollBarDrag
    lock screen
    put tVScroll into sVScroll
    
-   updateGutterRequest empty, empty, empty, empty, false, true, empty, true
+   updateGutterRequest empty, empty, empty, empty, false, true, false, true
    unlock screen
 end scrollBarDrag
 
