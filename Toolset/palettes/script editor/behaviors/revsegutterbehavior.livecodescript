@@ -54,7 +54,7 @@ command update pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, pUp
       put tContext["object"] into sLastObject
    end if
    
-   updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, tContext
+   updateBreakpoints pOffset, pOldNumber, pNewNumber, pTextChanged, tContext
    updateLineNumbers pTextChanged, pOldNumber, pNewNumber, tContext
    updateCurrentLine tContext
    
@@ -390,12 +390,12 @@ end updateCompilationErrors
 
 # Parameters
 #   pObject : reference to the object to update breakpoint positions for
-#   pLine : the current line number
+#   pOffset : the offset of text replacement
 #   pOldNumber : the number of lines previously in the script
 #   pNewNumber : the number of lines now in the script
 # Description
 #   Updates the the positions of breakpoints in response to the script being changed.
-private command updateBreakpointPositions pObject, pOffset, pLine, pOldNumber, pNewNumber   
+private command updateBreakpointPositions pObject, pOffset, pOldNumber, pNewNumber   
    local tNumber, tInsertion
    
    if pOldNumber = pNewNumber then
@@ -405,12 +405,12 @@ private command updateBreakpointPositions pObject, pOffset, pLine, pOldNumber, p
    local tBreakpoints
    put revDebuggerListBreakpoints(pObject) into tBreakpoints
    
+   local tLineIndex
+   put the lineIndex of char pOffset of getScriptField() into tLineIndex
+   
    if pOldNumber < pNewNumber then
       repeat for each line tBreakpoint in tBreakpoints
-         if item -1 of tBreakpoint = pLine then
-            local tLineIndex
-            put the lineIndex of char pOffset of getScriptField() into tLineIndex
-            
+         if item -1 of tBreakpoint = tLineIndex then
             local tCharIndex
             put the charIndex of line tLineIndex of getScriptField() into tCharIndex
             
@@ -428,13 +428,13 @@ private command updateBreakpointPositions pObject, pOffset, pLine, pOldNumber, p
          end if
          
          # If the line that contained the breakpoint was above the added text, leave it where it is
-         if item -1 of tBreakpoint < pLine then
+         if item -1 of tBreakpoint < tLineIndex then
             next repeat
          end if
          
          
          # If the line that contained the breakpoint was below the added text, move the breakpoint down by the number of lines added.
-         if item -1 of tBreakpoint > pLine then
+         if item -1 of tBreakpoint > tLineIndex then
             revDebuggerMoveBreakpoint item 1 to -2 of tBreakpoint, item -1 of tBreakpoint, item 1 to -2 of tBreakpoint, item -1 of tBreakpoint + (pNewNumber - pOldNumber)
          end if
       end repeat
@@ -442,9 +442,9 @@ private command updateBreakpointPositions pObject, pOffset, pLine, pOldNumber, p
       local tScript
       put textGetScript() into tScript
       repeat for each line tBreakpoint in tBreakpoints
-         if (item -1 of tBreakpoint >= pLine and item -1 of tBreakpoint < (pLine - (pNewNumber - pOldNumber))) and revDebuggerNextAvailableBreakpoint(tScript, item -1 of tBreakpoint - 1 + (pNewNumber - pOldNumber)) <> item -1 of tBreakpoint + (pNewNumber - pOldNumber) then
+         if (item -1 of tBreakpoint >= tLineIndex and item -1 of tBreakpoint < (tLineIndex - (pNewNumber - pOldNumber))) and revDebuggerNextAvailableBreakpoint(tScript, item -1 of tBreakpoint - 1 + (pNewNumber - pOldNumber)) <> item -1 of tBreakpoint + (pNewNumber - pOldNumber) then
             revDebuggerRemoveBreakpoint item 1 to -2 of tBreakpoint, item -1 of tBreakpoint
-         else if item -1 of tBreakpoint > (pLine + pNewNumber - pOldNumber) then
+         else if item -1 of tBreakpoint > (tLineIndex + pNewNumber - pOldNumber) then
             # If the breakpoint was below the removed lines, move it up
             revDebuggerMoveBreakpoint item 1 to -2 of tBreakpoint, item -1 of tBreakpoint, item 1 to -2 of tBreakpoint, item -1 of tBreakpoint + (pNewNumber - pOldNumber)
          end if
@@ -452,7 +452,7 @@ private command updateBreakpointPositions pObject, pOffset, pLine, pOldNumber, p
    end if
 end updateBreakpointPositions
 
-private command updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber, pTextChanged, pContext
+private command updateBreakpoints pOffset, pOldNumber, pNewNumber, pTextChanged, pContext
    clearMutableObjects
    
    local tObject
@@ -468,7 +468,7 @@ private command updateBreakpoints pOffset, pSelectedLine, pOldNumber, pNewNumber
    end if
    
    if pTextChanged then
-      updateBreakpointPositions tObject, pOffset, pSelectedLine, pOldNumber, pNewNumber
+      updateBreakpointPositions tObject, pOffset, pOldNumber, pNewNumber
    end if
    
    # Get a list of the breakpoints set on the current object using revDebuggerListBreakpoints.
@@ -717,7 +717,7 @@ on gutterMouseUp pTarget, pClickLoc
    
    lock screen
    clearMutableObjects
-   updateBreakpoints 1, 1, 1, 1, false
+   updateBreakpoints 1, 1, 1, false
    # OK-2010-02-26: Avoid delays when updating breakpoints by only updating the breakpoints pane
    --   sePanesUpdate
    seRefreshCurrentPaneIfItsBreakpoints
@@ -757,7 +757,7 @@ on menuPick pItemName
    
    lock screen
    clearMutableObjects
-   updateBreakpoints 1, 1, 1, 1, false
+   updateBreakpoints 1, 1, 1, false
    
    # OK-2010-02-26: Avoid delays when updating breakpoints by only updating the breakpoints pane
    --   sePanesUpdate
