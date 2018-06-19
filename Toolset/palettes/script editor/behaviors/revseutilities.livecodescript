@@ -1044,7 +1044,7 @@ command revSEColorizeField pField, pStart, pEnd
    end if
    
    if pEnd is empty then
-      put the number of chars of pField into pEnd
+      put the number of chars in the text of pField into pEnd
    end if
    
    sePrefInit
