@@ -3,6 +3,7 @@ local sDataArray         -- Multi-dimensional array
 local sIndexSequencing -- sDataArray indexes in order they should appear
 
 local sInit -- Has control been opened once before?
+local sResourceStack
 local sControlIsOpen
 
 constant kDefaultDimmedHiliteColor = "212,212,212"
@@ -237,9 +238,9 @@ private command _Initialize
    if not sInit then
       set the wholeMatches to true
       local theMasterRect
-      put the rect of me into theMasterRect         
+      put the rect of me into theMasterRect
       
-      switch the platform 
+      switch the platform
          case "Win32"
             if "registryRead" is among the items of the securityPermissions then
                put queryRegistry("HKEY_CURRENT_USER\Control Panel\Colors\HilightText") into sSystemA["hilited text color"]
@@ -258,8 +259,9 @@ private command _Initialize
       
       ## Set behaviors as needed
       ## These behaviors weren't set in original template
-      set the behavior of group "dgHeaderMask" of me to the long ID of button "Header Mask" of group "Behaviors" of stack _ResourceStack()
-      set the behavior of group "dgList" of me to the long ID of button "dgList Message Catcher" of group "Behaviors" of stack _ResourceStack()
+      put _ResourceStack() into sResourceStack
+      set the behavior of group "dgHeaderMask" of me to the long ID of button "Header Mask" of group "Behaviors" of sResourceStack
+      set the behavior of group "dgList" of me to the long ID of button "dgList Message Catcher" of group "Behaviors" of sResourceStack
       
       ## Developer could have set data before control opened
       if the keys of sDataArray is empty then
@@ -4001,11 +4003,10 @@ private command _table.FillListWithJustEnoughControls
    local msgsAreLocked
    put the lockMessages into msgsAreLocked
    
-   local controlCountChanged, theTemplateGroup, theColumns, theResourceStack, theRequiredControlCount, theCurrentControlCount
+   local controlCountChanged, theTemplateGroup, theColumns, theRequiredControlCount, theCurrentControlCount
    put false into controlCountChanged
    put the dgProps["row template"] of me into theTemplateGroup
    put _table.VisibleColumns() into theColumns
-   put _ResourceStack() into theResourceStack
    
    ## Determine required control count
    put _ControlsRequiredToFillSpace() into theRequiredControlCount
@@ -4066,7 +4067,6 @@ private command _table.CreateControlsForColumns pColumns, pRequiredControlCount
    local theColPropsA, theColumn, theColWidth
    local theControl
    local theCurrentControlCount
-   local theResourceStack
    local theTemplateGroup
    local theTopLeft
    local theMargins
@@ -4081,7 +4081,6 @@ private command _table.CreateControlsForColumns pColumns, pRequiredControlCount
    
    ## Initialize
    put the dgProps["row template"] of me into theTemplateGroup
-   put _ResourceStack() into theResourceStack
    --    put _CardOf() into theDGCard
    put the dgProps["column properties"] of me into theColPropsA
    
@@ -4106,7 +4105,7 @@ private command _table.CreateControlsForColumns pColumns, pRequiredControlCount
             ## Use default behavior if control doesn't have one assigned.
             if the behavior of it is empty then
                if the dgProps["default column behavior"] of me is empty then
-                  set the behavior of it to the long ID of button "Default Column" of theResourceStack
+                  set the behavior of it to the long ID of button "Default Column" of sResourceStack
                else
                   set the behavior of it to the dgProps["default column behavior"] of me
                end if
@@ -4117,7 +4116,7 @@ private command _table.CreateControlsForColumns pColumns, pRequiredControlCount
             set the textAlign of it to theColPropsA[theColumn]["alignment"]
             set the margins of it to theMargins
             if the dgProps["default column behavior"] of me is empty then
-               set the behavior of it to the long ID of button "Default Column" of theResourceStack
+               set the behavior of it to the long ID of button "Default Column" of sResourceStack
             else
                set the behavior of it to the dgProps["default column behavior"] of me
             end if
@@ -4551,9 +4550,6 @@ private command _table.CreateColumns
    put the lockMessages into msgsAreLocked
    lock messages
    
-   local theResourceStack
-   put _ResourceStack() into theResourceStack
-   
    local theOrigHScroll
    put _GetHScrollPercent() into theOrigHScroll
    _ResetHScrollToZero
@@ -4620,7 +4616,7 @@ private command _table.CreateColumns
          put "control id" && word 3 of it && "of me" into sTableObjectsA["columns"][theColumn]["group"]
          set the topLeft of it to theTopLeft
          set the visible of it to theColPropsA[theColumn]["visible"]
-         set the behavior of it to the long ID of button "Column Group" of group "Behaviors" of theResourceStack
+         set the behavior of it to the long ID of button "Column Group" of group "Behaviors" of sResourceStack
       end if
       
       ## column divider
@@ -4658,8 +4654,6 @@ end _table.CreateColumns
 
 
 private command _table.CreateHeaders
-   local theResourceStack
-   put _ResourceStack() into theResourceStack
    --   put _CardOf() into theDGCard
    local theColumns, theHeaderGroup, theHeaderRect
    put the dgProps["columns"] of me into theColumns
@@ -4706,7 +4700,7 @@ private command _table.CreateHeaders
             put the result into theGroup
             
             if the dgProps["default header behavior"] of me is empty then
-               set the behavior of theGroup to the long ID of button "Default Header" of theResourceStack
+               set the behavior of theGroup to the long ID of button "Default Header" of sResourceStack
             else
                set the behavior of theGroup to the dgProps["default header behavior"] of me
             end if
@@ -7475,6 +7469,16 @@ end PrintKeys
 private function _ResourceStack
    local theStack, theCharNo
    put the behavior of me into theStack
+   
+   repeat
+      if there is a button "Data Grid" of group "Behaviors" of \
+            stack trueWord -1 of theStack or theStack is empty then
+         exit repeat
+      else
+         put the behavior of theStack into theStack
+      end if
+   end repeat
+   
    if theStack is not empty then
       put offset(" of stack", theStack) into theCharNo
       delete char 1 to (theCharNo + 3) of theStack
@@ -7482,6 +7486,7 @@ private function _ResourceStack
    
    return theStack
 end _ResourceStack
+
 
 private function _TemplateControl
    -- Attempt to find the card of the datagrid template stack.
@@ -9310,7 +9315,7 @@ command EditFieldText pField, pIndex, pKey
    create field kFieldEditorName in group "dgListMask" of me
    put the long ID of it into sFieldEditor
    
-   set the behavior of sFieldEditor to the long ID of button "Field Editor" of _ResourceStack()
+   set the behavior of sFieldEditor to the long ID of button "Field Editor" of sResourceStack
    
    set the rect of sFieldEditor  to the rect of pField ## so formattedHeight will be correct in _resizeFieldToFitContent
    
@@ -9666,7 +9671,7 @@ private command DG2_EnsureRowChainedBehavior
    -- chain.
    if the dgProps["row template"] of me is not empty and there is a the dgProps["row template"] of me then
       local tChainedBehavior
-      put the long ID of button "Row Chained Behavior" of group "Behaviors" of _ResourceStack() into tChainedBehavior
+      put the long ID of button "Row Chained Behavior" of group "Behaviors" of sResourceStack into tChainedBehavior
 
       local tControl
       put the behavior of the dgProps["row template"] of me into tControl
@@ -10482,7 +10487,7 @@ private function DG2_SwipeControlHolderGet
          create invisible group "DG2 Swipe Control Holder" in group "dgList" of me
          set the margins of it to 0
          set the dgControl of it to the dgControl of me
-         set the behavior of it to the long ID of button "Swipe Control Holder" of group "Behaviors" of stack _ResourceStack()
+         set the behavior of it to the long ID of button "Swipe Control Holder" of group "Behaviors" of sResourceStack
 
          reset the templateGraphic
          create graphic "Message Catcher" in it
@@ -10537,7 +10542,7 @@ private function DG2_EditModeActionControlHolderGet
          create invisible group "DG2 Edit Mode Action Control Holder" in group "dgList" of me
          set the margins of it to 0
          set the dgControl of it to the dgControl of me
-         set the behavior of it to the long ID of button "Action Control Holder" of group "Behaviors" of stack _ResourceStack()
+         set the behavior of it to the long ID of button "Action Control Holder" of group "Behaviors" of sResourceStack
 
          reset the templateGraphic
          create graphic "message catcher" in it
