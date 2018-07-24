@@ -40,7 +40,7 @@ on updateSettings
    
    --put computeDefault(tSettings["android,label"], tSettings["name"]) into field "Label"
    
-   set the unicodeText of field "Label" to uniEncode(computeDefault(tSettings["android,label"], tSettings["name"]), "UTF8")
+   set the text of field "Label" to computeDefault(tSettings["android,label"], tSettings["name"])
    
    put computeDefault(tSettings["android,identifier"], "com.yourcompany.yourapp") into field "Identifier"
    put computeDefault(tSettings["android,version name"], "1.0.0") into field "Version Name"
