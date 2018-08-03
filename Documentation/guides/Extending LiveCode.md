@@ -107,8 +107,15 @@ in the IDE and in the online portal.
 	metadata title is "My Pink Circle"
 	metadata author is "Benjamin Beaumont"
 	metadata version is "1.0.0"
+	metadata platforms is "desktop,mobile"
 
 	end widget
+
+> **Note:** If the module makes use of external code that is only
+> available on specific Operating Systems or Platforms, use the "os"
+> and/or "platforms" metadata keys. The values are the same as can be
+> found in the LiveCode Documentation Format Reference. This data will
+> also appear in the dictionary.
 
 #### Importing libraries
 The LiveCode builder syntax is broken down into **modules**. There are 3 
@@ -830,7 +837,7 @@ pseudo-randomly generated UUID as a string:
 
 	metadata title is "Java UUID"
 	metadata author is "LiveCode"
-	metadata version is "1.0.0"	
+	metadata version is "1.0.0"
 	
 	// Bind to the static randomUUID() method of the java.util.UUID class
 	__safe foreign handler JNI_RandomUUID() returns JObject \
