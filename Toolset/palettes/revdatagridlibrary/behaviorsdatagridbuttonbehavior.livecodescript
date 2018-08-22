@@ -7467,12 +7467,17 @@ end PrintKeys
 
 
 private function _ResourceStack
+   if there is a stack "revDataGridLibrary" then
+      return the name of stack "revDataGridLibrary"
+   end if
+
    local theStack, theCharNo
    put the behavior of me into theStack
    
    repeat
-      if there is a button "Data Grid" of group "Behaviors" of \
-            stack trueWord -1 of theStack or theStack is empty then
+      if theStack is empty or \
+            there is a button "Data Grid" of group "Behaviors" of \
+            stack value(word -1 of theStack) then
          exit repeat
       else
          put the behavior of theStack into theStack
