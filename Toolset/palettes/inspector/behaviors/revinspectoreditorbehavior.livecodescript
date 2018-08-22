@@ -303,10 +303,6 @@ getProp editorExpandVertical
    return sExpandVertical
 end editorExpandVertical
 
-after openField
-   select the text of the target
-end openField
-
 on rawKeyDown pKeyNum
    -- allow scroll wheel, pgup, & pgdn to scroll the text field
    -- bubble up to the parent if at either limit

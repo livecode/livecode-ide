@@ -69,7 +69,6 @@ on editorUpdate
       if the result is empty then
          put tKey into field "value" of me
          put item -1 of tPath into field "key" of me
-         select the text of field "key" of me
       else
          put empty into field "key" of me
          put empty into field "value" of me
