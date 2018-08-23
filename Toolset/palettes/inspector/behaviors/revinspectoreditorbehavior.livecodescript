@@ -302,3 +302,7 @@ end editorExpandVertical
 getProp editorExpandVertical
    return sExpandVertical
 end editorExpandVertical
+
+after openField
+   select the text of the target
+end openField
