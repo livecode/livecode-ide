@@ -339,3 +339,6 @@ on rawKeyDown pKeyNum
    end if
 end rawKeyDown
 
+after openField
+   select the text of the target
+end openField

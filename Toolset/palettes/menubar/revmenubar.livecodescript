@@ -194,6 +194,7 @@ end setupWindowMenu
 /*
 Generates the menu for the recent files
 */
+constant kClearRecentFiles = "ClearTheRecentFileList"
 function revMenuBarRecentFiles
    # Get the recent file data
    local tRecentFiles
@@ -208,7 +209,12 @@ function revMenuBarRecentFiles
          put return & tab & revMenubarEscapeStackNameForMenu(tRecentFiles[x]["label"]) & "/|" & tRecentFiles[x]["filename"] after tMenu
       end if
    end repeat
-   
+
+   if tMenu is not empty then
+      put return & tab & "-" after tMenu
+      put return & tab & "Clear Recent Files" & "/|" & kClearRecentFiles after tMenu
+   end if
+
    return tMenu
 end revMenuBarRecentFiles
 
@@ -1380,10 +1386,10 @@ private function revMenubarFileMenu pContext
    put "&Open Stack.../O" & return after tFile
    
    if revMenuBarRecentFiles() is not empty then
-      put "Open Recent File" & return after tFile     
+      put "Open Recent File" & return after tFile
       put revMenuBarRecentFiles() & return after tFile
    else
-      put "(Open Recent File" & return after tFile    
+      put "(Open Recent File" & return after tFile
    end if
    
    put enableMenuItem("&Close/W", the mode of the topStack <= 3 and the short name of the topstack is not "revMenubar") & return after tFile
@@ -2758,7 +2764,14 @@ on revMenubarFileMenuPick pWhich
                end if
                break
             case "Open Recent File"
-               revIDEOpenStack item 2 of pWhich
+               local tRecentStack
+               put item 2 of pWhich into tRecentStack
+               if tRecentStack is kClearRecentFiles then
+                  revIDESetPreference "cRecentStackPaths", empty
+                  ideMessageSend "ideRecentFilesChanged"
+               else
+                  revIDEOpenStack tRecentStack
+               end if
                break
             case "Import As Control"
                put item 2 of pWhich into tType
