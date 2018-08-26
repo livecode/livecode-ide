@@ -7,8 +7,19 @@ end preOpenCard
 on initialize
    local tSettings
    put getSettings() into tSettings
-   set the hilite of button "Build for Android" to tSettings["android"] is true
-   set the enabled of button "Build for Android" to true
+   local tEnabled = false
+   repeat for each item tItem in revSBPlatformArchitectures("Android")
+      set the hilite of button ("Android" && tItem) of group "Android targets" of me to tSettings["Android",tItem] is true
+      if tSettings["Android",tItem] then
+         put true into tEnabled
+      end if
+   end repeat
+   
+   if not tEnabled and tSettings["android"] is true then
+      set the hilite of button "Android armv7" of group "Android targets" of me to true
+      put true into tSettings["Android,armv7"]
+      setSettings tSettings
+   end if
    
    -- PM-2014-03-17: [[ In App Purchasing Updates ]] Port over old style in app purchasing permissions.
    if "BILLING" is among the keys of tSettings["android,application permissions"] then
@@ -105,10 +116,42 @@ on updateSettings
 end updateSettings
 
 on updateAndroidSettingState
-   set the enabled of group "Android Settings" of me to (the hilite of button "Build for Android" of me)
-   set the visible of button "Androidchecked" to (the hilite of button "Build for Android" of me)
+   local tSettings
+   put getSettings() into tSettings
+   local tEnabled = false
+   repeat for each item tItem in revSBPlatformArchitectures("Android")
+      if tSettings["Android",tItem] then
+         put true into tEnabled
+      end if
+   end repeat
+   set the enabled of group "Android Settings" of me to tEnabled
+   set the visible of button "Androidchecked" to tEnabled
    set the opaque of button "Androidchecked" to false
 end updateAndroidSettingState
+
+on updateAndroidArch pArch, pBuild
+   local tSettingsA
+   put getSettings() into tSettingsA
+   
+   put pBuild into tSettingsA["Android",pArch]
+   
+   local tEnabled = false
+   repeat for each item tItem in revSBPlatformArchitectures("Android")
+      if tSettingsA["Android",tItem] then
+         put true into tEnabled
+         exit repeat
+      end if
+   end repeat
+   put tEnabled into tSettingsA["Android"]
+   setSettings tSettingsA
+   
+   if tEnabled then
+      buildForEnabled "android"
+   end if
+   
+   revSetEdit
+   updateAndroidSettingState
+end updateAndroidArch
 
 -- PM-2014-03-17: [[ In App Purchasing Updates ]] Updated UI to support new store types.
 on updateInAppPurchaseSettings
