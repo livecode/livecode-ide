@@ -568,7 +568,7 @@ end revIDEDeveloperExtensionNew
 private function __fetchMetadatum pXmlId, pKey
    local tNode
    
-   if pKey is among the items of "name,type,title,author,description,version" then
+   if pKey is among the items of "name,type,title,author,description,version,platforms,os" then
       -- Some metadata are placed into specifically-named top-level XML
       -- elements in the manifest.  This list must be kept up-to-date
       -- with the list of special-cased metadatum keys listed in the
