@@ -740,7 +740,27 @@ We could use:
 		binds to "atof"
 
 See the [Language Reference](https://github.com/livecode/livecode/blob/develop/docs/guides/LiveCode%20Builder%20Language%20Reference.md#the-c-binding-string) 
-for more information on C binding strings. 
+for more information on C binding strings.
+
+##### Other Binding Examples
+
+* Binding to the [strlen function](http://www.cplusplus.com/reference/cstring/strlen/) in the C standard library:
+
+		foreign handler C_Strlen(in pString as ZStringNative) returns CUInt \
+		binds to "c:strlen"
+This function can the be called from within LiveCode Builder as follows:
+
+		variable tLength as Integer
+		put C_Strlen("Hello World") into tLength --tLength will have a value of 11
+
+* Binding to the [CFDataGetBytePtr function](https://developer.apple.com/documentation/corefoundation/1543330-cfdatagetbyteptr?language=objc) within Apple's C-based Carbon framework for macOS:
+
+		foreign handler C_CFDataGetBytePtr(in theData as ObjcId) returns Pointer \
+		binds to "c:Carbon.framework>CFDataGetBytePtr"
+Note that the binding string for Apple's C-based frameworks is typically of the
+form "c:FrameworkBundleName.framework>functionName", where *FrameworkBundleName*
+is the name of the framwork (e.g: Carbon / CoreGraphics / etc...) and *functionName*
+is the name of the function to bind to.
 
 ##### Callbacks
 
