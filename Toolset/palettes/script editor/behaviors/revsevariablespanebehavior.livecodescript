@@ -249,6 +249,7 @@ end flattenVariableList
 
 private on pathToVariableComponents pPath, @rVariableName, @rDimensions
    local tCount
+   set the itemdel to the pathDelimiter of widget "tree" of me
    repeat for each item tItem in pPath
       add 1 to tCount
       if tCount is 1 then
@@ -377,12 +378,9 @@ end visualizationObjectSetValue
 
 private function friendlyNodeReference pNodeReference
    local tString
-   
    local tVariable, tDimensions
    pathToVariableComponents pNodeReference, tVariable, tDimensions   
-   
    put tVariable into tString
-   
    repeat with x = 1 to the number of elements of tDimensions
       put "[" & friendlyKey(tDimensions[x]) & "]" after tString
    end repeat
@@ -529,4 +527,6 @@ private command setDefaultsAndCallbacks
    set the cCallback of tFilter to "filterChanged"
    set the cCallbackTarget of tFilter to the long id of me
    set the cPlaceholderText of tFilter to "Search variables..."
+   
+   set the pathdelimiter of widget "tree" of me to numToCodepoint(0)
 end setDefaultsAndCallbacks
