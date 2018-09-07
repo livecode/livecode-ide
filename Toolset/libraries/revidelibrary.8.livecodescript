@@ -9292,9 +9292,10 @@ on revIDEToggleReshapeGraphic
    if "revReshapeLibrary" is not among the lines of revInternal__ListLoadedLibraries() then
       choose pointer tool
       revInternal__LoadLibrary "revReshapeLibrary"
-      send "revSetMarkers" to stack "revReshapeLibrary"
+      revSetMarkers
    else
-      send "revSetMarkers true" to stack "revReshapeLibrary"
+      revSetMarkers "true"
+
       revInternal__UnloadLibrary "revReshapeLibrary"
    end if
 end revIDEToggleReshapeGraphic
