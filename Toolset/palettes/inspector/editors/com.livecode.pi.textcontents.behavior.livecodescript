@@ -10,6 +10,10 @@ on editorInitialize
    set the itemdelimiter to "."
    put item -1 of the editorProperty["editor"] of me into sTextType
    
+   set the toolTip of button "wrap text" of me to "wrap text"
+   set the toolTip of button "show grid" of me to "show grid"
+   set the toolTip of button "import" of me to "import file"
+   
    set the editorExpandVertical of me to true
 end editorInitialize
 
@@ -99,11 +103,18 @@ on mouseUp
       case "show grid"
          local tGrid
          put not the hilite of the target into tGrid
+         set the hilite of the target to tWrap
          set the hGrid of fld "HtmlText" to tGrid
          set the vGrid of fld "HtmlText" to tGrid
-         set the tabStops of fld "HtmlText" to 150
-         set the dontWrap of fld "HtmlText" to tGrid
-         set the hScrollbar of fld "HtmlText" to tGrid
+         if tGrid then
+            set the tabStops of fld "HtmlText" to 150
+            set the dontWrap of fld "HtmlText" to tGrid
+            set the hScrollbar of fld "HtmlText" to tGrid
+         else
+            set the tabStops of fld "HtmlText" to 75
+            set the dontWrap of fld "HtmlText" to not the hilite of button "wrap text"
+            set the hScrollbar of fld "HtmlText" to not the hilite of button "wrap text"
+         end if
          break
       case "import"
          local tFile
