@@ -103,7 +103,7 @@ on mouseUp
       case "show grid"
          local tGrid
          put not the hilite of the target into tGrid
-         set the hilite of the target to tWrap
+         set the hilite of the target to tGrid
          set the hGrid of fld "HtmlText" to tGrid
          set the vGrid of fld "HtmlText" to tGrid
          if tGrid then
