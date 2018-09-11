@@ -4348,7 +4348,7 @@ Returns a list of all the display names of stacks recognised by the IDE as a pal
 */
 function revIDEAvailablePalettes
    return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences," \
-   & "Standalone Settings,About,Dictionary,Guide,Resource Center,Preferences,Search"	
+   & "Standalone Settings,About,Dictionary,Guide,Resource Center,Preferences,Search,Snippet Viewer"
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -4397,6 +4397,8 @@ function revIDEPaletteToStackName pPalette
          return "revDictionary"
       case "resource center"
          return "revResourceCenter"
+      case "snippet viewer"
+         return "revIDESnippetViewer"
    end switch
 end revIDEPaletteToStackName
 
@@ -4624,6 +4626,7 @@ command revIDEOpenPalette pPaletteName
       case "standalone settings"
       case "message watcher"
       case "tools"
+      case "snippet viewer"
          palette stack tStackName
          break
       case "search"
