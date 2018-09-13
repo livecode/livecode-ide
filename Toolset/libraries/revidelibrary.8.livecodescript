@@ -9294,7 +9294,8 @@ on revIDEToggleReshapeGraphic
       revInternal__LoadLibrary "revReshapeLibrary"
       revSetMarkers
    else
-      revSetMarkers true
+      revSetMarkers "true"
+
       revInternal__UnloadLibrary "revReshapeLibrary"
    end if
 end revIDEToggleReshapeGraphic
