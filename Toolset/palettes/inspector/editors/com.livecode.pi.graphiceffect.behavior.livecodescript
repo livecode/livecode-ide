@@ -119,7 +119,9 @@ on editorResize
    
    local tRect
    put the rect of me into tRect
-   set the rect of graphic 1 of me to the right of button 1 of me, item 2 of tRect + 2, item 3 of tRect - 5, item 4 of tRect - 5
+   set the rect of graphic 1 of me to the right of button 1 of me,  \
+         the top of button 1 of me + 3, item 3 of tRect - 5,  \
+         the bottom of button 1 of me - 3
    unlock messages
    unlock screen
 end editorResize
