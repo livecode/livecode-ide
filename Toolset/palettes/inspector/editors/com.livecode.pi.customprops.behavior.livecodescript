@@ -112,8 +112,12 @@ on editorResize
    send "groupResize kLabelSize, kControlGap" to group "Set buttons" of me
    
    # Use all space not taken by other elements for main array display
-   local tWidgetHeight
-   put the height of me - (4 * kControlGap + kLabelFieldHeight + kKeyFieldHeight + kValueFieldHeight + kSetButtonsHeight) into tWidgetHeight
+      local tWidgetHeight, tValueHeight
+   put 150 into tWidgetHeight -- or other value
+   put max (the height of this card - ( 12 * kControlGap + kLabelFieldHeight  \
+         + kKeyFieldHeight + kValueFieldHeight + kSetButtonsHeight  \
+         + tWidgetHeight), kValueFieldHeight) into tValueHeight
+
    set the height of widget 1 of me to tWidgetHeight
    set the width of widget 1 of me to the width of me
    set the left of widget 1 of me to the left of me
@@ -135,7 +139,7 @@ on editorResize
    set the left of field "value label" of me to the left of me
    
    set the width of field "value" of me to the width of me - kLabelSize - kControlGap
-   set the height of field "value" of me to kValueFieldHeight
+   set the height of field "value" of me to kValueFieldHeight + tValueHeight
    set the top of field "value" of me to the bottom of field "key" of me + kControlGap
    set the left of field "value" of me to the right of field "value label" of me + kControlGap
    
