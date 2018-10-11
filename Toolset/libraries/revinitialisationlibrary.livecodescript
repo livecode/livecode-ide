@@ -91,9 +91,9 @@ command revInternal__UnloadLibrary pLibraryName
    local tError, tLegacyError
    try
       // TODO: Remove legacy message name	   
-      dispatch "revLoadLibrary" to stack tStackName  
+      dispatch "revUnloadLibrary" to stack tStackName  
       if it is not "handled" then
-      	throw "No revUnloadLibrary handler found"
+         throw "No revUnloadLibrary handler found"
       end if
    catch tLegacyError
    end try
@@ -109,7 +109,8 @@ command revInternal__UnloadLibrary pLibraryName
    if tError is not empty then
       return "Error while unloading library. Library" && pLibraryName \
             && "did not complete the extensionFinalize request"
-   end if     
+   end if
+   delete variable sLoadedLibraries[pLibraryName]
    return empty
 end revInternal__UnloadLibrary
 

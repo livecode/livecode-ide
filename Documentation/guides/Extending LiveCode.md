@@ -2295,12 +2295,9 @@ player object, and more.
 
 ### The Externals SDK
 
-We provide a developer kit for writing externals which includes 
-documentation and examples. You may download this kit from:
+Occasionally LiveCode Builder may not be what you need to create your extension. We provide a legacy developer kit for writing externals in C++ which includes documentation and examples. 
 
-<http://downloads.runrev.com/resources/externals/revexternalssdk.zip>
-
-The following newsletter articles will also help you get started:
+The following newsletter articles will help you get started:
 
 * [External Writing for the Uninitiated – Part 1](http://newsletters.livecode.com/november/issue13/newsletter5.php)
 
