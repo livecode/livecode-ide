@@ -8520,7 +8520,9 @@ on ideStyleText pSelectedChunk, pSelectedObject, pIsField, pWhich, pValue
 
          if pWhich is "superscript" then put -4 into tTextShiftAmount
          else put 4 into tTextShiftAmount
-         if the textShift of tTarget is a number then put 0 into tTextShiftAmount
+         if the textShift of tTarget is a number AND the textShift of tTarget is not 0 then 
+            put 0 into tTextShiftAmount
+         end if
 
          set the textShift of tTarget to tTextShiftAmount
          break
