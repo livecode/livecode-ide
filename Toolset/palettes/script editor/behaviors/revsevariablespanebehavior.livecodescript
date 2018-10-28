@@ -528,5 +528,6 @@ private command setDefaultsAndCallbacks
    set the cCallbackTarget of tFilter to the long id of me
    set the cPlaceholderText of tFilter to "Search variables..."
    
-   set the pathdelimiter of widget "tree" of me to numToCodepoint(0)
+   set the pathDelimiter of widget "tree" of me to numToCodepoint(0)
+   set the sortType of widget "tree" of me to "numeric"
 end setDefaultsAndCallbacks
