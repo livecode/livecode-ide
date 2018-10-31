@@ -93,12 +93,20 @@ on ideOpenStack pTarget
       exit ideOpenStack
    end if
    
-   if the short name of ideStackOfObject(pTarget) is not the short name of me then
+   local tTargetStack
+   put the short name of ideStackOfObject(pTarget) into tTargetStack
+   
+   local tPlugins
+   put revIDEGetAllPlugins() into tPlugins
+   
+   if tTargetStack is not the short name of me and \
+         the filename of stack tTargetStack is not among the lines of tPlugins then
       startCenterClose
    end if
 end ideOpenStack
 
 command startCenterClose
+   breakpoint
    close me
 end startCenterClose
 
