@@ -106,7 +106,6 @@ on ideOpenStack pTarget
 end ideOpenStack
 
 command startCenterClose
-   breakpoint
    close me
 end startCenterClose
 
