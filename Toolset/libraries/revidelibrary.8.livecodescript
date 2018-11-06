@@ -6516,14 +6516,7 @@ on revIDETogglePaletteView
    unlock screen
 end revIDETogglePaletteView
 
-on revIDEPopupContextualMenu pTargets
-   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
-end revIDEPopupContextualMenu
-
-local sPluginsA
-on revIDEUpdatePlugins
-   global gREVStartupList, gREVShutdownlist, gREVDontLoadMenus
-   
+function revIDEGetAllPlugins
    local tUserPlugins
    put revAbsoluteFolderListing(revEnvironmentUserPluginsPath()) into tUserPlugins
    
@@ -6539,6 +6532,19 @@ on revIDEUpdatePlugins
    if tDevelopmentPlugins is not empty then
       put revCombineFilePaths(tFinal,tDevelopmentPlugins) into tFinal
    end if
+   return tFinal
+end revIDEGetAllPlugins
+   
+on revIDEPopupContextualMenu pTargets
+   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
+end revIDEPopupContextualMenu
+
+local sPluginsA
+on revIDEUpdatePlugins
+   global gREVStartupList, gREVShutdownlist, gREVDontLoadMenus
+   
+   local tFinal
+   put revIDEGetAllPlugins() into tFinal
    
    put empty into gREVStartupList
    put empty into gREVShutdownList
