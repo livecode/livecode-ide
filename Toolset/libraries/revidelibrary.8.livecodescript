@@ -6516,14 +6516,7 @@ on revIDETogglePaletteView
    unlock screen
 end revIDETogglePaletteView
 
-on revIDEPopupContextualMenu pTargets
-   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
-end revIDEPopupContextualMenu
-
-local sPluginsA
-on revIDEUpdatePlugins
-   global gREVStartupList, gREVShutdownlist, gREVDontLoadMenus
-   
+function revIDEGetAllPlugins
    local tUserPlugins
    put revAbsoluteFolderListing(revEnvironmentUserPluginsPath()) into tUserPlugins
    
@@ -6539,6 +6532,19 @@ on revIDEUpdatePlugins
    if tDevelopmentPlugins is not empty then
       put revCombineFilePaths(tFinal,tDevelopmentPlugins) into tFinal
    end if
+   return tFinal
+end revIDEGetAllPlugins
+   
+on revIDEPopupContextualMenu pTargets
+   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
+end revIDEPopupContextualMenu
+
+local sPluginsA
+on revIDEUpdatePlugins
+   global gREVStartupList, gREVShutdownlist, gREVDontLoadMenus
+   
+   local tFinal
+   put revIDEGetAllPlugins() into tFinal
    
    put empty into gREVStartupList
    put empty into gREVShutdownList
@@ -8520,7 +8526,9 @@ on ideStyleText pSelectedChunk, pSelectedObject, pIsField, pWhich, pValue
 
          if pWhich is "superscript" then put -4 into tTextShiftAmount
          else put 4 into tTextShiftAmount
-         if the textShift of tTarget is a number then put 0 into tTextShiftAmount
+         if the textShift of tTarget is a number AND the textShift of tTarget is not 0 then 
+            put 0 into tTextShiftAmount
+         end if
 
          set the textShift of tTarget to tTextShiftAmount
          break
