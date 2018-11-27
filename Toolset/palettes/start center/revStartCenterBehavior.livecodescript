@@ -99,8 +99,14 @@ on ideOpenStack pTarget
    local tPlugins
    put revIDEGetAllPlugins() into tPlugins
    
-   if tTargetStack is not the short name of me and \
-         the filename of stack tTargetStack is not among the lines of tPlugins then
+   repeat for each line tLine in tPlugins
+      if tLine is the filename of stack tTargetStack OR \
+            the substacks of stack tLine contains tTargetStack then
+         exit ideOpenStack
+      end if
+   end repeat
+   
+   if tTargetStack is not the short name of me then
       startCenterClose
    end if
 end ideOpenStack
