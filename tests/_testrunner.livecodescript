@@ -139,6 +139,11 @@ private command TestLoadIDE
       TestDiagnostic "original default folder:" && tDefaultFolder
       TestDiagnostic "new default folder:" && the defaultFolder
    end if
+   
+   // Close Start Center as it causes some IDE tests to fail
+   if the openstacks contains "revStartCenter" then
+      close stack "revStartCenter"
+   end if
 
    -- gRevDevelopment should be true by default
    global gRevDevelopment
