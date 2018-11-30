@@ -100,8 +100,13 @@ on ideOpenStack pTarget
    put revIDEGetAllPlugins() into tPlugins
    
    repeat for each line tLine in tPlugins
+      local tSubstacks
+      if tLine ends with ".livecode" or tLine ends with ".livecodescript" or \
+            tLine ends with ".rev" then 
+         put the substacks of stack tLine into tSubstacks
+      end if
       if tLine is the filename of stack tTargetStack OR \
-            the substacks of stack tLine contains tTargetStack then
+            tSubstacks contains tTargetStack then
          exit ideOpenStack
       end if
    end repeat
