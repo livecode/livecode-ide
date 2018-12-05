@@ -3084,7 +3084,7 @@ command scriptFormat pScope, pDontGroup
       if tStart > tEnd then
          put tOldFirstIndent into tOldLastIndent
       else
-         put textFormatGetLineIndent(line (tLine + tSelectionLineCount) of tScript) into tOldLastIndent
+         put textFormatGetLineIndent(line (tLine + tSelectionLineCount - 1) of tScript) into tOldLastIndent
       end if
       
       local tCode
@@ -3111,17 +3111,27 @@ command scriptFormat pScope, pDontGroup
       # The selection offsets are composed of two parts, the difference in the indent of the line that the selection started / ended on
       # and the difference in the number of chars before that line.
       local tFirstSelectionOffset
-      put (the number of chars of tNewFirstIndent - the number of chars of tOldFirstIndent) + (the number of chars of line 1 to (tLine - 1) of tNewScript - the number of chars of line 1 to (tLine - 1) of tScript) into tFirstSelectionOffset
+      put (the number of chars of line 1 to tLine of tNewScript - the number of chars of line 1 to tLine of tScript) into tFirstSelectionOffset      
+      
+      put (the number of chars of line 1 to tLine - 1 of tNewScript) + 2 into tFirstLineChar
+      if tLine is 1 then subtract 1 from tFirstLineChar
       
       local tLastSelectionOffset
       if tStart > tEnd then
          put tFirstSelectionOffset into tLastSelectionOffset
       else
-         put (the number of chars of tNewLastIndent - the number of chars of tOldLastIndent) + (the number of chars of line 1 to (tLine + tSelectionLineCount) of tNewScript - the number of chars of line 1 to (tLine + tSelectionLineCount) of tScript) into tLastSelectionOffset
-      end if
+         put(the number of chars of line 1 to (tLine + (tSelectionLineCount - 1)) of tNewScript - the number of chars of line 1 to (tLine + (tSelectionLineCount - 1)) of tScript) into tLastSelectionOffset      end if
       
       if tStart is not empty then
-         select char (tStart + tFirstSelectionOffset) to (tEnd + tLastSelectionOffset) of field "Script" of me
+         if tStart > tEnd then
+            select char (tStart + tFirstSelectionOffset ) to (tEnd + tFirstSelectionOffset ) of field "Script" of me
+         else
+            put tStart + tFirstSelectionOffset into tStart
+            if tStart < tFirstLineChar + (the number of chars of tNewFirstIndent) then 
+               put tFirstLineChar + (the number of chars of tNewFirstIndent) into tStart
+            end if
+            select char (tStart) to (tEnd + tLastSelectionOffset) of field "Script" of me
+         end if
       end if
    end if
    
