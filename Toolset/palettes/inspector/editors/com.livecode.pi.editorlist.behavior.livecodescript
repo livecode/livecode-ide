@@ -1,4 +1,4 @@
-﻿script "com.livecode.pi.editorList.behavior"
+﻿script "com.livecode.pi.editorList.behavior" with behavior "revInspectorEditorBehavior"
 local sNumChildren
 
 constant kComponentSpacing = 6
@@ -117,7 +117,15 @@ on editorValueChanged
    repeat with x =1 to sNumChildren
       put the editorValue of group ("editor" & x) of me into tValueArray[x]
    end repeat
-   combine tValueArray with tDelimiter
-   set the editorValue of me to tValueArray
+   
+   // TODO: Use 'combine tValueArray with tDelimiter' once we add sorting option to combine
+   // See bug 9344
+   local tList
+   repeat for each element tElement in tValueArray
+      put tElement & tDelimiter after tList
+   end repeat
+   delete char -1 of tList
+   set the editorValue of me to tList
+   
    dispatch "updateProperty"
 end editorValueChanged
