@@ -3233,6 +3233,10 @@ private command _list.DrawCachedControlList pForceRefresh, pCallback, pCallbackC
    local theSequence
    local theTopLeft
    -----
+
+   # If controls haven't been cached yet then exit
+   if sControlOfIndexA is not an array then return empty
+
    put false into noRedrawNeeded
    put empty into theFirstControlHeight
    
