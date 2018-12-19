@@ -5431,7 +5431,7 @@ end uProps
 getprop uProps[pProp]
     if the target is not me then pass uProps
     return the dgProps[pProp] of me
-end uProps[pProp]
+end uProps
 ## end temporary aliases
 
 
@@ -6927,7 +6927,7 @@ getprop dgDataControlOfIndex [pIndex]
         end if
     end if
     return empty
-end dgDataControlOfIndex[pIndex]
+end dgDataControlOfIndex
 
 
 function ColumnControlOfIndex pColumn, pIndex
