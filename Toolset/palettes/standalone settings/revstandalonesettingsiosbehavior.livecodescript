@@ -183,7 +183,7 @@ on updateSettings
    put computeDefault(tSettings["ios,iPhone X Landscape splash"], empty) into field "iPhone X Landscape Splash"
    put computeDefault(tSettings["ios,iPhone XR Portrait splash"], empty) into field "iPhone XR Portrait Splash" 
    put computeDefault(tSettings["ios,iPhone XR Landscape splash"], empty) into field "iPhone XR Landscape Splash"
-   put computeDefault(tSettings["ios,iPhone XSMAX Portrait splash"], empty) into field "iPhone XSMAXPortrait Splash" 
+   put computeDefault(tSettings["ios,iPhone XSMAX Portrait splash"], empty) into field "iPhone XSMAX Portrait Splash" 
    put computeDefault(tSettings["ios,iPhone XSMAX Landscape splash"], empty) into field "iPhone XSMAX Landscape Splash" 
    put computeDefault(tSettings["ios,ipad portrait splash"], empty) into field "iPad Portrait Splash"
    put computeDefault(tSettings["ios,ipad landscape splash"], empty) into field "iPad Landscape Splash"
