@@ -3233,6 +3233,10 @@ private command _list.DrawCachedControlList pForceRefresh, pCallback, pCallbackC
    local theSequence
    local theTopLeft
    -----
+
+   # If controls haven't been cached yet then exit
+   if sControlOfIndexA is not an array then return empty
+
    put false into noRedrawNeeded
    put empty into theFirstControlHeight
    
@@ -5431,7 +5435,7 @@ end uProps
 getprop uProps[pProp]
     if the target is not me then pass uProps
     return the dgProps[pProp] of me
-end uProps[pProp]
+end uProps
 ## end temporary aliases
 
 
@@ -6927,7 +6931,7 @@ getprop dgDataControlOfIndex [pIndex]
         end if
     end if
     return empty
-end dgDataControlOfIndex[pIndex]
+end dgDataControlOfIndex
 
 
 function ColumnControlOfIndex pColumn, pIndex
