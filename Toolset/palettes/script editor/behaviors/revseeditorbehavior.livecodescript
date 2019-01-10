@@ -1,4 +1,4 @@
-﻿script "revSEEditorBehavior"
+﻿script "revSEEditorBehavior" with behavior "com.livecode.scripteditor.behavior.editorcommon"
 # Stores the following mapping
 #  <handler name>,type   => string representing the handler type eg PF for private function
 # <handler name>,start  => line offset to start of handler
@@ -1951,14 +1951,14 @@ command showNextFindResult pQuery, pIsRegExp, pUseWildCards, pWholeMatch, pIgnor
          revSESetCurrentObject tObject, empty, true
          put 1 into tStart
       else
-         if tStart is empty then
+         if sLastFindLocation is empty then
             # Must be the first iteration
             put tSearch["start"] into tStart
          else
             # Calculate a new search start
             if sLastFindObject is not empty and seGetRuggedId(sLastFindObject) is seGetRuggedId(getObjectID()) and sLastFindLocation is not empty then
                if pInteractive then
-                  put item 1 of sLastFindLocation into tStart
+                  put item 2 of sLastFindLocation into tStart
                else
                   put item 1 of sLastFindLocation + 1 into tStart
                end if
