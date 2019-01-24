@@ -8095,13 +8095,18 @@ on revIDECut
    end if
    
    lock screen
-   lock messages
+   
    if the selectedImage is not empty then
       # If the there is a selection in an image using the image selection tool
       # Then make sure no text is selected before doing the cut
-      if the selectedText is not empty then select empty
+      if the selectedText is not empty then 
+         lock messages
+         select empty
+         unlock messages
+      end if
       set the defaultStack to revTargetStack(the long id of the selectedImage)
       cut
+      unlock screen
       exit revIDECut
    end if
    
@@ -8109,7 +8114,7 @@ on revIDECut
    if revCheckGroupDelete() then
       cut
    end if
-   unlock messages
+   
    unlock screen
    
    ideMessageSend "ideSelectedObjectChanged"
