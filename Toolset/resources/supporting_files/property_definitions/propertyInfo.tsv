@@ -165,6 +165,7 @@ showLines	Text baselines	Table	com.livecode.pi.boolean	true	false
 showName	Show name	Basic	com.livecode.pi.boolean	true	false			
 showSelection	Hilite selection	Basic	com.livecode.pi.boolean	true	false			
 showValue	Show value	Basic	com.livecode.pi.boolean	true	false		false			
+size	Size in bytes	Basic	com.livecode.pi.integer	true	true
 stackFiles::revIDESetStackFilesProperty	Stack files	Stack Files	com.livecode.pi.stackfiles	true	false			
 startAngle	Start	Basic	com.livecode.pi.number	true	false		0			0	360	1
 startArrow	Start arrow	Basic	com.livecode.pi.boolean	true	false			
