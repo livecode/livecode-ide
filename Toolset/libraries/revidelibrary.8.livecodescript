@@ -8861,9 +8861,11 @@ end revIDEToggleShowIDEStacksInLists
 on revIDETogglePalette pPaletteName
    local tStackName
    put revIDEPaletteToStackName(pPaletteName) into tStackName
-
+   
    if the mode of stack tStackName is 0 or the visible of stack tStackName is false then
       revIDEOpenPalette pPaletteName
+   else if tStackName is not line 1 of the openStacks then
+      go card 1 of stack tStackName
    else
       close stack tStackName
    end if
