@@ -1,4 +1,4 @@
-﻿script "revSEEditorBehavior" with behavior "com.livecode.scripteditor.behavior.editorcommon"
+﻿script "revSEEditorBehavior"
 # Stores the following mapping
 #  <handler name>,type   => string representing the handler type eg PF for private function
 # <handler name>,start  => line offset to start of handler
