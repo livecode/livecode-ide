@@ -108,6 +108,12 @@ on updateAndroidSettingState
    set the enabled of group "Android Settings" of me to (the hilite of button "Build for Android" of me)
    set the visible of button "Androidchecked" to (the hilite of button "Build for Android" of me)
    set the opaque of button "Androidchecked" to false
+   
+   -- splash screen is not supported in Indy and Business editions
+   if revLicenseType() is "commercial" \
+         or revLicenseType() is "professional" then
+      set the enabled of button "Splash Chooser" of group "Android Settings" of me to false
+   end if
 end updateAndroidSettingState
 
 -- PM-2014-03-17: [[ In App Purchasing Updates ]] Updated UI to support new store types.
