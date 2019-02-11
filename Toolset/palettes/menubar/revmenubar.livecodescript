@@ -2146,14 +2146,14 @@ function revMenuBarCardContextMenu pCard, pIndent
    return tText
 end revMenuBarCardContextMenu
 
-function revMenuBarObjectContextMenu pExtraText, pObject, pIndent, pSelectable
+function revMenuBarObjectContextMenu pExtraText, pObject, pIndent, pSelectable, pInProjectBrowser
    local tIndent
    repeat pIndent
       put tab after tIndent
    end repeat
    
    local tText
-   put revMenuBarStandardContextMenu(pObject, pIndent, pSelectable) & return into tText
+   put revMenuBarStandardContextMenu(pObject, pIndent, pSelectable, pInProjectBrowser) & return into tText
    repeat for each line tLine in pExtraText
       put tIndent & tLine & return after tText
    end repeat
@@ -2163,7 +2163,7 @@ function revMenuBarObjectContextMenu pExtraText, pObject, pIndent, pSelectable
    return tText
 end revMenuBarObjectContextMenu
 
-function revMenuBarStandardContextMenu pObject, pIndent, pSelectable
+function revMenuBarStandardContextMenu pObject, pIndent, pSelectable, pInProjectBrowser
    local tIndent
    repeat pIndent
       put tab after tIndent
@@ -2175,12 +2175,18 @@ function revMenuBarStandardContextMenu pObject, pIndent, pSelectable
          exists(the behavior of pObject)) & return after tText
    put tIndent & "Property Inspector" & return after tText
    put tIndent & "-" & return after tText
-   put tIndent & enableMenuItem("Cut", pSelectable) & return after tText
-   put tIndent & enableMenuItem("Copy", pSelectable) after tText
+   if pInProjectBrowser is "true" then
+      put tIndent & "Cut" & return after tText
+      put tIndent & "Copy" after tText
+   else
+      put tIndent & enableMenuItem("Cut", pSelectable) & return after tText
+      put tIndent & enableMenuItem("Copy", pSelectable) after tText
+   end if
+   
    return tText
 end revMenuBarStandardContextMenu
 
-function revBuildContextSensitiveMenu pExtraText, pTarget, pType, pSelectable
+function revBuildContextSensitiveMenu pExtraText, pTarget, pType, pSelectable, pInProjectBrowser
    local tText
    if word 1 of pTarget is "stack" then
       put revMenuBarStackContextMenu(pTarget, 0) into tText
@@ -2198,9 +2204,9 @@ function revBuildContextSensitiveMenu pExtraText, pTarget, pType, pSelectable
       return tText
    end if
    
-   put revMenuBarObjectContextMenu(pExtraText, pTarget,0, pSelectable) into tText
+   put revMenuBarObjectContextMenu(pExtraText, pTarget,0, pSelectable, pInProjectBrowser) into tText
    put return & "-" after tText
-   put return & enableMenuItem("Clear", pSelectable) after tText
+   put return & enableMenuItem("Clear", pSelectable OR pInProjectBrowser) after tText
    put return & "-" after tText
    put return & "Card" after tText
    put return & revMenuBarCardContextMenu(the long id of this card of tTargetStack, 1) after tText
@@ -2210,7 +2216,7 @@ function revBuildContextSensitiveMenu pExtraText, pTarget, pType, pSelectable
    return tText
 end revBuildContextSensitiveMenu
 
-function revMenubarContextMenu pType, pTarget
+function revMenubarContextMenu pType, pTarget, pInProjectBrowser
    local tSelectable
    put revIDEObjectsAreSelectable(sMenuTarget) into tSelectable
    
@@ -2270,17 +2276,17 @@ function revMenubarContextMenu pType, pTarget
          break
    end switch
    
-   put revBuildContextSensitiveMenu(tText, pTarget, , tSelectable) into tText
+   put revBuildContextSensitiveMenu(tText, pTarget, , tSelectable, pInProjectBrowser) into tText
    
    return modifyMenu(pType, tText)
 end revMenubarContextMenu
 
-on revMenubarSetContextMenu pType, pTarget
-   set the text of button "context" of me to revMenubarContextMenu(pType, pTarget)
+on revMenubarSetContextMenu pType, pTarget, pInProjectBrowser
+   set the text of button "context" of me to revMenubarContextMenu(pType, pTarget, pInProjectBrowser)
    set the script of button "context" of me to "on menuPick pWhich; revMenubarContextMenuPick pWhich; end menuPick"
 end revMenubarSetContextMenu
 
-on revMenubarPopupContextualMenu pTargets
+on revMenubarPopupContextualMenu pTargets, pInProjectBrowser
    local tTarget
    if pTargets is not empty then
       put the long id of (line 1 of pTargets) into tTarget
@@ -2301,23 +2307,23 @@ on revMenubarPopupContextualMenu pTargets
    end repeat
    
    if the number of lines in sMenuTarget > 1 then
-      revMenubarSetContextMenu "multiple", tTarget
+      revMenubarSetContextMenu "multiple", tTarget, pInProjectBrowser
    else
       local tType
       put word 1 of the name of tTarget into tType
       switch tType
          case "button"
             if the menuName of tTarget is not empty then
-               revMenubarSetContextMenu "menu", tTarget
+               revMenubarSetContextMenu "menu", tTarget, pInProjectBrowser
             else
-               revMenubarSetContextMenu "button", tTarget
+               revMenubarSetContextMenu "button", tTarget, pInProjectBrowser
             end if
             break
          case "graphic"
             if the style of tTarget is "polygon" then
-               revMenubarSetContextMenu "polygon", tTarget
+               revMenubarSetContextMenu "polygon", tTarget, pInProjectBrowser
             else
-               revMenubarSetContextMenu "standard", tTarget
+               revMenubarSetContextMenu "standard", tTarget, pInProjectBrowser
             end if
             break
          case "card"
@@ -2326,10 +2332,10 @@ on revMenubarPopupContextualMenu pTargets
          case "field"
          case "player"
          case "widget"
-            revMenubarSetContextMenu tType, tTarget
+            revMenubarSetContextMenu tType, tTarget, pInProjectBrowser
             break
          default
-            revMenubarSetContextMenu "standard", tTarget
+            revMenubarSetContextMenu "standard", tTarget, pInProjectBrowser
             break
       end switch
    end if

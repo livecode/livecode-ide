@@ -6535,8 +6535,8 @@ function revIDEGetAllPlugins
    return tFinal
 end revIDEGetAllPlugins
    
-on revIDEPopupContextualMenu pTargets
-   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
+on revIDEPopupContextualMenu pTargets, pInProjectBrowser
+   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets, pInProjectBrowser
 end revIDEPopupContextualMenu
 
 local sPluginsA
