@@ -334,10 +334,10 @@ end mouseDoubleUp
 
 on CloseFieldEditor pFieldEditor, pRow, pKey, pClosingTriggeredBy
    # The text the user entered is different than the current value of the target field.
-   if word 1 of the cObjectLongID of me is "stack" and \
-         the text of pFieldEditor is a number then
-      beep
-      answer error revIDELocalise("You cannot set the name of a stack to a number.")
+   if word 1 of the cObjectLongID of me is "stack" and \ 
+         not ideCheckStackName(the text of pFieldEditor) then
+      // Force a refresh
+      set the text of field "name" of me to the text of field "name" of me
       exit CloseFieldEditor
    end if
    set the textColor of field "name" of me to revIDEColor("text_3")
