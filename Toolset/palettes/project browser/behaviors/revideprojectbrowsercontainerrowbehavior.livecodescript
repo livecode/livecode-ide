@@ -294,7 +294,6 @@ setProp dvHilite[pHiliteColor] pBoolean
          set the backgroundColor of field "scriptLines" of me to revIDEColor("dataView_hiliteColor")
       end if
       
-      local tCPName
       repeat with i = 1 to 10
          put ("cBehaviorLongID" & i) into tCPName
          if exists(the tCPName of me) and the scriptStatus of the tCPName of me is "error" then
