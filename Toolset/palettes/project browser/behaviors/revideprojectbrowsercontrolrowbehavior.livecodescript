@@ -257,6 +257,8 @@ setProp dvHilite[pHiliteColor] pBoolean
          put ("cBehaviorLongID" & i) into tCPName
          if exists(the tCPName of me) and the scriptStatus of the tCPName of me is "error" then
             set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_scriptErrorBackgroundColor")
+         else if not (exists(the tCPName of me)) then
+            set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_scriptErrorBackgroundColor")
          else
             set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_hiliteColor")
          end if
