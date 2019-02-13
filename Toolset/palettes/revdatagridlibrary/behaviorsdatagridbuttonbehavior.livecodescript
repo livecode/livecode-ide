@@ -324,7 +324,7 @@ private command _CreateMobileScroller
          (_ControlType() is "table" and \
          the dgProps["show hscrollbar"] of me is not false) then
       if sScrollerId is empty or sScrollerId is not among the lines of mobileControls() then
-         put the short name of me into sScrollerId
+         put the long id of me into sScrollerId
          mobileControlCreate "scroller", sScrollerId
       end if
       mobileControlSet sScrollerId, "canBounce", "true"
