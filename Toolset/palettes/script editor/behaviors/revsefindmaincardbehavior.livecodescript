@@ -33,7 +33,9 @@ end menuPick
 
 on closeCard
    historySave
-   send "revSEFindFinalize" to (getCaller())
+   if there is a stack getCaller() then
+      send "revSEFindFinalize" to (getCaller())
+   end if
    pass closeCard
 end closeCard
 
