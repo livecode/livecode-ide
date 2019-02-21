@@ -181,6 +181,10 @@ on updateSettings
    put computeDefault(tSettings["ios,iPhone 6 Plus Landscape splash"], empty) into field "iPhone 6 Plus Landscape Splash"
    put computeDefault(tSettings["ios,iPhone X Portrait splash"], empty) into field "iPhone X Portrait Splash"   
    put computeDefault(tSettings["ios,iPhone X Landscape splash"], empty) into field "iPhone X Landscape Splash"
+   put computeDefault(tSettings["ios,iPhone XR Portrait splash"], empty) into field "iPhone XR Portrait Splash" 
+   put computeDefault(tSettings["ios,iPhone XR Landscape splash"], empty) into field "iPhone XR Landscape Splash"
+   put computeDefault(tSettings["ios,iPhone XSMAX Portrait splash"], empty) into field "iPhone XSMAX Portrait Splash" 
+   put computeDefault(tSettings["ios,iPhone XSMAX Landscape splash"], empty) into field "iPhone XSMAX Landscape Splash" 
    put computeDefault(tSettings["ios,ipad portrait splash"], empty) into field "iPad Portrait Splash"
    put computeDefault(tSettings["ios,ipad landscape splash"], empty) into field "iPad Landscape Splash"
    put computeDefault(tSettings["ios,ipad retina portrait splash"], empty) into field "iPad Retina Portrait Splash"
@@ -361,6 +365,10 @@ command updateOrientationSettings
       set the enabled of group "iPhone 6 Plus Landscape Splash" to tInitialOrientation contains "landscape"
       set the enabled of group "iPhone X Portrait Splash" to tInitialOrientation contains "portrait"
       set the enabled of group "iPhone X Landscape Splash" to tInitialOrientation contains "landscape"
+      set the enabled of group "iPhone XR Portrait Splash" to tInitialOrientation contains "portrait"
+      set the enabled of group "iPhone XR Landscape Splash" to tInitialOrientation contains "landscape"
+      set the enabled of group "iPhone XSMAX Portrait Splash" to tInitialOrientation contains "portrait"
+      set the enabled of group "iPhone XSMAX Landscape Splash" to tInitialOrientation contains "landscape"
    end if
 end updateOrientationSettings
 
@@ -388,6 +396,10 @@ command enableDeviceSpecificSettings pDevices
    set the enabled of group "iPhone 6 Plus Landscape Splash" to (1 is among the items of pDevices)
    set the enabled of group "iPhone X Portrait Splash" to (1 is among the items of pDevices)
    set the enabled of group "iPhone X Landscape Splash" to (1 is among the items of pDevices)
+   set the enabled of group "iPhone XR Portrait Splash" to (1 is among the items of pDevices)
+   set the enabled of group "iPhone XR Landscape Splash" to (1 is among the items of pDevices)
+   set the enabled of group "iPhone XSMAX Portrait Splash" to (1 is among the items of pDevices)
+   set the enabled of group "iPhone XSMAX Landscape Splash" to (1 is among the items of pDevices)
    set the enabled of group "iPad Portrait Splash" to (2 is among the items of pDevices)
    set the enabled of group "iPad Landscape Splash" to (2 is among the items of pDevices)
    set the enabled of group "iPad Retina Portrait Splash" to (2 is among the items of pDevices)

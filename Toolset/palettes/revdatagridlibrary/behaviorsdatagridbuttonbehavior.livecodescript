@@ -324,8 +324,8 @@ private command _CreateMobileScroller
          (_ControlType() is "table" and \
          the dgProps["show hscrollbar"] of me is not false) then
       if sScrollerId is empty or sScrollerId is not among the lines of mobileControls() then
-         mobileControlCreate "scroller"
-         put the result into sScrollerId
+         put the long id of me into sScrollerId
+         mobileControlCreate "scroller", sScrollerId
       end if
       mobileControlSet sScrollerId, "canBounce", "true"
       mobileControlSet sScrollerId, "pagingEnabled", "false"
@@ -3233,6 +3233,10 @@ private command _list.DrawCachedControlList pForceRefresh, pCallback, pCallbackC
    local theSequence
    local theTopLeft
    -----
+
+   # If controls haven't been cached yet then exit
+   if sControlOfIndexA is not an array then return empty
+
    put false into noRedrawNeeded
    put empty into theFirstControlHeight
    
@@ -5431,7 +5435,7 @@ end uProps
 getprop uProps[pProp]
     if the target is not me then pass uProps
     return the dgProps[pProp] of me
-end uProps[pProp]
+end uProps
 ## end temporary aliases
 
 
@@ -5755,7 +5759,7 @@ setprop dgProps [pProp] pValue
             show group "dgHorizontalComponents" of me
             _table.RegenerateColumns
             -- set the uEffectiveColumnWidths of group "dgHeader" of group "dgHeaderMask" of group "dgHeaderComponents" of me \
-                  -- to _table.GetEffectiveColumnWidths()
+            -- to _table.GetEffectiveColumnWidths()
             
             ## Set any props that have special settings for table.
             lock messages
@@ -5776,6 +5780,7 @@ setprop dgProps [pProp] pValue
          unlock messages      
          
          ResizeToFit
+         ResetList
          unlock screen
          break
          
@@ -5796,7 +5801,7 @@ setprop dgProps [pProp] pValue
             unlock messages
             put empty into sFormattedHeight
             put empty into sControlHeights
-
+            
             DG2_EnsureRowChainedBehavior
          end if
          break
@@ -5837,7 +5842,7 @@ setprop dgProps [pProp] pValue
       case "scroll when vscrollbar is hidden"
       case "scroll when hscrollbar is hidden"
       case "scroll selections into view"
-
+         
       case "animate actions"
       case "enable swipe"
          lock messages
@@ -5859,13 +5864,13 @@ setprop dgProps [pProp] pValue
             lock messages
             set the dgProps[pProp] of me to pValue
             unlock messages
-
+            
             -- We're setting new template controls. Redraw the list to take these new controls into account.
             DG2_CustomisableControlsClearByName pProp
             RefreshList
          end if
          break
-
+         
       case "alternate row colors"
          lock messages
          set the dgProps[pProp] of me to pValue is true
@@ -6013,7 +6018,7 @@ setprop dgProps [pProp] pValue
             -- Update any customisable controls to take into account the row resize.
             DG2_CustomisableControlsResizeDefaults
             DG2_CustomisableControlsClear
-
+            
             ResetList 
             unlock screen
          end if
@@ -6927,7 +6932,7 @@ getprop dgDataControlOfIndex [pIndex]
         end if
     end if
     return empty
-end dgDataControlOfIndex[pIndex]
+end dgDataControlOfIndex
 
 
 function ColumnControlOfIndex pColumn, pIndex

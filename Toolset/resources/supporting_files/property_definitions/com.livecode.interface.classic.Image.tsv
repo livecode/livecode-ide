@@ -6,6 +6,7 @@ title	Image
 name												
 filename::revIDESetImageFilename												
 id												
+size
 tooltip												
 visible							true					
 dontDither							false					
