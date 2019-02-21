@@ -99,8 +99,19 @@ on ideOpenStack pTarget
    local tPlugins
    put revIDEGetAllPlugins() into tPlugins
    
-   if tTargetStack is not the short name of me and \
-         the filename of stack tTargetStack is not among the lines of tPlugins then
+   repeat for each line tLine in tPlugins
+      local tSubstacks
+      if tLine ends with ".livecode" or tLine ends with ".livecodescript" or \
+            tLine ends with ".rev" then 
+         put the substacks of stack tLine into tSubstacks
+      end if
+      if tLine is the filename of stack tTargetStack OR \
+            tSubstacks contains tTargetStack then
+         exit ideOpenStack
+      end if
+   end repeat
+   
+   if tTargetStack is not the short name of me then
       startCenterClose
    end if
 end ideOpenStack
