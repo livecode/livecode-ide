@@ -105,7 +105,9 @@ on ideOpenStack pTarget
             tLine ends with ".rev" then 
          put the substacks of stack tLine into tSubstacks
          // Unload Plugin from memory
-         delete stack tLine
+         if not (the short name of stack tLine is in the openstacks) then
+            delete stack tLine
+         end if
       end if
       if tLine is the filename of stack tTargetStack OR \
             tSubstacks contains tTargetStack then
