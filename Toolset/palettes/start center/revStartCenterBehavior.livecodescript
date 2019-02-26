@@ -104,11 +104,13 @@ on ideOpenStack pTarget
       if tLine ends with ".livecode" or tLine ends with ".livecodescript" or \
             tLine ends with ".rev" then 
          put the substacks of stack tLine into tSubstacks
+         // Unload Plugin from memory
+         delete stack tLine
       end if
       if tLine is the filename of stack tTargetStack OR \
             tSubstacks contains tTargetStack then
          exit ideOpenStack
-      end if
+      end if      
    end repeat
    
    if tTargetStack is not the short name of me then
