@@ -96,24 +96,9 @@ on ideOpenStack pTarget
    local tTargetStack
    put the short name of ideStackOfObject(pTarget) into tTargetStack
    
-   local tPlugins
-   put revIDEGetAllPlugins() into tPlugins
-   
-   repeat for each line tLine in tPlugins
-      local tSubstacks
-      if tLine ends with ".livecode" or tLine ends with ".livecodescript" or \
-            tLine ends with ".rev" then 
-         put the substacks of stack tLine into tSubstacks
-         // Unload Plugin from memory
-         if not (the short name of stack tLine is in the openstacks) then
-            delete stack tLine
-         end if
-      end if
-      if tLine is the filename of stack tTargetStack OR \
-            tSubstacks contains tTargetStack then
-         exit ideOpenStack
-      end if      
-   end repeat
+   if the filename of stack (the mainstack of stack tTargetStack) is among the lines of revIDEGetAllPlugins() then
+      exit ideOpenStack
+   end if
    
    if tTargetStack is not the short name of me then
       startCenterClose
