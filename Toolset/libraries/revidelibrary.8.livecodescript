@@ -2280,9 +2280,11 @@ Example: set revIDEGetPreference("text size") to 12
 Returns (Any): The value of the preference
 */
 on revIDESetPreference pPreferenceName, pValue
-   set the pPreferenceName of stack "revpreferences" to pValue
-   revInternal__SavePreferences
-   ideMessageSend "idePreferenceChanged:" & pPreferenceName,pValue
+   if the pPreferenceName of stack "revpreferences" is not pValue then
+      set the pPreferenceName of stack "revpreferences" to pValue
+      revInternal__SavePreferences
+      ideMessageSend "idePreferenceChanged:" & pPreferenceName,pValue
+   end if
 end revIDESetPreference
 
 command revIDESetPreferenceOfSet pSetName, pPreferenceName, pValue

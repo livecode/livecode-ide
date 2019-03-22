@@ -907,7 +907,7 @@ local sSavePreferencesMessage
 
 command revInternal__SavePreferences
    cancel sSavePreferencesMessage
-   send "__revInternal_SavePreferences" to me in 500 milliseconds
+   send "__revInternal_SavePreferences" to me in 30 seconds
    put the result into sSavePreferencesMessage
 end revInternal__SavePreferences
 
