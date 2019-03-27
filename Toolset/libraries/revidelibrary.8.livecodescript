@@ -5111,6 +5111,27 @@ private on __setPropertyOfObject pObject, pProperty, pValue
    
 end __setPropertyOfObject
 
+function ideCheckStackName pName
+   if char 1 to 3 of pName is "rev" then
+      answer warning revIDELocalise("Using rev in the first three characters of a stack name is reserved for use by the LiveCode development environment and advanced users creating Plug-ins. If you use these characters, your stack may not behave as expected.") with revIDELocalise("OK") and revIDELocalise("Cancel")
+      if it is revIDELocalise("Cancel") then
+         return false
+      end if
+   end if
+   if pName is a number then
+      beep
+      answer error revIDELocalise("You cannot set the name of a stack to a number.")
+      return false
+   end if
+   if pName contains quote then 
+      beep
+      answer error revIDELocalise("The name of the stack cannot contain quotes")
+      return false
+   end if 
+   
+   return true
+end ideCheckStackName
+
 on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    local tThrottlePropertyChanged
    put false into tThrottlePropertyChanged
@@ -5132,27 +5153,14 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
          
          # If stack name is changed, use new name when setting edited
          if tStack is tObject and pProperty is "name" then
-            local tOldName
-            put the short name of tStack into tOldName
-            if char 1 to 3 of pValue is "rev" then
-               answer warning revIDELocalise("Using rev in the first three characters of a stack name is reserved for use by the LiveCode development environment and advanced users creating Plug-ins. If you use these characters, your stack may not behave as expected.") with revIDELocalise("OK") and revIDELocalise("Cancel")
-               if it is revIDELocalise("Cancel") then
-                  set the name of tStack to tOldName
-                  exit revIDEPropertySet
-               end if
-            end if
-            if pValue is a number then 
-               beep
-               answer error revIDELocalise("You cannot set the name of a stack to a number.")
+            
+            if not ideCheckStackName(pValue) then
+               local tOldName
+               put the short name of tStack into tOldName
                set the name of tStack to tOldName
                exit revIDEPropertySet
             end if
-            if pValue contains quote then 
-               beep
-               answer error revIDELocalise("The name of the stack cannot contain quotes")
-               set the name of tStack to tOldName
-               exit revIDEPropertySet
-            end if
+            
             put pValue into tStackName
          else
             put the short name of tStack into tStackName
