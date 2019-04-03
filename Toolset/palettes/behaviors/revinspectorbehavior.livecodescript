@@ -180,12 +180,14 @@ local sManualHeightOfStack, sNewHeight, sOldHeight
 on inspectorLayoutGroups pGroupList, pForceHeight
    
    # store height of stack when manually resizing
-   if pForceHeight <> true and the mouse is down and sNewHeight <> sOldHeight then
+   if pForceHeight is not true and the mouse is "down" and sNewHeight is not sOldHeight then
       put the height of this stack into sManualHeightOfStack
    end if
    
    # reset sManualHeightOfStack to empty if inspector was closed
-   if not the visible of me then put empty into sManualHeightOfStack
+   if not the visible of me then
+      put empty into sManualHeightOfStack
+   end if
    
    lock screen
    # Get the margin, padding
@@ -287,7 +289,7 @@ on inspectorLayoutGroups pGroupList, pForceHeight
    end if
    
    # reset manualHeight if user expands a non-expandable tab to full height
-   if not pForceHeight and not tCanExpand and sManualHeightOfStack = tStackHeight then
+   if not pForceHeight and not tCanExpand and sManualHeightOfStack is tStackHeight then
       put empty into sManualHeightOfStack
    end if
    
@@ -295,7 +297,7 @@ on inspectorLayoutGroups pGroupList, pForceHeight
    local tScreenRect, tNewStackHeight
    put revIDEStackScreenRect(the long id of me, true) into tScreenRect
    
-   if sManualHeightOfStack <> empty then
+   if sManualHeightOfStack is not empty then
       put min(sManualHeightOfStack, tStackHeight) into tNewStackHeight
       set the height of this stack to min(tNewStackHeight, item 4 of tScreenRect - tStackTop)
    else
