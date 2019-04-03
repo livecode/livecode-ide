@@ -1,5 +1,6 @@
 ﻿script "com.livecode.pi.customprops.behavior"
 local sPropSet, sHilitePath
+constant kWidgetHeight = 150
 
 on editorInitialize
    put empty into sPropSet
@@ -113,7 +114,7 @@ on editorResize
    
    # Use all space not taken by other elements for main array display
       local tWidgetHeight, tValueHeight
-   put 150 into tWidgetHeight -- or other value
+   put kWidgetHeight into tWidgetHeight
    put max (the height of this card - ( 12 * kControlGap + kLabelFieldHeight  \
          + kKeyFieldHeight + kValueFieldHeight + kSetButtonsHeight  \
          + tWidgetHeight), kValueFieldHeight) into tValueHeight
