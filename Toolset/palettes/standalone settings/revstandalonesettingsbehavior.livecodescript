@@ -221,16 +221,7 @@ function getImageDimensions pImageFile
 end getImageDimensions
 
 function validateIdentifier pIdentifier
-   local tValid
-   
-   put true into tValid
-   set the itemDelimiter to "."
-   repeat for each item tItem in pIdentifier 
-      if tItem is a number then
-         put false into tValid
-      end if
-   end repeat
-   return tValid
+   return matchText(pIdentifier, "(?i)^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$")
 end validateIdentifier
 
 on revUpdateStandaloneProgress pMessage
