@@ -43,7 +43,7 @@ on editorResize
    
    local tManualHeight, tManualGroupHeight
    put getManualHeight() into tManualHeight
-   if tManualHeight <> empty then
+   if tManualHeight is not empty then
       put tManualHeight - the height of group "background" - kControlGap - 2 into tManualGroupHeight
       set the height of me to tManualGroupHeight
       set the height of the owner of me to tManualGroupHeight
