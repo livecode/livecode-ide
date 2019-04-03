@@ -47,7 +47,7 @@ on editorResize
    lock messages
    local tManualHeight, tManualGroupHeight
    put getManualHeight() into tManualHeight
-   if tManualHeight <> empty then
+   if tManualHeight is not empty then
       put tManualHeight - the height of group "controls" of me - kControlGap - 1 - the height of group "background" into tManualGroupHeight
       set the height of me to tManualGroupHeight
       set the height of the owner of me to tManualGroupHeight
@@ -60,7 +60,7 @@ on editorResize
    put item 2 of tRect + the height of group "controls" of me + kControlGap into item 2 of tRect
    
    local tHeight
-   if tManualHeight <> empty then
+   if tManualHeight is not empty then
       put tManualGroupHeight - kControlGap  into tHeight
    else
       put the formattedHeight of field "htmltext" of me into tHeight
