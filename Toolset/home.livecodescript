@@ -2213,6 +2213,18 @@ function revEnvironmentNonNativeBinariesPath pPlatform, pSDK
       case "Android armv6"
          put slash & "android-armv6-bin" after tNonNativeBinariesPath
          break
+      case "Android armv7"
+         put slash & "android-armv7-bin" after tNonNativeBinariesPath
+         break
+      case "Android arm64"
+         put slash & "android-arm64-bin" after tNonNativeBinariesPath
+         break
+      case "Android x86"
+         put slash & "android-x86-bin" after tNonNativeBinariesPath
+         break
+      case "Android x86_64"
+         put slash & "android-x86_64-bin" after tNonNativeBinariesPath
+         break
       case "Emscripten"
       case "HTML5"
          put slash & "emscripten-bin" after tNonNativeBinariesPath
