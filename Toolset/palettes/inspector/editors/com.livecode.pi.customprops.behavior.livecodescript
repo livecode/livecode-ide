@@ -118,7 +118,7 @@ on editorResize
    # Use all space not taken by other elements for main array display
    local tWidgetHeight, tValueHeight
    put kWidgetHeight into tWidgetHeight
-   put max(the height of this card - ( 7 * kControlGap + kLabelFieldHeight  \
+   put max(the height of this card - ( 6 * kControlGap + kLabelFieldHeight  \
          + kKeyFieldHeight + kValueFieldHeight + kSetButtonsHeight  \
          + tWidgetHeight + tTopGroupHeight), 0) into tValueHeight
 
