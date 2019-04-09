@@ -1,6 +1,5 @@
 ﻿script "com.livecode.pi.customprops.behavior"
 local sPropSet, sHilitePath
-constant kWidgetHeight = 150
 
 on editorInitialize
    put empty into sPropSet
@@ -91,9 +90,10 @@ end editorUpdate
 constant kControlGap = 5
 constant kKeyFieldHeight = 21
 constant kLabelFieldHeight = 21
-constant kValueFieldHeight = 63
+constant kValueFieldHeight = 126
 constant kLabelSize = 50
 constant kSetButtonsHeight = 30
+constant kWidgetHeight = 150
 
 on editorResize
    lock screen
@@ -112,12 +112,15 @@ on editorResize
    set the lockLoc of group "Set buttons" of me to true
    send "groupResize kLabelSize, kControlGap" to group "Set buttons" of me
    
+   local tTopGroupHeight
+   put the bottom of group "background" into tTopGroupHeight
+   
    # Use all space not taken by other elements for main array display
-      local tWidgetHeight, tValueHeight
+   local tWidgetHeight, tValueHeight
    put kWidgetHeight into tWidgetHeight
-   put max (the height of this card - ( 12 * kControlGap + kLabelFieldHeight  \
+   put max(the height of this card - ( 7 * kControlGap + kLabelFieldHeight  \
          + kKeyFieldHeight + kValueFieldHeight + kSetButtonsHeight  \
-         + tWidgetHeight), kValueFieldHeight) into tValueHeight
+         + tWidgetHeight + tTopGroupHeight), 0) into tValueHeight
 
    set the height of widget 1 of me to tWidgetHeight
    set the width of widget 1 of me to the width of me
