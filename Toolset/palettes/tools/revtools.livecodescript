@@ -1,4 +1,4 @@
-﻿script "revTools"
+﻿script "revTools" with behavior "revPaletteBehavior"
 constant BLOCK_SIZE = 20
 
 constant kToolsColumnCountDefault = 3
@@ -170,6 +170,7 @@ on generatePalette
    repeat while there is a group "contents"
       delete group "contents"
    end repeat
+   reset the templateGroup
    create group "contents"
    
    # Clear the error group
