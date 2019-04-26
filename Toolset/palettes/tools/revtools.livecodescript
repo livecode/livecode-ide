@@ -1,4 +1,4 @@
-﻿script "revTools" with behavior "revPaletteBehavior"
+﻿script "revTools"
 constant BLOCK_SIZE = 20
 
 constant kToolsColumnCountDefault = 3
