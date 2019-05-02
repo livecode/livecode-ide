@@ -33,8 +33,10 @@ end menuPick
 
 on closeCard
    historySave
-   if there is a stack getCaller() then
-      send "revSEFindFinalize" to (getCaller())
+   local tCaller
+   put getCaller() into tCaller
+   if there is a stack tCaller then
+      send "revSEFindFinalize" to tCaller
    end if
    pass closeCard
 end closeCard
@@ -135,7 +137,11 @@ command updateButtonStates
 end updateButtonStates
 
 private function getCaller
-   return the long id of the cCaller of the owner of me
+   if there is a stack (the cCaller of the owner of me) then
+      return the long id of the cCaller of the owner of me
+   else
+      return empty
+   end if
 end getCaller
 
 # Returns
