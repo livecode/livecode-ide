@@ -31,7 +31,8 @@ private command updateTabButtons pSettings
    end repeat
    set the visible of button "OSXchecked" of group "checks" of me to tEnableMacTick
    
-   set the visible of button "Windowschecked" of group "checks" of me to pSettings["Windows"] = true
+   set the visible of button "Windowschecked" of group "checks" of me to pSettings["Windows"] = true or \
+         pSettings["Windows x86-64"] = true
    // SN-2015-01-13: [[ Bug 14373 ]] Check also if Linux 64 or Linux ARM are checked
    set the visible of button "UnixChecked" of group "checks" of me to pSettings["Linux"] = true \
          or pSettings["Linux x64"] = true \

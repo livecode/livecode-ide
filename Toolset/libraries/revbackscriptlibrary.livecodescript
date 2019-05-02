@@ -2591,9 +2591,9 @@ function revExternalPath pDriver, pPlatform, pArchitecture
          put revEnvironmentUserRuntimePath() & "/Mac OS X/" & pArchitecture & "/Externals/Legacy/Externals.txt" into tLegacyFile
          break
       case "Windows"
-         put revEnvironmentRuntimePath() & "/Windows/x86-32/Externals/Externals.txt" into tEnvironmentFile
-         put revEnvironmentUserRuntimePath() & "/Windows/x86-32/Externals/Externals.txt" into tUserFile
-         put revEnvironmentUserRuntimePath() & "/Windows/x86-32/Externals/Legacy/Externals.txt" into tLegacyFile
+         put revEnvironmentRuntimePath() & "/Windows/" & pArchitecture & "/Externals/Externals.txt" into tEnvironmentFile
+         put revEnvironmentUserRuntimePath() & "/Windows/" & pArchitecture & "/Externals/Externals.txt" into tUserFile
+         put revEnvironmentUserRuntimePath() & "/Windows/" & pArchitecture & "/Externals/Legacy/Externals.txt" into tLegacyFile
          break
          # OK-2007-08-14 : Linux support reinstated
       case "Linux"
