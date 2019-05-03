@@ -41,6 +41,14 @@ on editorResize
    local tRect, tFieldRect
    put the rect of me into tRect
    
+   local tManualHeight, tManualGroupHeight
+   put getManualHeight() into tManualHeight
+   if tManualHeight is not empty then
+      put tManualHeight - the height of group "background" - kControlGap - 2 into tManualGroupHeight
+      set the height of me to tManualGroupHeight
+      set the height of the owner of me to tManualGroupHeight
+   end if
+   
    put tRect into tFieldRect
    put item 2 of tFieldRect + kButtonHeight + kColumnHeaderHeight + kControlGap into item 2 of tFieldRect
    set the effective rect of field "stackFilesField" of me to tFieldRect

@@ -176,8 +176,19 @@ private function inspectorCalculateLayout pGroupList, pLeft, pTop, pRowWidth, pS
    return tInspectorHeight
 end inspectorCalculateLayout
 
-local sManualHeight
+local sManualHeightOfStack, sNewHeight, sOldHeight
 on inspectorLayoutGroups pGroupList, pForceHeight
+   
+   # store height of stack when manually resizing
+   if pForceHeight is not true and the mouse is "down" and sNewHeight is not sOldHeight then
+      put the height of this stack into sManualHeightOfStack
+   end if
+   
+   # reset sManualHeightOfStack to empty if inspector was closed
+   if not the visible of me then
+      put empty into sManualHeightOfStack
+   end if
+   
    lock screen
    # Get the margin, padding
    local tMargin, tPadding
@@ -277,23 +288,41 @@ on inspectorLayoutGroups pGroupList, pForceHeight
       set the maxheight of me to tStackHeight
    end if
    
-   if pForceHeight and not sManualHeight then
-      -- Make stack smaller rather than go offscreen
-      local tScreenRect
-      put revIDEStackScreenRect(the long id of me, true) into tScreenRect
-      set the height of me to min(tStackHeight, item 4 of tScreenRect - tStackTop)
+   # reset manualHeight if user expands a non-expandable tab to full height
+   if not pForceHeight and not tCanExpand and sManualHeightOfStack is tStackHeight then
+      put empty into sManualHeightOfStack
+   end if
+   
+   -- Make stack smaller rather than go offscreen
+   local tScreenRect, tNewStackHeight
+   put revIDEStackScreenRect(the long id of me, true) into tScreenRect
+   
+   if sManualHeightOfStack is not empty then
+      put min(sManualHeightOfStack, tStackHeight) into tNewStackHeight
+      set the height of this stack to min(tNewStackHeight, item 4 of tScreenRect - tStackTop)
+   else
+      set the height of this stack to min(tStackHeight, item 4 of tScreenRect - tStackTop)
    end if
    set the left of me to tStackLeft
    set the top of me to tStackTop
    
+   local tvScrollIsOn, tvScrollChanged
+   put false into tvScrollChanged
+   
    if there is a group "inspector" of me then
-      if the height of me < tStackHeight then
-         put true into sManualHeight
+      put the vScrollbar of group "inspector" of me into tvScrollIsOn
+      if the height of me < tStackHeight - tMargin then
          set the vscrollbar of group "inspector" of me to true
+         if not tvScrollIsOn then
+            put true into tvScrollChanged
+         end if
       else
-         put false into sManualHeight
          set the vscrollbar of group "inspector" of me to false
+         if tvScrollIsOn then 
+            put true into tvScrollChanged
+         end if
       end if
+
       set the rect of group "inspector" of me to \
             item 1 of tContentRect, \ 
             item 2 of tContentRect, \ 
@@ -301,8 +330,23 @@ on inspectorLayoutGroups pGroupList, pForceHeight
             the bottom of this card of me - tMargin
    end if
    unlock messages
+   
+   # adapt right size of controls to vScrollbar on and off
+   if tvScrollChanged then resizeInspector
+   
    unlock screen
 end inspectorLayoutGroups
+
+before resizeStack pNewWidth, pNewHeight, pOldWidth, pOldHeight
+   put pNewHeight into sNewHeight
+   put pOldHeight into sOldHeight
+   pass resizeStack
+end resizeStack
+
+function getManualHeight
+   return sManualHeightOfStack
+end getManualHeight
+
 
 local sSelectedSection, sSelectedSectionIndex
 private on inspectorSectionSet pSection
