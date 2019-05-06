@@ -302,3 +302,40 @@ end editorExpandVertical
 getProp editorExpandVertical
    return sExpandVertical
 end editorExpandVertical
+
+on rawKeyDown pKeyNum
+   -- allow scroll wheel, pgup, & pgdn to scroll the text field
+   -- bubble up to the parent if at either limit
+   if the target contains "field" then
+      local tScrollPosition, tScrollAmount, tScrollMax
+      put the vScroll of the target into tScrollPosition
+      put 0 into tScrollAmount
+      switch pKeyNum
+         case "65365"
+            put 45 into tScrollAmount
+            -- fall through
+         case "65309"
+            if tScrollPosition is 0 then pass rawKeyDown
+            add 5 to tScrollAmount
+            put max(0, tScrollPosition - tScrollAmount) into tScrollPosition
+            break
+         case "65366"
+            put 45 into tScrollAmount
+            -- fall through
+         case "65308"
+            add 5 to tScrollAmount
+            put the formattedHeight of the target - \
+                  the height of the target into tScrollMax
+            if tScrollPosition is tScrollMax then pass rawKeyDown
+            put min(tScrollMax, tScrollPosition + tScrollAmount) \
+                  into tScrollPosition
+            break
+         default
+            pass rawKeyDown
+      end switch
+      set the vScroll of the target to tScrollPosition
+   else
+      pass rawKeyDown
+   end if
+end rawKeyDown
+
