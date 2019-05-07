@@ -170,8 +170,8 @@ end socialMediaUnhiliteAll
 
 command recentFilesInitialise
    set the dgProps["hilite color"] of group "recentFiles" to uiColor("edition")
-   set the linkColor to uiColor("edition")
-   set the underlineLinks to false
+   set the linkColor of this stack to uiColor("edition")
+   set the underlineLinks of this stack to false
 end recentFilesInitialise
 
 command recentFilesSet
