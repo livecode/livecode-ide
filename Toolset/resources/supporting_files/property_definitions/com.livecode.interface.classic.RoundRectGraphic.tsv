@@ -4,6 +4,7 @@ title	Round Rectangle Graphic
 												
 -----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 name							Round Rectangle					
+label
 tooltip												
 style							roundrect	rectangle,roundrect,line,oval,regular,line,curve,polygon				
 opaque							true					

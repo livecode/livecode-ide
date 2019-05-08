@@ -3,7 +3,8 @@ type	graphic tool
 title	Curve Graphic											
 												
 -----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
-name							Curve					
+name							Curve				
+label	
 tooltip												
 style							curve	rectangle,roundrect,line,oval,regular,line,curve,polygon				
 opaque							false					
