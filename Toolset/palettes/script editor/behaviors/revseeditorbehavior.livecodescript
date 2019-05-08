@@ -29,12 +29,19 @@ command resize
    put tMyRect[3] - tMyRect[1] into tMyWidth
    put tMyRect[4] - tMyRect[2] into tMyHeight
 
-   local tGutterWidth
+   local tGutterWidth, tFoldingWidth
+   
+   if sePrefGet("editor,folding") then
+      put sePrefGet("editor,foldingwidth") into tFoldingWidth
+   else
+      put 0 into tFoldingWidth
+   end if
+   
    if sePrefGet("gutter,linenumbers") then
-      put max(formattedWidth of field "Numbers" of tControls["gutter"], \
+      put max(formattedWidth of field "Numbers" of tControls["gutter"] + tFoldingWidth, \
          kMinGutterWidth) into tGutterWidth
    else
-      put kMinGutterWidth into tGutterWidth
+      put kMinGutterWidth + tFoldingWidth into tGutterWidth
    end if
 
    local tFindHeight
@@ -1097,6 +1104,22 @@ on mouseDown pButtonNumber
       pass mouseDown
    end if
    
+   if sePrefGet("Editor,folding") then
+      if the commandKey is down then
+         local tLineText
+         local tAllowedLineStarts
+         put "on,private,function,command,setProp,getProp,after,before,if,repeat,switch,case,try,else" into tAllowedLineStarts
+         put line sLastClickLine of field "Script" of me into tLineText
+         if word 1 of tLineText is among the items of tAllowedLineStarts or (word 1 of tLineText begins with "#<" and char 3 of word 1 of tLineText <> "/") then
+            if token 1 of tLineText is "else" and token -1 of tLineText <> "else" then
+               exit mouseDown
+            end if
+            folding
+            exit mouseDown
+         end if
+      end if
+   end if
+   
    prepareContextMenu
    showContextMenu
    pass mouseDown
@@ -1401,6 +1424,43 @@ private command findText pText, pGlobal, pStartFrom, pEndAt, pSearch
       end try
    end repeat
    delete the last char of tResult
+   
+   if sePrefGet("Editor,folding") then
+      if item 1 of line - 1 of tResult > 0 then
+         local tStartLine, tEndLine, tCounter, tFoldStart, tFoldEnd, tNoOfLines
+         put the number of lines of char 1 to (item 1 of line - 1 of tResult) of pText into tStartLine
+         
+         if the hidden of line tStartLine of field "Script" of me then
+            put the number of lines of pText into tNoOfLines
+            lock screen
+            
+            -- search backwards until not hidden
+            put tStartLine - 1 into tCounter
+            repeat with i = tCounter down to 1
+               if NOT (the hidden of line i of field "Script" of me) then
+                  put i into tFoldStart
+                  exit repeat
+               end if
+            end repeat
+            
+            -- search forward
+            put the number of lines of pText into tNoOfLines
+            put tStartLine into tCounter
+            put tNoOfLines into tFoldEnd
+            repeat with i = tCounter to tNoOfLines
+               if NOT (the hidden of line i of field "Script" of me) then
+                  put i - 1 into tFoldEnd
+                  exit repeat
+               end if
+            end repeat
+            
+            unfoldAll tFoldStart, tFoldEnd + 1
+            synchFoldedFieldNumbers
+            unlock screen
+         end if -- if the hidden of line tStartLine of field "Script" of me
+      end if -- if item 1 of line - 1 of tResult > 0
+   end if -- if sePrefGet("Editor,folding")
+   
    return tResult
 end findText
 
@@ -1433,7 +1493,12 @@ command findMarkResult pStart, pEnd, pInteractive
    # The field is scrolled by the minimum amount required to bring the current search
    # result fully into view.
    local tHeight
-   put the formattedHeight of char 1 to pEnd of field "Script" of me into tHeight
+   
+   if not sePrefGet("Editor,folding") then
+      put the formattedHeight of char 1 to pEnd of field "Script" of me into tHeight
+   else
+      put the formattedTop of char pEnd of field "Script" of me - the top of field "Script" of me + the vScroll of field "Script" of me into tHeight
+   end if
    
    # If tHeight is before the beginning of the visible area then scroll back until its the first line
    local tScroll
@@ -2919,3 +2984,1206 @@ private command addStack pStack, pObeyDontSearch, pMarked, pIgnorePasswordProtec
    
    return tResult
 end addStack
+
+on folding
+   local tStartLine
+   put the word 2 of the clickLine into tStartLine
+   foldUnfold tStartLine
+end folding
+
+command foldUnfold pStartLine
+   local tSelectedLine, tSelectedChunk, tFoldingOpen, tFoldingClosed, t
+   local tStartLine, tEndLine, tStartAndEnd, tVerticalPixAbove
+   
+   put the formattedTop of line pStartLine of field "Script" of me into tVerticalPixAbove
+   
+   parseStructs pStartLine
+   
+   put the result into tStartAndEnd
+   if tStartAndEnd is empty then exit foldUnfold
+   
+   put item 1 of tStartAndEnd into tStartLine
+   put item 2 of tStartAndEnd into tEndLine
+   
+   if ((tStartLine = "" OR tEndLine = "") OR (tStartLine = tEndLine)) then exit foldUnfold
+   
+   put word 2 of the selectedLine into tSelectedLine
+   put the selectedChunk into tSelectedChunk
+   
+   put sePrefGet("editor,foldingopen") into tFoldingOpen
+   put sePrefGet("editor,foldingClosed") into tFoldingClosed
+   
+   local tStatus, tOpenOrClosed
+   
+   put line tStartLine of field "Folding" of group "Gutter" of me into tOpenOrClosed
+   if tOpenOrClosed is tFoldingOpen then
+      put "open" into tStatus
+   else
+      put "closed" into tStatus
+   end if
+   
+   ## Gather sub structs that may have been folded to keep them folded
+   if tStatus = "closed" then -- will be unfolded now --> get sub struct status
+      local tMainUnfoldA
+      
+      local tLineNumbersOfFoldedSubStructs, tFoldingA, tLinesToShow, tLineDiff
+      
+      ## will be working on a subset of styledText of field "Folding" which will start at 1
+      put tStartLine - 1 into tLineDiff
+      
+      ## first get a list of all lines to unfold
+      repeat with i = tStartLine + 1 - tLineDiff to tEndLine - tLineDiff
+         put i & cr after tMainUnfoldA
+      end repeat
+      delete char -1 of tMainUnfoldA
+      put tMainUnfoldA into tLinesToShow
+      split tMainUnfoldA by return as set
+      
+      ## find the folded substructs
+      put the styledText of line tStartLine to tEndLine + 1 of field "Folding" of group "Gutter" of me into tFoldingA
+      repeat for each line aLineNumber in tLinesToShow
+         if tFoldingA[aLineNumber]["runs"][1]["text"] = tFoldingClosed then
+            put aLineNumber & cr after tLineNumbersOfFoldedSubStructs
+         end if
+      end repeat
+      delete last char of tLineNumbersOfFoldedSubStructs
+      
+      ## find the lines that should NOT be unfolded
+      if tLineNumbersOfFoldedSubStructs <> empty then
+         local tStartAndEndsOfSubStructs, tResult
+         
+         repeat for each line aSubStruct in tLineNumbersOfFoldedSubStructs
+            
+            parseStructs aSubstruct + tLineDiff
+            put the result into tResult
+            
+            put item 1 of tResult - tLineDiff & comma & item 2 of tResult - tLineDiff & cr after tStartAndEndsOfSubStructs
+         end repeat
+         delete char -1 of tStartAndEndsOfSubStructs
+         
+         local tSubLinesFoldA, tSubLinesKeepVisible
+         ## make list of lines that should NOT be unfolded
+         repeat for each line aLine in tStartAndEndsOfSubStructs
+            repeat with i = item 1 of aLine + 1 to item 2 of aLine
+               put i & cr after tSubLinesFoldA
+            end repeat
+         end repeat
+         
+         delete char -1 of tSubLinesFoldA
+         split tSubLinesFoldA by return as set
+         
+         local tLinesToUnfold, tFinalUnfoldA
+         put "" into tLinesToUnfold
+         
+         difference tMainUnfoldA with tSubLinesFoldA into tFinalUnfoldA
+         put the keys of tFinalUnfoldA into tLinesToUnfold
+         
+         ## tLinesToUnfold is the list of lines to unfold excluding the ones that stay folded
+         sort tLinesToUnfold numeric
+      end if
+   end if
+   
+   lock screen
+   
+   if tStatus = "closed" then -- will be unfolded now
+      
+      local tScriptA, tNumbersA, tStart
+      
+      put the styledText of line tStartLine to tEndLine + 1 of field "Script" of me into tScriptA
+      put the styledText of line tStartLine to tEndLine + 1 of field "Numbers" of group "Gutter" of me into tNumbersA
+      
+      if tLinesToUnfold = empty then put tLinesToShow into tLinesToUnfold
+      put line 1 of tLinesToUnfold into tStart
+      
+      put "foldable,open" into tScriptA[tStart - 1]["metadata"]
+      put tFoldingOpen into tFoldingA[tStart - 1]["runs"][1]["text"]
+      
+      repeat for each line aLine in tLinesToUnfold
+         put "false" into tScriptA[aLine]["style"]["hidden"]
+         put "false" into tNumbersA[aLine]["style"]["hidden"]
+         put "false" into tFoldingA[aLine]["style"]["hidden"]
+      end repeat
+      
+      set the styledText of line tStartLine to tEndLine + 1 of field "Script" of me to tScriptA
+      set the styledText of line tStartLine to tEndLine + 1 of field "Numbers" of group "Gutter" of me to tNumbersA
+      set the styledText of line tStartLine to tEndLine + 1 of field "Folding" of group "Gutter" of me to tFoldingA
+      
+   else -- will be folded now
+      
+      set the metadata of line tStartLine of field "Script" of me to "foldable,folded"
+      put tFoldingClosed into line tStartLine of field "Folding" of me
+      
+      set the hidden of line tStartLine + 1 to tEndLine  of field "Numbers" of me to true
+      set the hidden of line tStartLine + 1 to tEndLine of field "Folding" of me to true
+      set the hidden of line tStartLine + 1 to tEndLine of field "Script" of me to true
+   end if
+   
+   if tSelectedLine <> "" then
+      if tSelectedLine >= tStartLine + 1 AND tSelectedLine <= tEndLine + 1 then
+         select before word 1 of line tStartLine of field "Script" of me
+      else
+         select char word 2 of tSelectedChunk to word 4 of tSelectedChunk  of field "Script" of me
+      end if
+   end if
+   
+   local tVerticalPixNow
+   put the formattedTop of line pStartLine of field "Script" of me into tVerticalPixNow
+   
+   ## force the location of selection triangle to be constant when folding and unfolding
+   set the vScroll of field "Script" of me to the vScroll of field "Script" of me - (tVerticalPixAbove - tVerticalPixNow)
+   dispatch "updateScroll" to group "Gutter" of me
+   updateGutterRequest empty, empty, empty, empty, false, true, true
+   
+   unlock screen
+end foldUnfold
+
+on unfoldAll pStartLine, pEndLine
+   local tFoldText, tFoldingOpen, tFoldingClosed, tSelectedLine
+   local tVerticalPixAbove, tVerticalPixNow
+   
+   put sePrefGet("editor,foldingopen") into tFoldingOpen
+   put sePrefGet("editor,foldingClosed") into tFoldingClosed
+   
+   put word 2 of the selectedLine into tSelectedLine
+   if tSelectedLine <> "" then
+      put the formattedTop of line tSelectedLine of field "Script" of me into tVerticalPixAbove
+   end if
+   
+   lock screen
+   if pStartLine = "" then
+      local tSelectedChunk, tFrom, tTo
+      put the selectedChunk of field "Script" of me into tSelectedChunk
+      put word 2 tSelectedChunk into tFrom
+      put word 4 of tSelectedChunk into tTo
+      
+      set the hidden of line 1 to -1 of field "Script" of me to false
+      set the hidden of line 1 to -1 of field "Numbers" of me to false
+      set the hidden of line 1 to -1 of field "Folding" of me to false
+      
+      local tScriptA
+      put the styledText of field "Script" of me into tScriptA
+      repeat for each key aKey in tScriptA
+         if tScriptA[aKey]["metadata"]<> empty then
+            put "folding,open" into tScriptA[aKey]["metadata"]
+         end if
+      end repeat
+      
+      set the styledText of field "Script" of me to tScriptA
+      select char tFrom to tTo of field "Script" of me
+      
+      put the text of field "Folding" of me into tFoldText
+      replace tFoldingClosed with tFoldingOpen in tFoldText
+      put tFoldText into field "Folding" of me
+      
+   else -- pStartLine not empty = unfold range
+      
+      set the hidden of line pStartLine to pEndLine of field "Script" of me to false
+      set the hidden of line pStartLine to pEndLine of field "Numbers" of me to false
+      set the hidden of line pStartLine to pEndLine of field "Folding" of me to false
+      
+      repeat with i = pStartLine to pEndline
+         if the metadata of line i of field "Script" of me <> empty then
+            set the metadata of line i of field "Script" of me to "folding,open"
+            put tFoldingOpen into line i of field "Folding" of me
+         end if
+      end repeat
+   end if
+   
+   if tSelectedLine <> "" then
+      put the formattedTop of line tSelectedLine of field "Script" of me into tVerticalPixNow
+      
+      ## force the location of selection triangle to be constant when folding and unfolding
+      set the vScroll of field "Script" of me to the vScroll of field "Script" of me - (tVerticalPixAbove - tVerticalPixNow)
+      dispatch "updateScroll" to group "Gutter" of me
+   end if
+   
+   updateGutterRequest empty, empty, empty, empty, false, true, true
+   unlock screen
+end unfoldAll
+
+on foldAll
+   lock screen
+   
+   local tHandlers, tHandlerStartLine, tHandlerEndLIne
+   local tScriptA, tNumbersA, tFoldA
+   local tPathToHidden
+   local tSelectedLine
+   
+   scriptCompile
+   if the result is not empty then exit foldAll
+   
+   local tFoldingOpen, tFoldingClosed
+   
+   put sePrefGet("editor,foldingopen") into tFoldingOpen
+   put sePrefGet("editor,foldingClosed") into tFoldingClosed
+   
+   put word 2 of the selectedLine of field "Script" of me into tSelectedLine
+   if tSelectedLine <> "" then
+      local tVerticalPixAbove
+      put the formattedTop of line tSelectedLine of field "Script" of me into tVerticalPixAbove
+   end if
+   
+   put "style,hidden" into tPathToHidden
+   split tPathToHidden by comma
+   
+   put the styledText of field "Script" of me into tScriptA
+   put the styledText of field "Numbers" of me into tNumbersA
+   put the styledText of field "Folding" of me into tFoldA
+   
+   getHandlerList
+   put the result into tHandlers
+   
+   -- remove cruft in tHandlers
+   local tCollect
+   repeat for each line tLine in tHandlers
+      if word 4 of tLine is a number  then
+         put word 1 to 4 of tLine & cr after tCollect
+      end if
+   end repeat
+   delete char - 1 of tCollect
+   put tCollect into tHandlers
+   
+   sort tHandlers numeric by word 3 of each
+   
+   repeat for each line aHandler in tHandlers
+      put word 3 of aHandler into tHandlerStartLine
+      put word 4 of aHandler into tHandlerEndLIne
+      
+      put tFoldingClosed into tFoldA[tHandlerStartLine]["runs"][1]["text"]
+      put "folded" into item 2 of tScriptA[tHandlerStartLine]["metadata"]
+      
+      repeat with i = tHandlerStartLIne + 1 to tHandlerEndLIne - 1
+         put "true" into tScriptA[i][tPathToHidden]
+         put "true" into tNumbersA[i][tPathToHidden]
+         put "true" into tFoldA[i][tPathToHidden]
+      end repeat
+   end repeat
+   
+   set the styledText of field "Script" of me to tScriptA
+   set the styledText of field "Numbers" of me to tNumbersA
+   set the styledText of field "Folding" of me to tFoldA
+   
+   ## force the location of selection to be constant when folding and unfolding
+   if tSelectedLine <> "" then
+      local tVerticalPixNow
+      put the formattedTop of line tSelectedLine of field "Script" of me into tVerticalPixNow
+      
+      ## when folding don't let selection in hidden line
+      local tNewLine
+      put tSelectedLine into tNewLine
+      if tScriptA[tNewLine][tPathToHidden] then
+         repeat while tNewLine > 0
+            subtract 1 from tNewLine
+            if NOT tScriptA[tNewLine][tPathToHidden] then
+               exit repeat
+            end if
+         end repeat
+      end if
+      
+      local tDiffLines
+      put tSelectedLine - tNewLine into tDiffLines
+      if tDiffLines <> 0 then subtract 1 from tDiffLines
+      
+      set the vScroll of field "Script" of me to  \
+            the vScroll of field "Script" of me - (tVerticalPixAbove - tVerticalPixNow) \
+            + (tDifflines * the effective textHeight of field "Script" of me)
+      
+      select before line tNewLine of field "Script" of me
+   end if
+   selectionUpdate
+   synchFoldedFieldNumbers
+   unlock screen
+end foldAll
+
+on synchFoldedFieldNumbers
+   ## sent whenever folding has to be synced between script, numbers, and folding
+   local tScriptA, tFoldA, tNumbersA
+   local tFoldingOpen, tFoldingClosed
+   
+   lock screen
+   
+   put sePrefGet("editor,foldingopen") into tFoldingOpen
+   put sePrefGet("editor,foldingClosed") into tFoldingClosed
+   
+   put the styledText of field "Script" of me into tScriptA
+   put the styledText of field "Numbers" of me into tNumbersA
+   put the styledText of field "Folding" of me into tFoldA
+   
+   findFoldables tScriptA, tFoldA
+   
+   repeat for each key aKey in tScriptA
+      put tScriptA[aKey]["style"]["hidden"] into tNumbersA[aKey]["style"]["hidden"]
+      put tScriptA[aKey]["style"]["hidden"] into tFoldA[aKey]["style"]["hidden"]
+      if item 1 of tScriptA[aKey]["metadata"] = "foldable" then
+         
+         if item 2 of tScriptA[aKey]["metadata"] = "folded" then
+            put tFoldingClosed into tFoldA[aKey]["runs"][1]["text"]
+         else
+            put tFoldingOpen into tFoldA[aKey]["runs"][1]["text"]
+         end if
+      end if
+   end repeat
+   
+   set the styledText of field "Numbers" of me to tNumbersA
+   set the styledText of field "Folding" of me to tFoldA
+   
+   updateGutterRequest empty, empty, empty, empty, false, true, true
+   dispatch "updateScroll" to group "Gutter" of me
+   
+   unlock screen
+end synchFoldedFieldNumbers
+
+on clearFolding
+   ## sent when turning off folding in Edit Menu
+   local tLineNumbers
+   lock screen
+   set the hidden of line 1 to -1 of field "Script" of me to false
+   set the metadata of line 1 to -1 of field "Script" of me to ""
+   put field "Numbers" of me into field "Numbers" of me -- unfolds
+   put the number of lines of field "Folding" of me into tLineNumbers
+   put "" into field "Folding" of me
+   put "" into line tLineNumbers of field "Folding" of me -- unfolds and removes text
+   updateGutterRequest empty, empty, empty, empty, false, true, true
+   resize
+   unlock screen
+end clearFolding
+
+on checkFolding
+   ## sent from script tabs
+   local tFolding
+   dispatch function "sePrefGet" to field "Script" of me with "Editor,folding"
+   put the result into tFolding
+   if not tFolding then
+      local tHidden
+      put the hidden of line 1 to -1 of field "Script" of me into tHidden
+      if not (tHidden = false) then
+         send "unfoldall" to field "Script" of me
+      end if
+   else
+      lock screen
+      set the hidden of line 1 to -1 of field "Numbers" of group "Gutter" of me to false
+      set the hidden of line 1 to -1 of field "Folding" of group "Gutter" of me to false
+      send "synchFoldedFieldNumbers" to field "Script" of me
+      unlock screen
+   end if
+end checkFolding
+
+private function getNextNonEmptyLine @pTextA, pLineCount
+   local tInc, tMax
+   local tNextLIneText
+   
+   put pLineCount + 1 into tInc
+   put pTextA[tInc] into tNextLIneText
+   
+   if tNextLIneText = "" then
+      put item 2 of the extents of pTextA into tMax
+      repeat until tNextLIneText <> ""
+         add 1 to tInc
+         if tInc > tMax then exit to top -- an error occurred
+         put pTextA[tInc] into tNextLIneText
+      end repeat
+   end if
+   return tNextLIneText
+end getNextNonEmptyLine
+
+private function getTokenArray  pLIneCount
+   
+   ## get text of script until end of current handler
+   local tOffsetLine
+   local tSkipLineNo
+   local tText
+   local tEndList
+   
+   put "if,repeat,switch,try" into tEndList
+   put 0 into tSkipLineNo
+   put 0 into tOffsetLine
+   
+   put line pLineCount to -1 of field "Script" of me into tText
+   ## find "end handlerName" by excluding all other "end" forms
+   repeat
+      put lineOffset("end", tText, tSkipLineNo) into tOffsetLine
+      if tOffsetLine = 0 then exit repeat
+      add tOffsetLine to tSkipLineNo
+      if token 2 of line tSkipLineNo of tText is among the items of tEndList then
+         next repeat
+      else
+         if token 1 of line tSkipLineNo of tText = "end" then -- make sure it is not in comment
+            exit repeat
+         else
+            next repeat
+         end if
+      end if
+   end repeat
+   put line 1 to tSkipLineNo of tText into tText
+   
+   local tNoLines, tCounter
+   local tCR, tCRs
+   local tTextA, tTextTempA, tSubText
+   local tQuoteSlashStart, tQuoteSlashEnd, tDoubleAsterix
+   
+   put cr into tCR
+   put 0 into tCounter
+   
+   put quote & "/" & "*" & quote into tQuoteSlashStart
+   put quote & "*" & "/" & quote into tQuoteSlashEnd
+   put  "/" & "*" & "*" into tDoubleAsterix
+   
+   replace tQuoteSlashStart with "slashAsterix" in tText
+   replace tQuoteSlashEnd with "asterixSlash" in tText
+   replace tDoubleAsterix with "doubleAsterix" in tText
+   
+   set the lineDelimiter to "/" & "*"
+   set the itemDelimiter to "*" & "/"
+   
+   local tInspect
+   put item 1 of line 1 of tText into tInspect
+   
+   local tWholeText, tTokenOnly
+   
+   ## catch clicking on a keyword line in slash comment
+   if the number of items of line 1 of tText > 1 then
+      return ""
+   end if
+   
+   put the number of lines of tText into tNoLines
+   if tNoLines > 1 then
+      repeat with i = 2 to tNoLines
+         put item 1 of line i of tText into tSubText
+         repeat for each char aChar in tSubText
+            if aChar = tCR then add 1 to tCounter
+         end repeat
+         repeat tCounter
+            put tCR after tCRs
+         end repeat
+         put tCRs into item 1 of line i of tText
+         put "" into tCRs
+         put 0 into tCounter
+      end repeat
+      set the lineDelimiter to cr
+      set the itemDelimiter to comma
+      replace "/" & "*" with empty in tText
+      replace "*" & "/" with empty in tText
+      replace "slashAsterix" with tQuoteSlashStart in tText
+      replace "asterixSlash" with tQuoteSlashEnd in tText
+      replace "doubleAsterix" with "/" & "*" & "*" in tText
+   end if
+   
+   local tInc
+   put pLineCount - 1 into tInc
+   split tText by cr
+   repeat for each key aLineNumber in tText
+      put tText[aLineNumber] into tWholeText
+      if tWholeText contains quote then
+         set the itemDelimiter to quote
+         repeat with i =  the number of items of tWholeText down to 1
+            if i mod 2 = 0 then put empty into item i of tWholeText
+         end repeat
+         set the itemDelimiter to comma
+      end if
+      put token 1 to -1 of tWholeText into tTextA[aLineNumber + tInc]
+      if  tWholeText contains "\" then put "\" after tTextA[aLineNumber + tInc]
+   end repeat
+   return tTextA
+end getTokenArray
+
+on findFoldables @pScriptA, @pFoldA
+   local tAllowedLineStarts, tCollect, tInsideCommentA, tCounter, tOffset, tSkip
+   local tText, tCommentPos, tScriptText
+   local tFoldingOpen, tFoldingClosed
+   
+   lock screen
+   put textGetScript() into tScriptText
+   
+   ## find /* */ comments
+   put 0 into tOffset
+   put 0 into tSkip
+   repeat
+      put lineOffset("/*", tScriptText, tSkip) into tOffset
+      if tOffset = 0 then exit repeat
+      add tOffset to tSkip
+      put tSkip & cr after tCommentPos
+   end repeat
+   
+   put 0 into tOffset
+   put 0 into tSkip
+   repeat
+      put lineOffset("*/", tScriptText, tSkip) into tOffset
+      if tOffset = 0 then exit repeat
+      add tOffset to tSkip
+      put tSkip & cr after tCommentPos
+   end repeat
+   
+   ## remove hits inside /* */ comments from list
+   if tCommentPos <> "" then
+      sort tCommentPos ascending numeric
+      
+      local tStart, tEnd
+      repeat with i = 1 to the number of lines of tCommentPos - 2 step 2
+         put line i of tCommentPos into tStart
+         put line i + 1 of tCommentPos into tEnd
+         repeat with j = tStart to tEnd
+            put j & cr after tInsideCommentA
+         end repeat
+      end repeat
+      delete last char of tInsideCommentA
+      split tInsideCommentA by return as set
+   end if
+   
+   put sePrefGet("editor,foldingopen") into tFoldingOpen
+   put sePrefGet("editor,foldingClosed") into tFoldingClosed
+   put "on,private,function,command,setProp,getProp,after,before,if,repeat,switch,case,try,else" into tAllowedLineStarts
+   put 0 into tCounter
+   
+   repeat for each line aLine in tScriptText
+      add 1 to tCounter
+      if (tInsideCommentA[tCounter]) then next repeat -- bail out since the line is within a commented section
+      
+      if token 1 of aLine is among the items of tAllowedLineStarts or word 1 of aLine begins with "#<" then
+         
+         -- test for if variants
+         if (token 1 of aLine is "if") then
+            -- exclude one-liners and two-liners of "if"
+            if (aLine contains "then") and not (token - 1 of aLine = "then") then
+               
+               if "else" is among the tokens of aLine then
+                  next repeat
+               end if
+               
+               local tSubCounter, tNextNonEmptyLine
+               put tCounter + 1 into tSubCounter
+               -- except if next coding line starts with else /else if
+               repeat
+                  put line tSubCounter of tScriptText into tNextNonEmptyLine
+                  if the number of tokens of tNextNonEmptyLine > 0 then exit repeat
+                  add 1 to tSubCounter
+               end repeat
+               
+               if token 1 of tNextNonEmptyLine = "else" then
+                  
+                  if the number of tokens of tNextNonEmptyLine > 1 then
+                     next repeat
+                  end if
+                  
+                  if token -1 of tNextNonEmptyLine is "then" then
+                     put tCounter & cr after tCollect -- not just a one-liner
+                     next repeat
+                  end if
+                  
+                  if token 2 of tNextNonEmptyLine is "if"  \
+                        and "then" is among the tokens of tNextNonEmptyLine  \
+                        and token -1 of tNextNonEmptyLine <> "then" then
+                     next repeat
+                  end if
+                  
+                  if token -1 of tNextNonEmptyLine = "else" then
+                     put tCounter & cr after tCollect -- not just a one-liner
+                     next repeat
+                  end if
+                  
+               else
+                  next repeat -- just a one-liner
+               end if
+               
+            else -- (aLine contains "then") and not (token - 1 of aLine = "then")
+               
+               put tCounter + 1 into tSubCounter
+               -- test for "then" in line after if without then
+               repeat
+                  put line tSubCounter of tScriptText into tNextNonEmptyLine
+                  if the number of tokens of tNextNonEmptyLine > 0 then exit repeat
+                  add 1 to tSubCounter
+               end repeat
+               
+               if token 1 of tNextNonEmptyLine is "then" then
+                  if token -1 of tNextNonEmptyLine is "then" then
+                     put tCounter & cr after tCollect
+                     next repeat
+                  end if
+                  if "else" is among the words of tNextNonEmptyLine then
+                     next repeat
+                  end if
+               end if
+               
+               if token - 1 of aLine is "then" then
+                  if "else" is among the tokens of tNextNonEmptyLine  \
+                        and the number of tokens of tNextNonEmptyLine > 1 \
+                        and token 1 of tNextNonEmptyLine <> "if" then
+                     next repeat
+                  end if
+               end if
+               
+               put tCounter & cr after tCollect -- regular if
+               next repeat
+               
+            end if -- (aLine contains "then") and not (token - 1 of aLine = "then")
+         end if --token 1 of aLine is "if
+         
+         if token 1 of aLine is "else" and not (token -1 of aLine is "else") then next repeat
+         
+         -- block comments "#<"
+         if word 1 of aLine begins with "#<" then
+            if not (word 1 of aLine begins with "#</") then
+               put tCounter & cr after tCollect
+               next repeat
+            else
+               next repeat
+            end if
+         end if
+         -- end block comments
+         
+         -- case: dont mark stacked case statements
+         if token 1 of aLine is "case" then
+            put tCounter + 1 into tSubCounter
+            -- test for "case" in line after case
+            repeat
+               put line tSubCounter of tScriptText into tNextNonEmptyLine
+               if the number of tokens of tNextNonEmptyLine > 0 then exit repeat
+               add 1 to tSubCounter
+            end repeat
+            if token 1 of tNextNonEmptyLine = "case" then
+               next repeat
+            else
+               put tCounter & cr after tCollect
+            end if
+         end if
+         -- end case
+         
+         -- all other foldables
+         put tCounter & cr after tCollect
+      end if -- token 1 of aLine is among the items of tAllowedLineStarts
+   end repeat
+   
+   split tCollect by return as set
+   
+   repeat for each key aLine in pFoldA
+      if tCollect[aLine] then next repeat
+      put "" into pFoldA[aLine]["runs"][1]["text"]
+      put "" into pScriptA[aLine]["metadata"]
+   end repeat
+   
+   repeat for each key aLine in tCollect
+      put "foldable" into item 1 of pScriptA[aLine]["metadata"]
+      if item 2 of pScriptA[aLine]["metadata"] = "folded" then
+         put tFoldingClosed into pFoldA[aLine]["runs"][1]["text"]
+      else
+         put tFoldingOpen into pFoldA[aLine]["runs"][1]["text"]
+      end if
+   end repeat
+   
+   unlock screen
+end findFoldables
+
+on parseStructs pStartLine
+   local tStartLine, tLineText
+   local tHandlerName
+   local tText, tTextA, tTextAKeys
+   local tCurrLine, tCurrFirstToken, tCurrLastToken
+   local tEndStructure
+   local tLineCounter
+   local tEndList
+   
+   put "if,repeat,switch,try" into tEndList
+   
+   local tPendingIf
+   put false into tPendingIf
+   
+   if pStartLine = empty then
+      put word 2 of the clickLine into tStartLine
+   else
+      put pStartLine into tStartLine
+   end if
+   put line tStartLine of field "Script" of me into tLineText
+   
+   ## to discern when search starts at single "else" set a flag
+   local tStartAtSingleElse
+   if token 1 of tLineText = "else" and token - 1 of tLineText = "else" then
+      put true into tStartAtSingleElse
+   end if
+   
+   -- handlers
+   if token 1 of tLineText is among the items of   "on,private,function,command,setProp,getProp,after,before" then
+      if token 1 of tLineText is "private" then
+         put token 3 of tLineText into tHandlername
+      else
+         put token 2 of tLineText into tHandlerName
+      end if
+      
+      put getTokenArray(tStartLine) into tTextA
+      put the keys of tTextA into tTextAKeys
+      sort tTextAKeys numeric ascending
+      
+      repeat for each line tLineCounter in tTextAKeys
+         put tTextA[tLineCounter] into tCurrLine
+         if tCurrLine = "" then next repeat
+         
+         if token 1 of tCurrLine is "end" and token 2 of tCurrLine is tHandlername then
+            exit repeat
+         end if
+      end repeat
+      
+      return tStartLine, tLineCounter - 1
+      exit parseStructs
+   end if -- handler
+   
+   -- conditional if
+   if token 1 of tLineText is "if" or (token 1 of tLineText is "else" and token - 1 of tLineText is "else") then
+      
+      local tOpenStructs
+      local tNextLineText
+      local tMaxCount
+      
+      put token 1 of tLineText into tCurrFirstToken
+      put token - 1 of tLIneText into tCurrLastToken
+      
+      -- get a cleaned text as array without comments or slashcomments
+      put getTokenArray(tStartLine) into tTextA
+      
+      if tTextA = "" then exit parseStructs -- it was a click in an if line in a slashed comment
+      
+      put getNextNonEmptyLine(tTextA, tStartLine) into tNextLineText
+      
+      put item 2 of the extents of tTextA into tMaxCount
+      
+      -- it is a one-liner -> exit # don't fold if clicked on
+      if ("then" is among the tokens of tLineText) and (tCurrLastToken <> "then" and ("else" is among the tokens of tLineText)) then
+         if NOT (token 1 of tNextLineText = "else") then
+            exit parseStructs
+         end if
+      end if
+      
+      if ("then" is among the tokens of tLineText) and (tCurrLastToken <> "then") then
+         if token 1 of tNextLineText is not "else" then
+            exit parseStructs
+         end if
+      end if
+      -- end one-liner
+      
+      put "end if" into tEndStructure
+      put tStartLine into tLineCounter
+      
+      if tCurrFirstToken is "else" then
+         put 1 into tOpenStructs
+      else
+         put 0 into tOpenStructs
+      end if
+      
+      put the keys of tTextA into tTextAKeys
+      sort tTextAKeys numeric ascending
+      
+      repeat for each line tLineCounter in tTextAKeys
+         put tTextA[tLineCounter] into tCurrLine
+         if tCurrLine = "" then next repeat
+         
+         put getNextNonEmptyLine(tTextA, tLineCounter) into tNextLineText
+         
+         put token 1 of tCurrLine into tCurrFirstToken
+         put token - 1 of tCurrLine into tCurrLastToken
+         
+         if tPendingIf then
+            -- case
+            -- if a\
+            -- then\
+            -- put b <-- either last part or continuation with else if or else
+            if "else" is not among the tokens of tCurrLine AND "if" is not among the tokens of tCurrLine \
+                  and "else" is not among the tokens of tNextLineText then
+               put false into tPendingIf
+               if tOpenStructs = 1 then
+                  exit repeat
+               else
+                  subtract 1 from tOpenStructs
+                  next repeat
+               end if
+            end if
+            
+            -- case
+            -- if a\
+            -- then\
+            -- put b
+            -- else if c then put a <-- end of statement
+            if token 1 of tCurrLine = "else" \
+                  and token 2 of tCurrLine = "if" \
+                  and token - 1 of tCurrLine <> "then" \
+                  and token 1 of tNextLineText <> "else" then
+               put false into tPendingIf
+               if tOpenStructs = 1 then
+                  exit repeat
+               else
+                  subtract 1 from tOpenStructs
+                  next repeat
+               end if
+            end if
+            
+            if token 1 of tCurrLine = "else" \
+                  and token 2 of tCurrLine = "if" \
+                  and token - 1 of tCurrLine <> "then" \
+                  and token 1 of tNextLineText = "else"  then
+               put false into tPendingIf
+            end if
+            
+            if token 1 of tCurrLine = "if" and token - 1 of tCurrLine <> "then" then
+               put false into tPendingIf
+               next repeat
+            end if
+         end if
+         
+         if token 1 of tCurrLine is "if"  then
+            
+            ## check backslash = continuation line
+            if tCurrLine contains "\" then
+               add 1 to tOpenStructs
+               next repeat
+            end if
+            
+            ## forms with single statement, no statement lists
+            -- if b then get c else get d
+            if "then" is among the tokens of tCurrLine AND tCurrLastToken <> "then" AND "else" is among the tokens of tCurrLine then
+               next repeat
+            end if
+            
+            -- if b then get c
+            if "then" is among the tokens of tCurrLine AND tCurrLastToken <> "then" then
+               
+               -- catch:
+               -- if a then put b
+               -- else put c <--
+               if token 1 of tNextLineText = "else" and token - 1 of tNextLineText <> "else" then
+                  add 1 to tOpenStructs
+                  next repeat
+               end if
+               
+               -- catch:
+               -- if a then put b
+               -- else <--
+               -- put c
+               -- end if
+               if token 1 of tNextLineText = "else" then
+                  add 1 to tOpenStructs
+                  next repeat
+               end if
+               next repeat
+            end if
+            
+            -- if a
+            -- then put b <--
+            -- if a
+            -- then put b <--
+            -- else put c
+            if token 1 of tNextLineText = "then" and token - 1 of tNextLineText <> "then" then
+               add 1 to tOpenStructs
+               next repeat
+            end if
+            -- end forms with single statement
+            
+            -- if x
+            -- then <--
+            -- statementlist
+            -- end if
+            if token 1 of tNextLineText = "then" and the number of tokens of of tNextLineText = 1 then
+               add 1 to tOpenStructs
+               next repeat
+            end if
+            
+            -- begin of new "If then"
+            if tCurrLastToken = "then" then
+               add 1 to tOpenStructs
+               next repeat
+            end if
+            
+         end if --  if token 1 of tCurrLine is "if"
+         
+         ## handle "then"
+         
+         -- if condition
+         -- then statement <--
+         -- [else elseStatement]
+         if tCurrFirstToken = "then" and the number of tokens of tCurrLine > 1 then -- must be a statement
+            if token 1 of tNextLineText = "else"  then
+               if  the number of tokens of tNextLineText = 1 then
+                  next repeat
+               end if
+            else
+               if tOpenStructs = 1 then
+                  exit repeat
+               else
+                  subtract 1 from tOpenStructs
+                  next repeat
+               end if
+            end if
+         end if
+         
+         -- backslash = continuation line can have statementlist without "end if"
+         if tCurrLastToken = "then" and char - 1 of tCurrLine = "\" then
+            put true into tPendingIf
+            if "if" is among the tokens of tNextLineText then
+               next repeat
+            end if
+         end if
+         -- end handle "then"
+         
+         ## look for else
+         -- case of "else if condition then" as in:
+         -- if a then
+         -- put c
+         -- else if d then <----
+         -- put c             -- StatementList
+         -- else put h / or "end if"
+         if tCurrFirstToken is "else" and tCurrLastToken = "then" then
+            next repeat
+         end if
+         
+         -- case of
+         -- else if condition
+         -- then <--
+         -- statementlist
+         if tCurrFirstToken is "else" and token 2 of tCurrLine is "if" and tCurrLastToken <> "then" then
+            if token 1 of tNextLineText = "then" then
+               next repeat
+            end if
+         end if
+         
+         -- case of:
+         -- if a then doSomething
+         -- else if d then put c <--
+         if tCurrFirstToken is "else" and token 2 of tCurrLine is "if" and tCurrLastToken <> "then" then
+            if token 1 of tNextLineText = "else" then
+               next repeat
+            else
+               if tOpenStructs = 1 then
+                  exit repeat
+               else
+                  subtract 1 from tOpenStructs
+                  next repeat
+               end if
+            end if
+         end if
+         
+         -- case of ending in "else elseStatement"
+         -- end of conditional as in
+         -- if a then
+         -- put c
+         -- put d
+         -- else put h <--
+         if tCurrFirstToken is "else" AND tCurrLastToken <> "else" AND NOT ("if" is among the tokens of tCurrLine) then
+            put false into tPendingIf
+            if tOpenStructs = 1 then
+               exit repeat
+            else
+               subtract 1 from tOpenStructs
+               next repeat
+            end if
+         end if
+         
+         -- if a then
+         -- get b else get c <--
+         if tCurrFirstToken <> "else" AND ("else" is among the tokens of tCurrLine) and tCurrLastToken <> "else" then
+            if tOpenStructs = 1 then
+               exit repeat
+            else
+               subtract 1 from tOpenStructs
+               next repeat
+            end if
+         end if
+         
+         ## get out of if loop at "else", let search starting with single "else" pass
+         if tCurrFirstToken = "else" AND tCurrLastToken = "else" and tStartAtSingleElse <> "true" then
+            if tOpenStructs = 1 then
+               exit repeat
+            else
+               next repeat
+            end if
+         end if
+         
+         -- end look for else
+         
+         ## catch end if
+         if tCurrFirstToken is token 1 of  tEndStructure and token 2 of tCurrLine is token 2 of tEndStructure then
+            put false into tPendingIf
+            if tOpenStructs = 1 then
+               exit repeat
+            else
+               subtract 1 from tOpenStructs
+               next repeat
+            end if
+         end if
+         
+         if tPendingIf then
+            if tCurrFirstToken is among the items of "repeat,try,switch" then
+               put false into tPendingIf
+               if tOpenStructs = 1 then
+                  put tLineCounter - 1 into tLineCounter
+                  exit repeat
+               end if
+               subtract 1 from tOpenStructs
+            end if
+         end if
+         
+         ## catch uncompleted if structures, look for handler name
+         if tCurrFirstToken is "end" and token 2 of tCurrLine is not among the items of tEndList then
+            -- should be handler name and end of handler without finding "end if" -> exit
+            exit parseStructs
+         end if
+      end repeat
+      
+      return tStartLine, tLineCounter - 1
+      exit parseStructs
+   end if -- if
+   
+   ## repeat
+   if token 1 of tLineText is "repeat"  then
+      put "end repeat" into tEndStructure
+      put tStartLine into tLineCounter
+      put 0 into tOpenStructs
+      
+      put getTokenArray(tStartLine) into tTextA
+      put the keys of tTextA into tTextAKeys
+      sort tTextAKeys numeric ascending
+      
+      repeat for each line tLineCounter in tTextAKeys
+         put tTextA[tLineCounter] into tCurrLine
+         if tCurrLine = "" then next repeat
+         
+         if token 1 of tCurrLine is "repeat" then
+            add 1 to tOpenStructs
+            next repeat
+         end if
+         
+         if token 1 of tCurrLine is token 1 of  tEndStructure and token 2 of tCurrLine is token 2 of tEndStructure then
+            if tOpenStructs = 1 then
+               exit repeat
+            else
+               subtract 1 from tOpenStructs
+               next repeat
+            end if
+         end if
+      end repeat
+      
+      return tStartLine, tLineCounter - 1
+      exit parseStructs
+   end if -- repeat
+   
+   ## conditional switch
+   if token 1 of tLineText is "switch"  then
+      put "end switch" into tEndStructure
+      put tStartLine into tLineCounter
+      put 0 into tOpenStructs
+      
+      put getTokenArray(tStartLine) into tTextA
+      put the keys of tTextA into tTextAKeys
+      sort tTextAKeys numeric ascending
+      
+      repeat for each line tLineCounter in tTextAKeys
+         put tTextA[tLineCounter] into tCurrLine
+         if tCurrLine = "" then next repeat
+         if token 1 of tCurrLine is "switch" then
+            add 1 to tOpenStructs
+            next repeat
+         end if
+         
+         if token 1 of tCurrLine is token 1 of  tEndStructure and token 2 of tCurrLine is token 2 of tEndStructure then
+            if tOpenStructs = 1 then
+               exit repeat
+            else
+               subtract 1 from tOpenStructs
+               next repeat
+            end if
+         end if
+      end repeat
+      
+      return tStartLine, tLineCounter - 1
+      exit parseStructs
+   end if -- switch
+   
+   ## case
+   if token 1 of tLineText is "case" then
+      
+      put "case,default" into tEndStructure
+      put 0 into tOpenStructs
+      
+      put getTokenArray(tStartLine + 1) into tTextA
+      put the keys of tTextA into tTextAKeys
+      sort tTextAKeys numeric ascending
+      
+      repeat for each line tLineCounter in tTextAKeys
+         put tTextA[tLineCounter] into tCurrLine
+         if tCurrLine = "" then next repeat
+         
+         put token 1 of tCurrLine into tCurrFirstToken
+         if tCurrFirstToken = "end" and token 2 of tCurrLine = "switch" then
+            return tStartLine, tLineCounter - 1
+            exit parseStructs
+         end if
+         if tCurrFirstToken is among the items of tEndStructure then
+            return tStartLine, tLineCounter - 1
+            exit parseStructs
+         end if
+      end repeat
+      return tStartLine, tLineCounter
+      exit parseStructs
+   end if -- case
+   
+   ## try
+   if token 1 of tLineText is "try"  then
+      put "end try" into tEndStructure
+      put tStartLine into tLineCounter
+      put 0 into tOpenStructs
+      
+      put getTokenArray(tStartLine) into tTextA
+      put the keys of tTextA into tTextAKeys
+      sort tTextAKeys numeric ascending
+      
+      repeat for each line tLineCounter in tTextAKeys
+         put tTextA[tLineCounter] into tCurrLine
+         if tCurrLine = "" then next repeat
+         
+         if token 1 of tCurrLine is "try" then
+            add 1 to tOpenStructs
+            next repeat
+         end if
+         
+         if token 1 of tCurrLine is token 1 of  tEndStructure and token 2 of tCurrLine is token 2 of tEndStructure then
+            if tOpenStructs = 1 then
+               exit repeat
+            else
+               subtract 1 from tOpenStructs
+               next repeat
+            end if
+         end if
+      end repeat
+      
+      return tStartLine, tLineCounter - 1
+      exit parseStructs
+   end if -- try
+   
+   ## block code # begins with "#<optional comment>" and ends with "#</optional comment>"
+   if word  1 of tLineText begins with "#<" and char 3 of word 1 of tLineText <> "/" then
+      put "#</" into tEndStructure
+      put tStartLine - 1 into tLineCounter
+      put 0 into tOpenStructs
+      
+      put line tStartLine to -1 of textGetScript() into tTextA
+      
+      repeat for each line tCurrLine in tTextA
+         add 1 to tLineCounter
+         if tCurrLine = "" then next repeat
+         
+         if word 1 of tCurrLine begins with "#<" and not (word 1 of tCurrLine begins with tEndStructure) then
+            add 1 to tOpenStructs
+            next repeat
+         end if
+         
+         if word 1 of tCurrLine begins with "#<" then
+            if tOpenStructs = 1 then
+               return tStartLine, tLineCounter - 1
+               exit repeat
+            else
+               subtract 1 from tOpenStructs
+               next repeat
+            end if
+         end if
+         
+      end repeat
+      
+      exit parseStructs
+   end if -- block code
+   
+end parseStructs
