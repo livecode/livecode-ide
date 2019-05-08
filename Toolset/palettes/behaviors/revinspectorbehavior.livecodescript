@@ -4,6 +4,9 @@ constant kMaxLabelSize = 200
 # The inspector data
 local sDataA
 
+# used by manualHeight
+local sStackIsInFront
+
 on setAsBehavior pTarget
    dispatch "setAsBehavior" to revIDEFrameBehavior() with the long id of this me
    set the behavior of pTarget to the long id of this me
@@ -36,6 +39,7 @@ before openStack
    end repeat
    set the stackfiles of me to tStackFiles
    revIDEPopDefaultFolder
+   put true into sStackIsInFront
 end openStack
 
 on resizeInspector
@@ -180,7 +184,8 @@ local sManualHeightOfStack, sNewHeight, sOldHeight
 on inspectorLayoutGroups pGroupList, pForceHeight
    
    # store height of stack when manually resizing
-   if pForceHeight is not true and the mouse is "down" and sNewHeight is not sOldHeight then
+   if pForceHeight is not true and the mouse is "down"  \
+         and sNewHeight is not sOldHeight and the mouseStack is empty and sStackIsInFront then
       put the height of this stack into sManualHeightOfStack
    end if
    
@@ -277,7 +282,11 @@ on inspectorLayoutGroups pGroupList, pForceHeight
    
    local tStackHeight
    if tInspectorHeight is empty then
-      put kInspectorMinHeight into tStackHeight
+      if sManualHeightOfStack is not empty then
+         put sManualHeightOfStack into tStackHeight
+      else
+         put kInspectorMinHeight into tStackHeight
+      end if
    else
       put tInspectorHeight + tMargin into tStackHeight
    end if
@@ -286,11 +295,6 @@ on inspectorLayoutGroups pGroupList, pForceHeight
       set the maxheight of me to 65535
    else
       set the maxheight of me to tStackHeight
-   end if
-   
-   # reset manualHeight if user expands a non-expandable tab to full height
-   if not pForceHeight and not tCanExpand and sManualHeightOfStack is tStackHeight then
-      put empty into sManualHeightOfStack
    end if
    
    -- Make stack smaller rather than go offscreen
@@ -342,6 +346,16 @@ before resizeStack pNewWidth, pNewHeight, pOldWidth, pOldHeight
    put pOldHeight into sOldHeight
    pass resizeStack
 end resizeStack
+
+on resumeStack
+   put true into sStackIsInFront
+   pass resumeStack
+end resumeStack
+
+on suspendStack
+   put false into sStackIsInFront
+   pass suspendStack
+end suspendStack
 
 function getManualHeight
    return sManualHeightOfStack
