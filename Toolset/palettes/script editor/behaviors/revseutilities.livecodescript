@@ -434,6 +434,7 @@ end sePrefList
 command sePrefInit
    # Get the default preferences, which are returned in an array.
    local tPrefs
+   sePrefGetDefaults
    
    put the result into tPrefs
    
