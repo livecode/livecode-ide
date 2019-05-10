@@ -41,8 +41,8 @@ command resize
       set the right of field "Folding" of me to item 3 of tMyRect + 500
    end if
    
-   set the rect of field "Overlay" of me to the rect of me
-   set the rect of group "Mutables" of me to the rect of me
+   set the rect of field "Overlay" of me to tMyRect
+   set the rect of group "Mutables" of me to tMyRect
    updateGutterRequest empty, empty, empty, empty, false, true, true
 end resize
 
