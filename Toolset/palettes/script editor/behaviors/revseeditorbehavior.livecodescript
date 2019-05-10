@@ -1113,8 +1113,6 @@ on mouseDown pButtonNumber
          if word 1 of tLineText is among the items of tAllowedLineStarts  \
                or (word 1 of tLineText begins with "#<" and char 3 of word 1 of tLineText <> "/")  \
                or word 1 of tLineText begins with slash & "*" then
-               exit mouseDown
-            end if
             folding
             exit mouseDown
          end if
