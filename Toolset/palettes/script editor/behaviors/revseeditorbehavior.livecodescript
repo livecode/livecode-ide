@@ -1110,8 +1110,9 @@ on mouseDown pButtonNumber
          local tAllowedLineStarts
          put "on,private,function,command,setProp,getProp,after,before,if,repeat,switch,case,try,else" into tAllowedLineStarts
          put line sLastClickLine of field "Script" of me into tLineText
-         if word 1 of tLineText is among the items of tAllowedLineStarts or (word 1 of tLineText begins with "#<" and char 3 of word 1 of tLineText <> "/") then
-            if token 1 of tLineText is "else" and token -1 of tLineText <> "else" then
+         if word 1 of tLineText is among the items of tAllowedLineStarts  \
+               or (word 1 of tLineText begins with "#<" and char 3 of word 1 of tLineText <> "/")  \
+               or word 1 of tLineText begins with slash & "*" then
                exit mouseDown
             end if
             folding
@@ -2992,7 +2993,7 @@ on folding
 end folding
 
 command foldUnfold pStartLine
-   local tSelectedLine, tSelectedChunk, tFoldingOpen, tFoldingClosed, t
+   local tSelectedLine, tSelectedChunk, tFoldingOpen, tFoldingClosed
    local tStartLine, tEndLine, tStartAndEnd, tVerticalPixAbove
    
    put the formattedTop of line pStartLine of field "Script" of me into tVerticalPixAbove
@@ -3004,8 +3005,8 @@ command foldUnfold pStartLine
    
    put item 1 of tStartAndEnd into tStartLine
    put item 2 of tStartAndEnd into tEndLine
-   
-   if ((tStartLine = "" OR tEndLine = "") OR (tStartLine = tEndLine)) then exit foldUnfold
+  
+   if ((tStartLine = "" OR tEndLine = "") OR (tStartLine >= tEndLine)) then exit foldUnfold
    
    put word 2 of the selectedLine into tSelectedLine
    put the selectedChunk into tSelectedChunk
@@ -3164,7 +3165,7 @@ on unfoldAll pStartLine, pEndLine
       put the styledText of field "Script" of me into tScriptA
       repeat for each key aKey in tScriptA
          if tScriptA[aKey]["metadata"]<> empty then
-            put "folding,open" into tScriptA[aKey]["metadata"]
+            put "foldable,open" into tScriptA[aKey]["metadata"]
          end if
       end repeat
       
@@ -3183,7 +3184,7 @@ on unfoldAll pStartLine, pEndLine
       
       repeat with i = pStartLine to pEndline
          if the metadata of line i of field "Script" of me <> empty then
-            set the metadata of line i of field "Script" of me to "folding,open"
+            set the metadata of line i of field "Script" of me to "foldable,open"
             put tFoldingOpen into line i of field "Folding" of me
          end if
       end repeat
@@ -3245,9 +3246,14 @@ on foldAll
    
    sort tHandlers numeric by word 3 of each
    
+   local tListHandlerLines
+   
    repeat for each line aHandler in tHandlers
       put word 3 of aHandler into tHandlerStartLine
       put word 4 of aHandler into tHandlerEndLIne
+      
+      put tHandlerStartLine & cr after tListHandlerLines
+      put tHandlerEndLIne & cr after tListHandlerLines
       
       put tFoldingClosed into tFoldA[tHandlerStartLine]["runs"][1]["text"]
       put "folded" into item 2 of tScriptA[tHandlerStartLine]["metadata"]
@@ -3256,8 +3262,57 @@ on foldAll
          put "true" into tScriptA[i][tPathToHidden]
          put "true" into tNumbersA[i][tPathToHidden]
          put "true" into tFoldA[i][tPathToHidden]
+         put i & cr after tListHandlerLines
       end repeat
    end repeat
+   
+   delete last char of tListHandlerLines
+   split tListHandlerLines by return as set
+   
+   local tScriptText, tOffset, tSkip, tCommentPos
+   
+   put textGetScript() into tScriptText
+   
+   ## find /* */ comments
+   put 0 into tOffset
+   put 0 into tSkip
+   repeat
+      put lineOffset("/*", tScriptText, tSkip) into tOffset
+      if tOffset = 0 then exit repeat
+      add tOffset to tSkip
+      put tSkip & cr after tCommentPos
+   end repeat
+   
+   put 0 into tOffset
+   put 0 into tSkip
+   repeat
+      put lineOffset("*/", tScriptText, tSkip) into tOffset
+      if tOffset = 0 then exit repeat
+      add tOffset to tSkip
+      put tSkip & cr after tCommentPos
+   end repeat
+   
+   ## only fold slash comments outside of handlers
+   if tCommentPos <> "" then
+      sort tCommentPos ascending numeric
+      
+      local tStart, tEnd
+      repeat with i = 1 to the number of lines of tCommentPos - 2 step 2
+         put line i of tCommentPos into tStart
+         put line i + 1 of tCommentPos into tEnd
+         if tListHandlerLines[tStart] or tListHandlerLines[tEnd] then next repeat
+         
+         put tFoldingClosed into tFoldA[tStart]["runs"][1]["text"]
+         put "folded" into item 2 of tScriptA[tStart]["metadata"]
+         
+         repeat with j = tStart + 1 to tEnd - 1
+            put "true" into tScriptA[j][tPathToHidden]
+            put "true" into tNumbersA[j][tPathToHidden]
+            put "true" into tFoldA[j][tPathToHidden]
+         end repeat
+         
+      end repeat
+   end if
    
    set the styledText of field "Script" of me to tScriptA
    set the styledText of field "Numbers" of me to tNumbersA
@@ -3399,6 +3454,24 @@ private function getTokenArray  pLIneCount
    put 0 into tOffsetLine
    
    put line pLineCount to -1 of field "Script" of me into tText
+   
+   local tWorkText
+   
+   -- remove quoted literals
+   set the itemDelimiter to quote
+   repeat for each line aLine in tText
+      if aLine contains quote then
+         repeat with i = 1 to the number of items of aLine
+            if i mod 2 = 0 then
+               put empty into item i of aLine
+            end if
+         end repeat
+      end if
+      put aLine & cr after tWorkText
+   end repeat -- remove quoted literals
+   set the itemDelimiter to comma
+   put tWorkText into tText
+   
    ## find "end handlerName" by excluding all other "end" forms
    repeat
       put lineOffset("end", tText, tSkipLineNo) into tOffsetLine
@@ -3426,11 +3499,9 @@ private function getTokenArray  pLIneCount
    
    put quote & "/" & "*" & quote into tQuoteSlashStart
    put quote & "*" & "/" & quote into tQuoteSlashEnd
-   put  "/" & "*" & "*" into tDoubleAsterix
    
    replace tQuoteSlashStart with "slashAsterix" in tText
    replace tQuoteSlashEnd with "asterixSlash" in tText
-   replace tDoubleAsterix with "doubleAsterix" in tText
    
    set the lineDelimiter to "/" & "*"
    set the itemDelimiter to "*" & "/"
@@ -3465,34 +3536,47 @@ private function getTokenArray  pLIneCount
       replace "*" & "/" with empty in tText
       replace "slashAsterix" with tQuoteSlashStart in tText
       replace "asterixSlash" with tQuoteSlashEnd in tText
-      replace "doubleAsterix" with "/" & "*" & "*" in tText
    end if
    
    local tInc
    put pLineCount - 1 into tInc
+   
    split tText by cr
    repeat for each key aLineNumber in tText
       put tText[aLineNumber] into tWholeText
-      if tWholeText contains quote then
-         set the itemDelimiter to quote
-         repeat with i =  the number of items of tWholeText down to 1
-            if i mod 2 = 0 then put empty into item i of tWholeText
-         end repeat
-         set the itemDelimiter to comma
-      end if
       put token 1 to -1 of tWholeText into tTextA[aLineNumber + tInc]
       if  tWholeText contains "\" then put "\" after tTextA[aLineNumber + tInc]
    end repeat
+   
    return tTextA
 end getTokenArray
 
+constant kAllowedLineStarts = "on,private,function,command,setProp,getProp,after,before,if,repeat,switch,case,try,else"
+
 on findFoldables @pScriptA, @pFoldA
-   local tAllowedLineStarts, tCollect, tInsideCommentA, tCounter, tOffset, tSkip
-   local tText, tCommentPos, tScriptText
+   local tCollect, tInsideCommentA, tCounter, tOffset, tSkip
+   local tText, tCommentPos, tScriptText, tTestLine
    local tFoldingOpen, tFoldingClosed
    
    lock screen
    put textGetScript() into tScriptText
+   local tWorkText
+   
+   set the itemDelimiter to quote
+   -- remove quoted literals
+   repeat for each line aLine in tScriptText
+      if aLine contains quote then
+         repeat with i = 1 to the number of items of aLine
+            if i mod 2 = 0 then
+               put empty into item i of aLine
+            end if
+         end repeat
+      end if
+      put aLine & cr after tWorkText
+   end repeat -- remove quoted literals
+   set the itemDelimiter to comma
+   
+   put tWorkText into tScriptText
    
    ## find /* */ comments
    put 0 into tOffset
@@ -3501,6 +3585,12 @@ on findFoldables @pScriptA, @pFoldA
       put lineOffset("/*", tScriptText, tSkip) into tOffset
       if tOffset = 0 then exit repeat
       add tOffset to tSkip
+      -- check if "/*" is at end of code and if it is a one-liner
+      put line tSkip of tScriptText into tTestLine
+      if the number of tokens of tTestLine > 0 then
+         add 1 to tSkip
+         if tTestLine ends with "*" & slash then next repeat
+      end if
       put tSkip & cr after tCommentPos
    end repeat
    
@@ -3531,14 +3621,26 @@ on findFoldables @pScriptA, @pFoldA
    
    put sePrefGet("editor,foldingopen") into tFoldingOpen
    put sePrefGet("editor,foldingClosed") into tFoldingClosed
-   put "on,private,function,command,setProp,getProp,after,before,if,repeat,switch,case,try,else" into tAllowedLineStarts
    put 0 into tCounter
    
    repeat for each line aLine in tScriptText
       add 1 to tCounter
+      
+      -- slash comments = "/* */"
+      if word 1 of aLine begins with slash & "*" and not (word -1 of aLine ends with "*/") then
+         put tCounter & cr after tCollect
+         next repeat
+      end if
+      
       if (tInsideCommentA[tCounter]) then next repeat -- bail out since the line is within a commented section
       
-      if token 1 of aLine is among the items of tAllowedLineStarts or word 1 of aLine begins with "#<" then
+      if token 1 of aLine is among the items of kAllowedLineStarts or word 1 of aLine begins with "#<" then
+         
+         if token 1 of aLine is "else" then
+            if token 2 of aLine is "if" and not (token - 1 of aLine is "then") then next repeat
+            if "then" is among the words of aLine and "then" is not (token -1 of aLine) then next repeat
+            if not ("then" is among the tokens of aLine) and not ("else" is token -1 of aLine) then next repeat
+         end if
          
          -- test for if variants
          if (token 1 of aLine is "if") then
@@ -3559,6 +3661,11 @@ on findFoldables @pScriptA, @pFoldA
                end repeat
                
                if token 1 of tNextNonEmptyLine = "else" then
+                  
+                  if token 2 of tNextNonEmptyLine = "if" and token -1 of tNextNonEmptyLine = "then" then
+                     put tCounter & cr after tCollect
+                     next repeat
+                  end if
                   
                   if the number of tokens of tNextNonEmptyLine > 1 then
                      next repeat
@@ -3618,8 +3725,6 @@ on findFoldables @pScriptA, @pFoldA
             end if -- (aLine contains "then") and not (token - 1 of aLine = "then")
          end if --token 1 of aLine is "if
          
-         if token 1 of aLine is "else" and not (token -1 of aLine is "else") then next repeat
-         
          -- block comments "#<"
          if word 1 of aLine begins with "#<" then
             if not (word 1 of aLine begins with "#</") then
@@ -3650,7 +3755,7 @@ on findFoldables @pScriptA, @pFoldA
          
          -- all other foldables
          put tCounter & cr after tCollect
-      end if -- token 1 of aLine is among the items of tAllowedLineStarts
+      end if -- token 1 of aLine is among the items of kAllowedLineStarts
    end repeat
    
    split tCollect by return as set
@@ -3701,7 +3806,7 @@ on parseStructs pStartLine
    end if
    
    -- handlers
-   if token 1 of tLineText is among the items of   "on,private,function,command,setProp,getProp,after,before" then
+   if token 1 of tLineText is among the items of "on,private,function,command,setProp,getProp,after,before" then
       if token 1 of tLineText is "private" then
          put token 3 of tLineText into tHandlername
       else
@@ -3726,8 +3831,8 @@ on parseStructs pStartLine
    end if -- handler
    
    -- conditional if
-   if token 1 of tLineText is "if" or (token 1 of tLineText is "else" and token - 1 of tLineText is "else") then
-      
+   if token 1 of tLineText is "if" or (token 1 of tLineText is "else" and token - 1 of tLineText is "else") \
+         or (token 1 of tLineText is "else" and token 2 of tLineText is "if" and token -1 of tLineText is "then") then
       local tOpenStructs
       local tNextLineText
       local tMaxCount
@@ -3818,6 +3923,14 @@ on parseStructs pStartLine
                   and token - 1 of tCurrLine <> "then" \
                   and token 1 of tNextLineText = "else"  then
                put false into tPendingIf
+            end if
+            
+            if token 1 of tCurrLine = "else" \
+                  and token 2 of tCurrLine = "if" \
+                  and token - 1 of tCurrLine = "then" \
+                  then
+               put false into tPendingIf
+               next repeat
             end if
             
             if token 1 of tCurrLine = "if" and token - 1 of tCurrLine <> "then" then
@@ -4171,7 +4284,7 @@ on parseStructs pStartLine
             next repeat
          end if
          
-         if word 1 of tCurrLine begins with "#<" then
+         if word 1 of tCurrLine begins with "#</" then
             if tOpenStructs = 1 then
                return tStartLine, tLineCounter - 1
                exit repeat
@@ -4185,5 +4298,37 @@ on parseStructs pStartLine
       
       exit parseStructs
    end if -- block code
+   
+   ## slash comment
+   if word  1 of tLineText begins with slash & "*" then
+      put "*" & slash into tEndStructure
+      put tStartLine - 1 into tLineCounter
+      put 0 into tOpenStructs
+      
+      put line tStartLine to -1 of textGetScript() into tTextA
+      
+      repeat for each line tCurrLine in tTextA
+         add 1 to tLineCounter
+         if tCurrLine = "" then next repeat
+         
+         if word 1 of tCurrLine begins with slash & "*" then
+            add 1 to tOpenStructs
+            next repeat
+         end if
+         
+         if word 1 of tCurrLine begins with  "*" & slash or word -1 of tCurrLine ends with "*" & slash then
+            if tOpenStructs = 1 then
+               return tStartLine, tLineCounter - 1
+               exit repeat
+            else
+               subtract 1 from tOpenStructs
+               next repeat
+            end if
+         end if
+         
+      end repeat
+      
+      exit parseStructs
+   end if -- slash comment
    
 end parseStructs
