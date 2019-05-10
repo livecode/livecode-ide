@@ -30,7 +30,7 @@ command resize
    subtract tFoldingWidth from item 3 of tMyRect
    
    if sePrefGet("gutter,linenumbers") then
-      set the rect of field "Numbers" of me to the rect of me
+      set the rect of field "Numbers" of me to tMyRect
    else
       set the right of field "Numbers" of me to the left of me + 500
    end if
