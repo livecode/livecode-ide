@@ -816,8 +816,9 @@ on foldingMouseUp pTarget, pClickLine
    put "on,private,function,command,setProp,getProp,after,before,if,repeat,switch,case,try,else" into tAllowedLineStarts
    put word 1 of line  (word 2 of pClickLine) of field "Script" of the owner of me into tFirstWord
    if tFirstWord is among the items of tAllowedLineStarts or  \
-      tFirstWord begins with "#<" and char 3 of tFirstWord <> "/" then
-      dispatch "folding" to field "Script" of the owner of me-- with word 2 of pClickLine
+         tFirstWord begins with "#<" and char 3 of tFirstWord <> "/" or \
+         tFirstWord begins with "/" & "*" then
+      dispatch "folding" to field "Script" of the owner of me
    end if
 end foldingMouseUp
 
