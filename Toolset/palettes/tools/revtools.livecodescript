@@ -170,6 +170,7 @@ on generatePalette
    repeat while there is a group "contents"
       delete group "contents"
    end repeat
+   reset the templateGroup
    create group "contents"
    
    # Clear the error group
