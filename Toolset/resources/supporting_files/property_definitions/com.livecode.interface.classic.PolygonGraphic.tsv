@@ -4,6 +4,7 @@ title	Polygon Graphic
 												
 -----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 name							Polygon					
+label
 tooltip												
 style							polygon	rectangle,roundrect,line,oval,regular,line,curve,polygon				
 opaque							false					

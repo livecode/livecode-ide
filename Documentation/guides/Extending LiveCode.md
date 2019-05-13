@@ -1071,7 +1071,7 @@ method to allocate an instance, and then call `initWithVoice:` on it:
 The `+` indicates this is a class method, i.e. we don't require an 
 instance of the class to call the method. 
 
-	foreign handler Objc_NSSpeechSynthesizerInitWithVoice(in pSynthesizer as ObjcId, in pVoice as optional ObjcId) returns ObjcId \
+	foreign handler Objc_NSSpeechSynthesizerInitWithVoice(in pSynthesizer as ObjcRetainedId, in pVoice as optional ObjcId) returns optional ObjcRetainedId \
 		binds to "objc:NSSpeechSynthesizer.-initWithVoice:"
 		
 The `-` here indicates this is an instance method, i.e. we require an 

@@ -4,6 +4,7 @@ title 							Rectangle Graphic
 												
 -----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 name							Rectangle					
+label
 tooltip												
 style							rectangle	rectangle,roundrect,line,oval,regular,line,curve,polygon				
 opaque							true					
