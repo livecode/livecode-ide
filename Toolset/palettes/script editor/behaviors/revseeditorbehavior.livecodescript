@@ -3271,6 +3271,24 @@ on foldAll
    
    put textGetScript() into tScriptText
    
+   ## remove quoted literals
+   local tItemCount, tUnquoted, tOldItemDelim
+   put the itemDelimiter into tOldItemDelim
+   set the itemDelimiter to quote
+   
+   put 1 into tItemCount
+   repeat for each item tItem in tScriptText
+      if tItemCount mod 2 = 0 then 
+         put quote & quote after tUnquoted
+      else
+         put tItem after tUnquoted
+      end if
+      add 1 to tItemCount
+   end repeat
+   
+   set the itemDelimiter to tOldItemDelim
+   put tUnquoted into tScriptText
+   
    ## find /* */ comments
    put 0 into tOffset
    put 0 into tSkip
