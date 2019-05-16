@@ -843,26 +843,32 @@ private function __fetchExtensionManifestData pFolder, pExtFile
    return tDataA
 end __fetchExtensionManifestData
 
-private command __extensionAddDependenciesToRequiresArray pExtension, @xRequiresA
+private command __extensionAddDependenciesToRequiresArray \
+         pExtension, @xRequiresA, @xExtensions
+
    local tDependentsA
    put revIDEExtensionProperty(pExtension, "requires") into tDependentsA
-   
-   repeat for each element tElement in tDependentsA      
+
+   repeat for each element tElement in tDependentsA
       if tElement is not among the keys of xRequiresA then
-         __extensionAddDependenciesToRequiresArray tElement, xRequiresA
+         __extensionAddDependenciesToRequiresArray \
+               tElement, xRequiresA, xExtensions
       end if
       addToList tElement, xRequiresA[pExtension]
-   end repeat   
+   end repeat
+
+   put empty into xExtensions[pExtension]
 end __extensionAddDependenciesToRequiresArray
 
 function revIDEExtensionsOrderByDependency pExtensions
    # Accumulate an array of dependencies
-   local tRequiresA
+   local tRequiresA, tExtensions
    repeat for each line tExtension in pExtensions
-      __extensionAddDependenciesToRequiresArray tExtension, tRequiresA
+      __extensionAddDependenciesToRequiresArray \
+            tExtension, tRequiresA, tExtensions
    end repeat
    
-   return extensionOrderByDependency(the keys of tRequiresA, tRequiresA)
+   return extensionOrderByDependency(the keys of tExtensions, tRequiresA)
 end revIDEExtensionsOrderByDependency
 
 private function isUserExtension pData
