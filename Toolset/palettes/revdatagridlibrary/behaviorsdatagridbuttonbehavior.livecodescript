@@ -239,6 +239,44 @@ private command _Initialize
       local theMasterRect
       put the rect of me into theMasterRect         
       
+      ## Configure the DG subgroups to enable use of acceleratedRendering
+      ## effectively in form mode.
+
+      ## The top-level group must be container (this means that no adornment
+      ## props must be set on the top-level group).
+      set the layerMode of me to "container"
+
+      ## The dgBackground group holds the backdrop behind the row-templates.
+      ## This can be changed to static when the engine is changed so that
+      ## a control is only redrawn when focused *if* it will change appearance.
+      set the layerMode of control "dgBackground" of me to "dynamic"
+
+      ## The dgListMask group holds the scrolling elements; in form view mode
+      ## only the dgList subgroup is relevant. As it holds other subgroups which
+      ## will hold dynamic layers it must be container.
+      set the layerMode of group "dgListMask" of me to "container"
+
+      ## The dgList group holds the replicated row template groups. As it holds
+      ## dynamic layer groups it must be container.
+      set the layerMode of group "dgList" of me to "container"
+
+      ## The dgHorizontalComponents group holds the horizontal scrollbar and
+      ## corner wedge. Making it dynamic means that it doesn't cause re-rendering
+      ## of static layers above when it changes.
+      set the layerMode of group "dgHorizontalComponents" of me to "dynamic"
+
+      ## The dgScrollbar group holds the vertical scrollbar. Making it dynamic
+      ## means that it doesn't cause re-rendering of static layers above when it
+      ## changes.
+      set the layerMode of scrollbar "dgScrollbar" of me to "dynamic"
+
+      ## The following groups all relate to table mode. These are all set to
+      ## static for now.
+      set the layerMode of group "dgAlternatingRowsMask" of me to "static"
+      set the layerMode of group "dgHighlights" of me to "static"
+      set the layerMode of group "dgHeaderComponents" of me to "static"
+      set the layerMode of group "dgDividers" of me to "static"
+
       switch the platform 
          case "Win32"
             if "registryRead" is among the items of the securityPermissions then
@@ -2587,12 +2625,19 @@ private command _DrawListWithProperties pStartingSequence, pSetVScrollTo, pForce
     
     ## Make sure focus stays with us
     if the long ID of me is in theControl then
-        
         lock messages
         if there is not a theControl then
+          ## [[ FocusRedraw ]] Make sure focus is only changed if the target is
+          ## not already focused.
+          if the long id of the focusedObject is not the long id of graphic "dgBackground" of me then
             focus on graphic "dgBackground" of me
+          end if
         else
+          ## [[ FocusRedraw ]] Make sure focus is only changed if the target is
+          ## not already focused.
+          if the long id of the focusedObject is not theControl then
             focus on theControl
+          end if
         end if
         unlock messages
     end if
@@ -2964,6 +3009,7 @@ private command _list.FillListWithJustEnoughControls
       repeat with i = theCurrentControlCount + 1 to theRequiredControlCount
          copy theTemplateGroup to group "dgList" of me
          put it into theControl
+         set the layerMode of theControl to "dynamic"
          set the name of theControl to the short name of theControl && format("%04d", i)
          put "control id" && word 3 of theControl && "of me" & cr after sTableObjectsA["all row controls"]
          
@@ -3096,6 +3142,14 @@ private command _list.DrawControlsInRealTime pForceRefresh, pCallback, pCallback
    
    put not controlCountWasModified and sTableObjectsA["current"]["indexes"] is theIndexesInSequence into noRedrawNeeded
    -- put theIndexesInSequence && the milliseconds & cr into msg
+
+   ## [[ DG2Layout ]] If edit mode or enable swipe is enabled or if minimal
+   ## layout is not enabled then we must still call LayoutControl on each
+   ## iteration.
+   local theMustLayout
+   put sEditMode or \
+        the dgProps["enable swipe"] of me or \
+        not the dgProps["minimal layout"] of me into theMustLayout
    
    if not noRedrawNeeded or pForceRefresh then
       put empty into sTableObjectsA["visible row controls"]
@@ -3137,16 +3191,24 @@ private command _list.DrawControlsInRealTime pForceRefresh, pCallback, pCallback
          
          ## Set row color
          if there is a graphic "Background" of theEffectiveControl then
+            ## Compute the new row color based on the alternating index
+            local theNewRowColor
             if theSequence mod 2 is kAlternatingRowModValue then
-               set the backgroundColor of graphic "Background" of theEffectiveControl to theRow2Color
+              put theRow2Color into theNewRowColor
             else
-               set the backgroundColor of graphic "Background" of theEffectiveControl to theRow1Color
+              put theRow1Color into theNewRowColor
+            end if
+
+            ## [[ ColorRedraw ]] Only change the backgroundColor of the control
+            ## if it has changed.
+            if the backgroundColor of graphic "Background" of theEffectiveControl is not theNewRowColor then
+              set the backgroundColor of graphic "Background" of theEffectiveControl to theNewRowColor
             end if
          end if
          
          ## If control index is not the index we are working on then
          ## Load new data
-         local theCurrentIndex
+         local theCurrentIndex, theNeedsLayout
          put the dgIndex of theControl into theCurrentIndex
          if theCurrentIndex is not theIndex then
             ## Allow developer to do something if unloading control
@@ -3170,8 +3232,15 @@ private command _list.DrawControlsInRealTime pForceRefresh, pCallback, pCallback
                dispatch "FillInData" to theControl with sDataArray[theIndex]
                lock messages
             end if
+
+            ## If data was changed, then the control must layout
+            put true into theNeedsLayout
          else
             -- put "not drawing index:" && theIndex & cr after msg
+
+            ## If data has not changed then only layout if DG2 features are
+            ## active
+            put theMustLayout into theNeedsLayout
          end if
          
          ## Set the rect AFTER filling in data in case filling in data causes the group to resize
@@ -3179,23 +3248,40 @@ private command _list.DrawControlsInRealTime pForceRefresh, pCallback, pCallback
          if pCallback is not empty then
             dispatch pCallback to me with pCallbackContext, theControl, theSequence, theRect, theTopLeft
          end if
-         set the topLeft of theControl to item 1 to 2 of theRect ## So developer can always count on topleft of controls in template code
-         lock messages
-         set the rect of theControl to theRect
-         unlock messages
-         dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
-         
-         ## Resize to fit height
-         if not controlHeightIsFixed then
+
+         ## Always set the topLeft of the row template - this causes unchanged
+         ## rows to scroll, and ensure that changed rows controls are where they
+         ## expect.
+         set the topLeft of theControl to item 1 to 2 of theRect
+
+         ## If the width or height of the row template has changed then get the
+         ## user script to layout it out again.
+         if theNeedsLayout or \
+            the width of theControl is not (item 3 of theRect - item 1 of theRect) or \
+            the height of theControl is not (item 4 of theRect - item 2 of theRect) then
             lock messages
-            put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
             set the rect of theControl to theRect
             unlock messages
+
+            set the lockUpdates of theControl to true
+            dispatch "LayoutControl" to theControl with theRect, DG2_GetWorkingRectOfControlFromControlRect(theControl, theRect)
+            set the lockUpdates of theControl to false
+
+            ## Resize to fit height
+            if not controlHeightIsFixed then
+               lock messages
+               put item 2 of theRect + the formattedHeight of theControl into item 4 of theRect
+               set the rect of theControl to theRect
+               unlock messages
+            end if
          end if
          
          put the bottom of theControl into item 2 of theTopLeft
          
-         ## Hilited index?
+         ## [[ HiliteAll ]] Update the hilite of the row template - ideally
+         ## this would only be done *if* the hilite of the row has changed
+         ## or the row template has been reused or the data for the row has
+         ## changed. 
          if theIndex is among the items of sHilitedIndexes then
             _HiliteControl theEffectiveControl, true
          else
@@ -3214,7 +3300,7 @@ private command _list.DrawControlsInRealTime pForceRefresh, pCallback, pCallback
    ## Filter control list and reset controls that aren't part of visible list
    put line (the number of lines of sTableObjectsA["visible row controls"] + 1) to -1 of theMasterControlList into theMasterControlList
    _ResetControls theMasterControlList
-   
+
    return empty
 end _list.DrawControlsInRealTime
 
@@ -3398,6 +3484,7 @@ private command _list.CalculateFormattedHeight
    lock messages
    copy theTemplateGroup to group "dgList" of me
    put it into theControl
+   set the layerMode of theControl to "dynamic"
    unlock messages
    
    try ## Watch for user errors
@@ -6143,6 +6230,12 @@ setprop dgProps [pProp] pValue
          set the dgProps[pProp] of me to "Data Grid"
          unlock messages
          break
+
+      case "minimal layout"
+         lock messages
+         set the dgProps[pProp] of me to pValue is true
+         unlock messages
+         break
          
       default
          throw "invalid property '" & pProp & "'"       
@@ -6357,6 +6450,10 @@ getprop dgProps [pProp]
          
       case "fixed control height" ## early dev versions
          return the dgProps["fixed row height"] of me
+         break
+
+      case "minimal layout"
+         return the dgProps["minimal layout"] of me
          break
    end switch
    
@@ -7683,6 +7780,7 @@ private command _ProcessNewIndexData pIndex
       put "control id" && word 3 of theControl && "of me" into sControlOfIndexA[pIndex]
       set the visible of theControl to false
       set the dgIndex of theControl to pIndex
+      set the layerMode of theControl to "dynamic"
       unlock messages
       
       put sControlOfIndexA[pIndex] into line (the number of lines of sTableObjectsA["all row controls"] + 1) of sTableObjectsA["all row controls"]
@@ -7735,6 +7833,7 @@ private command _UpdateIndexWithNewData pIndex
       lock messages
       copy theTemplateGroup to group "dgList" of me
       put it into theControl
+      set the layerMode of theControl to "dynamic"
    end if
    
    ## Insert data into control
@@ -8392,6 +8491,7 @@ private command _CacheControls
       copy theTemplateGroup to group "dgList" of me
       put "control id" && word 3 of it && "of me" & cr after sTableObjectsA["all row controls"] 
       set the name of it to the short name of it && format("%04d", i)
+      set the layerMode of it to "dynamic"
       
       ## Take over geometry
       set the lockloc of it to true
@@ -8558,20 +8658,28 @@ private command _LayoutCachedControls
    unlock screen
 end _LayoutCachedControls
 
-
 private command _HiliteControl pControl, pBoolean
-   if there is a graphic "Background" of pControl then 
+   if there is a graphic "Background" of pControl then
+      ## Compute the new background color based on whether it is hilited and
+      ## if not hilited, whether alternating colors should be used.
+      local tNewBackgroundColor
       if pBoolean then
-         set the backgroundColor of graphic "Background" of pControl to _GetHiliteColor()
+         put _GetHiliteColor() into tNewBackgroundColor
       else
          set the wholeMatches to true
          local theLine
          put itemOffset(the dgIndex of pControl, sIndexSequencing) into theLine
          if theLine mod 2 is kAlternatingRowModValue then
-            set the backgroundColor of graphic "Background" of pControl to _GetEffectiveColor("alternate row color")
+            put _GetEffectiveColor("alternate row color") into tNewBackgroundColor
          else
-            set the backgroundColor of graphic "Background" of pControl to _GetEffectiveColor("row color")
+            put _GetEffectiveColor("row color") into tNewBackgroundColor
          end if            
+      end if
+
+      ## [[ ColorRedraw ]] Only update the background color if it has actually
+      ## changed.
+      if the backgroundColor of graphic "Background" of pControl is not tNewBackgroundColor then
+        set the backgroundColor of graphic "Background" of pControl to tNewBackgroundColor
       end if
    end if
    
@@ -10827,6 +10935,7 @@ function DG2_CustomisableControlsGetDefaultEditModeReorderControl
       reset the templateGroup
       create invisible group "DG2 Default Edit Mode Reorder Control" in _TemplateControl()
       set the margins of it to kEditModeReorderControlMargins
+      set the layerMode of it to "dynamic"
 
       create widget as "com.livecode.widget.svgpath" in it
       set the iconPresetName of it to kEditModeReorderControlIcon
@@ -10848,6 +10957,7 @@ function DG2_CustomisableControlsGetDefaultEditModeActionSelectControl
       reset the templateGroup
       create invisible group "DG2 Default Edit Mode Action Select Control" in _TemplateControl()
       set the margins of it to kEditModeActionSelectControlMargins
+      set the layerMode of it to "dynamic"
 
       create widget as "com.livecode.widget.svgpath" in it
       set the iconPresetName of it to kEditModeActionSelectControlIcon
@@ -10872,6 +10982,7 @@ function DG2_CustomisableControlsGetDefaultEditModeActionControl
       reset the templateGroup
       create invisible group "DG2 Default Action Control" in _TemplateControl()
       set the margins of it to 0
+      set the layerMode of it to "dynamic"
 
       reset the templateButton
       create button "DG2 Default Action Control" in it
@@ -10903,6 +11014,7 @@ private function DG2_CustomisableControlsGetDefaultSwipeControl pName
       reset the templateGroup
       create invisible group pName in _TemplateControl()
       set the margins of it to 0
+      set the layerMode of it to "dynamic"
       put it into tGroup
 
       reset the templateGraphic
