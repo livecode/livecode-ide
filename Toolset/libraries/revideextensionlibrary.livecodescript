@@ -117,7 +117,7 @@ private command __extensionInstallPackage pPackageLocation
          next repeat
       end if
       # Ensure dependency exists
-      if not __extensionDependencyExists(tExtension) then
+      if not __extensionDependencyExists(tExtension) and not extensionIsBuiltin(tExtension) then
          throw "Dependency" && tExtension && "not available. Please install before proceeding"
       end if
    end repeat
