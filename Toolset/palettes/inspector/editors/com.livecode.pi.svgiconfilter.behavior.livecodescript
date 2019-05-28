@@ -11,10 +11,11 @@ on preOpenStack
 end preOpenStack
 
 on mouseUp
-   if the short name of the target is "iconList" then
+   if the short name of the target is "iconList" and \
+         the selectedIcon of widget "iconList" of me is not empty then
       set the dialogData to the selectedIcon of widget "iconList" of me
-      close this stack
    end if
+   close this stack
 end mouseUp
 
 on openField
