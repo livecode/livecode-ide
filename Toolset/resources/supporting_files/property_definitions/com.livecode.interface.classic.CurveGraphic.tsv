@@ -17,7 +17,7 @@ dashes
 startArrow							false					
 endArrow							false					
 points												
-layerMode							Static	Static,Dynamic,Scrolling				
+layerMode												
 behavior							empty	long id				
 foregroundColor						Border fill						
 foregroundPattern						Border fill						
