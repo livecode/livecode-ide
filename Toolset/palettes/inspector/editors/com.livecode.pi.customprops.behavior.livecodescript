@@ -3,6 +3,7 @@ local sPropSet, sHilitePath
 
 on editorInitialize
    put empty into sPropSet
+   set the pathDelimiter of widget "array" of me to numToCodepoint(11)
    put the editorLabel of me into field "rowlabel" of me
    set the rowShowLabel of me to false
    set the label of button "customPropertySet" of group "Set buttons" of me to "customKeys"
@@ -66,6 +67,7 @@ on editorUpdate
    else
       local tKey
       fetchArrayDataOnPath tPath, tValue[sPropSet], tKey 
+      set the itemDelimiter to the pathDelimiter of widget "array" of me
       if the result is empty then
          put tKey into field "value" of me
          put item -1 of tPath into field "key" of me
@@ -162,6 +164,7 @@ end setPropSet
 
 on setArrayDataOnPath pValue, pPath, @xArray
    local tKey
+   set the itemDelimiter to the pathDelimiter of widget "array" of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
       put pValue into xArray[tKey]
@@ -173,6 +176,7 @@ end setArrayDataOnPath
 
 on setArrayKeyOnPath pKey, pPath, @xArray
    local tKey
+   set the itemDelimiter to the pathDelimiter of widget "array" of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
       local tSubArray
@@ -187,6 +191,7 @@ end setArrayKeyOnPath
 
 on deleteArrayKeyOnPath pPath, @xArray
    local tKey
+   set the itemDelimiter to the pathDelimiter of widget "array" of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
       delete variable xArray[item 1 of pPath]
@@ -198,6 +203,7 @@ end deleteArrayKeyOnPath
 
 on addArrayKeyOnPath pPath, @xArray
    local tKey
+   set the itemDelimiter to the pathDelimiter of widget "array" of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
       put "" into xArray[item 1 of pPath]
@@ -209,6 +215,7 @@ end addArrayKeyOnPath
 
 on fetchArrayDataOnPath pPath, pArray, @rData
    local tKey
+   set the itemDelimiter to the pathDelimiter of widget "array" of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
       if tKey is not among the keys of pArray then
@@ -269,6 +276,7 @@ end keyChanged
 
 local sLastHilite
 private command keyChangedOnPath pPath
+   set the itemDelimiter to the pathDelimiter of widget "array" of me
    if pPath is empty then
       # Don't update anthing
       exit keyChangedOnPath
