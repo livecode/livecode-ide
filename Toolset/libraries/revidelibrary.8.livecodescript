@@ -4014,7 +4014,11 @@ function revIDESpecialFolderPath pKey, pParam
          return item 1 to -3 of the filename of stack "home" & "/Toolset"
          break
       case "Toolchain"
-         return item 1 to -3 of the filename of stack "home" & "/Toolchain"
+         if revEnvironmentIsInstalled() then
+            return item 1 to -3 of the filename of stack "home" & "/Toolchain"
+         else
+            return revEnvironmentBinariesPath()
+         end if
          break
       case "Object Property Definitions"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/property_definitions"
