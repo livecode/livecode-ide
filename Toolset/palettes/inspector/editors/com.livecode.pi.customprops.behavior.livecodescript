@@ -1,5 +1,6 @@
 ﻿script "com.livecode.pi.customprops.behavior"
 local sPropSet, sHilitePath
+local sLastHilite
 
 on editorInitialize
    put empty into sPropSet
@@ -274,7 +275,6 @@ on keyChanged
    keyChangedOnPath tPath
 end keyChanged
 
-local sLastHilite
 private command keyChangedOnPath pPath
    set the itemDelimiter to the pathDelimiter of widget "array" of me
    if pPath is empty then
