@@ -12,7 +12,9 @@ end preOpenStack
 
 on mouseUp
    if the short name of the target is "iconList" then
-      set the dialogData to the selectedIcon of widget "iconList" of me
+      if the selectedIcon of widget "iconList" of me is not empty then
+         set the dialogData to the selectedIcon of widget "iconList" of me
+      end if
       close this stack
    end if
 end mouseUp
