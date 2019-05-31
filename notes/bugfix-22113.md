@@ -1,0 +1,1 @@
+# Fix behavior of custom property inspector when editing a key or adding a new element

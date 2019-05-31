@@ -70,9 +70,12 @@ on editorUpdate
       fetchArrayDataOnPath tPath, tValue[sPropSet], tKey 
       set the itemDelimiter to the pathDelimiter of widget "array" of me
       if the result is empty then
-         put tKey into field "value" of me
-         put item -1 of tPath into field "key" of me
-         select the text of field "key" of me
+         if the text of field "value" of me is not tKey or \
+               the text of field "key" of me is not item -1 of tPath then
+            put tKey into field "value" of me
+            put item -1 of tPath into field "key" of me
+            select the text of field "key" of me
+         end if
       else
          put empty into field "key" of me
          put empty into field "value" of me
@@ -157,6 +160,7 @@ end editorResize
 
 on setPropSet pArray
    local tValue
+   set the arrayData of widget "array" of me to pArray
    put the editorValue of me into tValue
    put pArray into tValue[sPropSet]
    set the editorValue of me to tValue
@@ -168,6 +172,9 @@ on setArrayDataOnPath pValue, pPath, @xArray
    set the itemDelimiter to the pathDelimiter of widget "array" of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
+      if tKey is not among the keys of xArray then
+         exit setArrayDataOnPath
+      end if
       put pValue into xArray[tKey]
    else
       delete item 1 of pPath
@@ -180,9 +187,12 @@ on setArrayKeyOnPath pKey, pPath, @xArray
    set the itemDelimiter to the pathDelimiter of widget "array" of me
    put item 1 of pPath into tKey
    if the number of items in pPath is 1 then
+      if tKey is not among the keys of xArray then
+         exit setArrayKeyOnPath
+      end if
       local tSubArray
-      put xArray[item 1 of pPath] into tSubArray
-      delete variable xArray[item 1 of pPath]
+      put xArray[tKey] into tSubArray
+      delete variable xArray[tKey]
       put tSubArray into xArray[pKey]
    else
       delete item 1 of pPath
@@ -233,7 +243,9 @@ end fetchArrayDataOnPath
 
 on dataChanged
    checkRehilite
-   setPropSet the arrayData of widget 1 of me
+   if not the result then
+      setPropSet the arrayData of widget 1 of me
+   end if
 end dataChanged
 
 on valueChanged
@@ -245,7 +257,7 @@ end valueChanged
 private command valueChangedOnPath pPath
    if pPath is empty then
       # Don't update anthing
-      exit valueChangedOnPath
+      return false
    end if
    local tArray
    put the arrayData of widget 1 of me into tArray
@@ -267,6 +279,8 @@ private command valueChangedOnPath pPath
    end if
    setArrayDataOnPath field "value" of me, pPath, tArray
    setPropSet tArray
+   
+   return true
 end valueChangedOnPath
 
 on keyChanged
@@ -279,13 +293,13 @@ private command keyChangedOnPath pPath
    set the itemDelimiter to the pathDelimiter of widget "array" of me
    if pPath is empty then
       # Don't update anthing
-      exit keyChangedOnPath
+      return false
    end if
    
    local tNewKey
    put field "key" of me into tNewKey
    if tNewKey is item -1 of pPath then
-      exit  keyChangedOnPath
+      return false
    end if
    
    local tArray
@@ -308,7 +322,10 @@ private command keyChangedOnPath pPath
    
    put tNewKey into item -1 of pPath
    put pPath into sHilitePath
+   put pPath into sLastHilite
    unlock screen
+   
+   return true
 end keyChangedOnPath
 
 on propSetRenamed pFrom, pTo
@@ -386,8 +403,11 @@ end hiliteChanged
 
 on checkRehilite
    # Check to see if the key or value has changed
+   local tDidUpdate
    keyChangedOnPath sLastHilite
+   put the result into tDidUpdate
    valueChangedOnPath sLastHilite
+   put the result or tDidUpdate into tDidUpdate
    
    # Store the existing hilited path
    put the hilitedElement of widget "array" of me into sLastHilite
@@ -399,6 +419,8 @@ on checkRehilite
    
    set the disabled of field "value" of me to sLastHilite is empty
    set the disabled of field "key" of me to sLastHilite is empty
+   
+   return tDidUpdate
 end checkRehilite
 
 function arrayKeysAreNumeric pArrayA
