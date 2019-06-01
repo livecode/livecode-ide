@@ -740,7 +740,27 @@ We could use:
 		binds to "atof"
 
 See the [Language Reference](https://github.com/livecode/livecode/blob/develop/docs/guides/LiveCode%20Builder%20Language%20Reference.md#the-c-binding-string) 
-for more information on C binding strings. 
+for more information on C binding strings.
+
+##### Other Binding Examples
+
+* Binding to the [strlen function](http://www.cplusplus.com/reference/cstring/strlen/) in the C standard library:
+
+      foreign handler C_Strlen(in pString as ZStringNative) returns CUInt \
+         binds to "c:strlen"
+This function can the be called from within LiveCode Builder as follows:
+
+      variable tLength as Integer
+      put C_Strlen("Hello World") into tLength --tLength will have a value of 11
+
+* Binding to the [CFDataGetBytePtr function](https://developer.apple.com/documentation/corefoundation/1543330-cfdatagetbyteptr?language=objc) within Apple's C-based Carbon framework for macOS:
+
+      foreign handler C_CFDataGetBytePtr(in theData as ObjcId) returns Pointer \
+         binds to "c:Carbon.framework>CFDataGetBytePtr"
+Note that the binding string for Apple's C-based frameworks is typically of the
+form "c:FrameworkBundleName.framework>functionName", where *FrameworkBundleName*
+is the name of the framwork (e.g: Carbon / CoreGraphics / etc...) and *functionName*
+is the name of the function to bind to.
 
 ##### Callbacks
 
@@ -843,6 +863,77 @@ code folder `jvm`.
     code/universal-ios-iphoneos11.4/library.lcext
     code/universal-ios-iphoneos11.4/module.lcm
     code/universal-ios-iphonesimulator11.4/library.dylib
+
+##### LiveCode's Foundation Library and the FFI
+
+LiveCode's foundation library, called [libfoundation](https://github.com/livecode/livecode/tree/develop/libfoundation),
+contains a number of useful helper functions that can aid writing widgets and
+libraries in LiveCode Builder; indeed, many of the included core LiveCode Builder
+API modules (com.livecode.file, com.livecode.arithmetic, etc) make extensive
+use of the foundation library.
+
+The first step is to determine if the function you wish to use is available to use
+via the FFI. To do this it is necessary to look at the [foundation library header file](https://github.com/livecode/livecode/blob/develop/libfoundation/include/foundation.h)
+If the function is declared in the header file and the declaration is preceded
+by `MC_DLLEXPORT` then that function can be accessed through the FFI.
+
+For instance, the `MCMemoryNew` function has the following declaration in the header
+file:
+
+      MC_DLLEXPORT bool MCMemoryNew(size_t size, void*& r_record);
+and so it can be accessed through the API.
+
+###### Wrapping a Foundation Library Function in the FFI
+
+To provide an example, the `MCStringDecode` function is a function that converts a variable
+from the type `Data` to the native LiveCode string. It has the following declaration in the
+foundation library header file:
+
+      MC_DLLEXPORT bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+
+To wrap the function in LiveCode Builder it is necessary to understand the parameters
+of the function:
+
+* the `data` parameter is the variable of type `Data` that is to be converted to a `String`
+* the `encoding` parameter is an integer between zero and eleven that specifies the type of
+  data to be decoded. Of interest for this example is that `4` represents UTF8 encoded data
+  (the other available formats can be found in the `MCStringEncoding` declaration in the 
+  foundation library header file
+* the `is_external_rep` parameter exists for legacy reasons only, and takes a value `false`
+* the `r_string` parameter is the resulting decoded string. Unlike all the other parameters
+  it should be declared as an `out` parameter because it gives the decoded String
+
+The method to bind to a foundation library function is the same as binding to any C function,
+with two important distinctions:
+
+* the name of the function in the LCB declaration must exactly match the name of the function
+  in the foundation library
+* the binding string is simply `<builtin>`, with no class or function name specified
+
+This gives the following foreign declaration for the `MCStringDecode` function:
+
+      foreign handler MCStringDecode(in pData as Data, in pDataFormat as CUInt, in pExternalRep as CBool, \
+         out pString as String) returns CBool binds to "<builtin>"
+
+This foreign binding now allows for a simple string decoding function to be written in LCB:
+
+      unsafe handler StringFromUTF8Data(in pData as Data) returns String
+         variable tDecoded as String
+         MCStringDecode(pData, 4, false, tDecoded)
+         return tDecoded
+      end handler
+
+###### Further Foundation Library Examples
+
+* Binding to the `MCStringEncode` function (the reverse of `MCStringDecode`):
+
+      foreign handler MCStringEncode(in pString as String, in pDataFormat as CUInt, in pExternalRep as CBool, \
+         out pData as Data) returns CBool binds to "<builtin>"
+
+* Binding to the MCMemoryNew function that allocates and initialises a
+  block of memory:
+
+      foreign handler MCMemoryNew(in pSize as CUInt, out pPointer as Pointer) returns CBool binds to "<builtin>"
 
 #### Java
 
