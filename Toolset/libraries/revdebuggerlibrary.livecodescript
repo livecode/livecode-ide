@@ -2455,6 +2455,7 @@ on traceBreak pHandler, pLine
       set the traceStack to the short name of __TargetStack(the long id of the target)
       __UpdateScriptEditor tTarget, pHandler, pLine, "debug"
    else
+      delete variable sLastBreakInfo
       set the traceReturn to true
    end if
 end traceBreak
