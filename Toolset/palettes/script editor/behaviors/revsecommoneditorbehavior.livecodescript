@@ -1866,6 +1866,7 @@ function autoCompleteCompletionRequired pLineNumber, pStructureType, pStructureN
    local tScript
    put textGetScript() into tScript
    
+   local tOutOfBounds
    put autoCompleteInSlashCommentOrOutOfHandler(tScript, pLineNumber) into tOutOfBounds
    if tOutOfBounds then
       return false
