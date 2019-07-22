@@ -1,1 +1,1 @@
-# Sync auto complete window when msg box is scrolled horizontally
+# Sync auto complete field when msg box is scrolled horizontally
