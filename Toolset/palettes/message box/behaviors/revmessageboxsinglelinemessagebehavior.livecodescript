@@ -96,6 +96,7 @@ command revDisplayAutoComplete pString
       put 1 into lMatchingIndex
       get field "message" & char (the number of chars of field "message" +1) to (the number of chars of line 1 of lMatchingHistory) of  line 1 of lMatchingHistory
       if it is the text of field "auto complete" then
+         set the hscroll of field "auto complete" to the hscroll of field "message"
          unlock screen
          return empty
       end if
