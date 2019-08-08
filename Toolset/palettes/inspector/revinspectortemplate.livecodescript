@@ -29,8 +29,8 @@ end openStack
 
 on closeStack
    ## Unsubscribe from all messages
-   revIDEUnsubscribe "idePreferenceChanged:idePropertyInspector_labels"
-   
+   revIDEUnsubscribeAll
+
    set the cSelectedObjects of me to empty
    
    # Unlock
