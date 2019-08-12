@@ -29,7 +29,7 @@ end openStack
 
 on closeStack
    ## Unsubscribe from all messages
-   revIDEUnsubscribeAll
+   revIDEUnsubscribeAll the long id of me
 
    set the cSelectedObjects of me to empty
    
