@@ -70,9 +70,10 @@ on editorUpdate
          put tKey into field "value" of me
          put item -1 of tPath into field "key" of me
          
-         local tActiveField
-         put revRuggedID(the long id of the selectedfield) into tActiveField
-         if tActiveField contains not "revNewScriptEditor" then
+         if the long name of the target contains "widget" && quote & "array" & quote \
+               && "of group" && quote & "customProperties" & quote && "of group" && quote \
+               & "Custom Properties" & quote && "of group" && quote & "inspector" & quote \
+                  then
             select the text of field "key" of me
          end if
       else
