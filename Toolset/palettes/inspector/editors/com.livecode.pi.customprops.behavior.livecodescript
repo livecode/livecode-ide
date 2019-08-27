@@ -401,3 +401,9 @@ function arrayKeysAreNumeric pArrayA
    end repeat
    return true
 end arrayKeysAreNumeric
+
+## bug 22199 prevent hiliting field "Value" when clicking to enter text
+after openField
+   ## block "after openfield" message in stack "revInspectorEditorBehavior"
+end openField
+
