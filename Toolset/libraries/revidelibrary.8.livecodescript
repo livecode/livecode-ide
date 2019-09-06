@@ -2113,7 +2113,8 @@ private function __ideFilterObjectIDListWithPreference pObjectList
    return __ideRemoveIDEObjectIDsFromList(pObjectList)
 end __ideFilterObjectIDListWithPreference
 
-function revIDEStacksForDataView pIndex
+# [[ 2019.09.06 mdw Allow hiding script-only stacks ]]
+function revIDEStacksForDataView pIndex, pHideScriptOnlyStacks
    local tSortType, tSortOrder
    revIDEGetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
    
@@ -2121,6 +2122,16 @@ function revIDEStacksForDataView pIndex
    local tMainStacks, tInvertedMainStacks
    
    put ideMainStacks() into tMainStacks
+   if pHideScriptOnlyStacks is true then
+      local tStacks
+      repeat for each line tStack in tMainStacks
+         if "livecodescript" is in the long id of stack tStack then
+         else
+           put tStack & cr after tStacks
+         end if
+      end repeat
+      put tStacks into tMainStacks
+   end if
    if tSortType is "name" then
       if tSortOrder is "ascending" then
          sort lines of tMainStacks ascending
