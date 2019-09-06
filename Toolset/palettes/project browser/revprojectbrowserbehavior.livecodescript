@@ -2433,7 +2433,7 @@ on pbRightClick pObject
    end if
    put pObject before tSelected
    
-   revIDEPopupContextualMenu tSelected
+   revIDEPopupContextualMenu tSelected, "true"
 end pbRightClick
 
 ## Connector creation for all row types
