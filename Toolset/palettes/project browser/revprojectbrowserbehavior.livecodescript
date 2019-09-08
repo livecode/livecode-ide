@@ -76,7 +76,8 @@ on preOpenStack
    addFrameItem "groupControl","footer", "action", "Group controls", "folder open alt", "","groupControls", the long id of me
    addFrameItem "cloneControl","footer", "action", "Clone control", "files alt", "","cloneControls", the long id of me
    addFrameItem "deleteControl","footer", "action", "Delete control", "trash", "","deleteControls", the long id of me
-   
+   addFrameItem "refreshControl","footer", "action", "Refresh display", "cog", "","refreshProjectView", the long id of me
+
    
    # Preferences
    addFrameItem "pb_indicator", "header", "preference", "Object type indicator", "enum","Text,Icon", "preferenceChanged", the long id of me   
