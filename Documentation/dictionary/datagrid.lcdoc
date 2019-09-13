@@ -1924,9 +1924,22 @@ Deletes the specified indexes from the data grid. pIndexes is a comma
 delimited list of integers.
 
 
-Name: DeleteLine 
+Name: DeleteLine
 
-Synonyms: DeleteLines 
+Type: command 
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "DeleteLine" to group "DataGrid" with pLine
+
+Summary: Deletes the specified lines from the data grid. 
+
+Description:
+Deletes the specified line from the data grid. pLine is an 
+integer.
+
+
+Name: DeleteLines 
 
 Type: command 
 
