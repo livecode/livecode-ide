@@ -1908,13 +1908,27 @@ the data will be added to the end of the existing data.
 
 Name: DeleteIndex 
 
-Synonyms: DeleteIndexes 
-
 Type: command 
 
 Associations: datagrid, datagrid commands
 
 Syntax: dispatch "DeleteIndex" to group "DataGrid" with pIndex 
+
+Summary: Deletes the specified indexes from the data grid. 
+
+Description:
+
+Deletes the specified indexes from the data grid. pIndex is an
+integer.
+
+
+Name: DeleteIndexes
+
+Type: command 
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "DeleteIndexes" to group "DataGrid" with pIndexes 
 
 Summary: Deletes the specified indexes from the data grid. 
 
