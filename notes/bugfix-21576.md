@@ -1,1 +1,1 @@
-# Updated documentation for the DataGrid commands deleteLine and deleteLines which are no longer synonymous.
+# Split non-synonymous DataGrid commands deleteIndex and deleteIndexes as well as deleteLine and deleteLines in the documentation.
