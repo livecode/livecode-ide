@@ -1945,7 +1945,7 @@ Type: command
 
 Associations: datagrid, datagrid commands
 
-Syntax: dispatch "DeleteLine" to group "DataGrid" with pLine
+Syntax: dispatch "DeleteLine" to group "DataGrid" with pLines
 
 Summary: Deletes the specified lines from the data grid. 
 
