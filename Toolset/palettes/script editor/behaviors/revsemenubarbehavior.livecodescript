@@ -611,7 +611,8 @@ private function modifyMenu pMenuName, pMenu
    
    local tModifiedMenu
    dispatch "revHookBuildScriptEditorMenu" to me with pMenuName, pMenu, tModifiedMenu
-   if it is not "handled" then
+# [[ 2019.09.16 mdw allow both handled and passed responses ]]
+   if it is "unhandled" then
       put pMenu into tModifiedMenu
    end if
    return tModifiedMenu
@@ -619,5 +620,6 @@ end modifyMenu
 
 private function dispatchMenuPick pMenuName, pWhich
    dispatch "revHookScriptEditorMenuPick" to me with pMenuName, pWhich
-   return it is "handled"
+# [[ 2019.09.16 mdw allow both handled and passed responses ]]
+   return it is not "unhandled"
 end dispatchMenuPick
