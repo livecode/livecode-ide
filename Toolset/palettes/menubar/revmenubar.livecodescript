@@ -2762,6 +2762,10 @@ on revMenubarFileMenuPick pWhich
                else
                   revIDEActionNewMainstack tStackType
                end if
+                # [[ 2019.09.27 mdw center new stacks on linux ]]
+               local tStack
+               put the result into tStack
+               set the location of tStack to the screenloc
                break
             case "Open Recent File"
                local tRecentStack
