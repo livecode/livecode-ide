@@ -3357,7 +3357,15 @@ on revIDECreateObject pObjectTypeID, pTarget, pLoc
    end if
    
    __setPropertiesToDefaults tCreatedControlID, tObjPropsA
-   
+   if pObjectTypeID begins with "com.livecode.interface.classic.DataGrid" then
+   else
+      put 1 into tCount
+      repeat while there is a control (tObjectType & tCount)
+         add 1 to tCount
+      end repeat
+      set the name of tCreatedControlID to (tObjectType & tCount)
+   end if
+
    ## Set the size of the object to the size set in the Preferences
    __setSizeToPreference tCreatedControlID, pObjectTypeID
    
