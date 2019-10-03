@@ -1109,15 +1109,11 @@ function __readStructureOfContainer @pData
     local tControls
 
     put the childControlIDs of the target into tControls
-    repeat for each line tCardID in tControls
-#   repeat with x = 1 to the number of controls of the target
+    repeat with x = 1 to the number of lines in tControls
       # read the properties of the control
       dispatch function "__readPropertiesOfControl" to control x of the target with sControlPropertiesToRead, pData[x]
       
-      --local tName
-      --put the name of control x of the target into tName
-      
-      #  if the control is a group
+       #  if the control is a group
       if the name of control x of the target begins with "group" then
          
          dispatch function "__readStructureOfContainer" to control x of the target with pData[x]["controls"]
@@ -1181,18 +1177,19 @@ private command __fetchPropertyCustomGetter pGetter, pObject, pProperty, @xPropA
    end if
 end __fetchPropertyCustomGetter
 
+# MDW 2019.10.02 [[ feature_fast_stack_introspection ]] added pProperties parameter for speed
 private on __fetchPropertyOfControl pProp, @xData
    local tError
-   put empty into tError
-   
    local tObjID
-   put the long id of the target into tObjID
+
+   put empty into tError
+   if pProperties is empty then
+      put the long id of the target into tObjID
+      put __classicObjectProperties(tObjID) into pProperties
+   end if
    
-   local tProperties
-   put __classicObjectProperties(tObjID) into tProperties
-   
-   if tProperties["properties"][pProp]["getter"] is not empty then
-      __fetchPropertyCustomGetter tProperties["properties"][pProp]["getter"], \
+   if pProperties["properties"][pProp]["getter"] is not empty then
+      __fetchPropertyCustomGetter pProperties["properties"][pProp]["getter"], \
             tObjId, pProp, xData
       exit __fetchPropertyOfControl
    end if
@@ -1251,21 +1248,27 @@ private on __fetchPropertyOfControl pProp, @xData
    end if
 end __fetchPropertyOfControl
 
-# Used internall but not private. This function is dispatched to the object and reads the properties
+# Used internally but not private. This function is dispatched to the object and reads the properties
 # In the list. Sending it to the object allows the use of the target which reduces the lookup time
 # for each of the properties
+# MDW 2019.10.02 [[ feature_fast_stack_introspection ]] rewrote to take __classicObjectProperties out of the loop
 function __readPropertiesOfControl pList, @pData
-   local tError
+   local tObjID
+   put the long id of the target into tObjID
+   
+   local tProperties
+   put __classicObjectProperties(tObjID) into tProperties
+   
    set the itemdelimiter to ";"
    repeat for each line tProp in pList
       -- If this pseudo-property is actually multiple properties,
       -- the value is an array with keys the real property names
       if the number of items in tProp > 1 then
          repeat for each item tRealProp in tProp
-            __fetchPropertyOfControl tRealProp, pData[tRealProp]
+            __fetchPropertyOfControl tRealProp, pData[tRealProp], tProperties
          end repeat
       else
-         __fetchPropertyOfControl tProp, pData
+         __fetchPropertyOfControl tProp, pData, tProperties
       end if
    end repeat
 end __readPropertiesOfControl
