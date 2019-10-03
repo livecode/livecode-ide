@@ -1079,12 +1079,20 @@ function __readStructureOfStack @pData
    dispatch function "__readPropertiesOfControl" to the target with sStackPropertiesToRead, pData
    
    # 2) Process any cards
-   repeat with x = 1 to the number of cards of the target
+#  MDW 2019.10.02 [[ feature_fast_stack_introspection ]]
+    local x
+    local tCards
+
+    put the cardIDs of the target into tCards
+    put 1 into x
+    repeat for each line tCardID in tCards
+#   repeat with x = 1 to the number of cards of the target
       # a) Get basic properties for the card
       dispatch function "__readPropertiesOfControl" to card x of the target with sCardPropertiesToRead, pData["cards"][x]
       
       # b) Process the card container for all its controls
       dispatch function "__readStructureOfContainer" to card x of the target with pData["cards"][x]["controls"]
+        add 1 to x
    end repeat
    
    # 3) Process any subsctacks
@@ -1097,7 +1105,12 @@ function __readStructureOfContainer @pData
    local tControlsProcessedInContainer
    
    # 1) Repeat for each control in the container
-   repeat with x = 1 to the number of controls of the target
+#  MDW 2019.10.02 [[ feature_fast_stack_introspection ]]
+    local tControls
+
+    put the childControlIDs of the target into tControls
+    repeat for each line tCardID in tControls
+#   repeat with x = 1 to the number of controls of the target
       # read the properties of the control
       dispatch function "__readPropertiesOfControl" to control x of the target with sControlPropertiesToRead, pData[x]
       
