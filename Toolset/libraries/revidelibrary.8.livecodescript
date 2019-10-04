@@ -1134,15 +1134,22 @@ on __readGroupedPropertiesOfControl pGroupsA, @pDataA
       end repeat
    end repeat
    
+# MDW 2019.10.02 [[ feature_fast_stack_introspection ]] rewrote to take __classicObjectProperties out of the loop
+   local tObjID
+   put the long id of the target into tObjID
+   
+   local tProperties
+   put __classicObjectProperties(tObjID) into tProperties
+
    local tDataA
    set the itemdelimiter to ";"
    repeat for each key tKey in tPropMappingA
       if the number of items in tKey > 1 then
          repeat for each item tRealProp in tKey
-            __fetchPropertyOfControl tRealProp, tDataA[tKey]
+            __fetchPropertyOfControl tRealProp, tDataA[tKey], tProperties
          end repeat
       else
-         __fetchPropertyOfControl tKey, tDataA
+         __fetchPropertyOfControl tKey, tDataA, tProperties
       end if
    end repeat
    
@@ -1178,7 +1185,7 @@ private command __fetchPropertyCustomGetter pGetter, pObject, pProperty, @xPropA
 end __fetchPropertyCustomGetter
 
 # MDW 2019.10.02 [[ feature_fast_stack_introspection ]] added pProperties parameter for speed
-private on __fetchPropertyOfControl pProp, @xData
+private on __fetchPropertyOfControl pProp, @xData, pProperties
    local tError
    local tObjID
 
