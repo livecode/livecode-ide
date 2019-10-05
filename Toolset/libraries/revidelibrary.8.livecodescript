@@ -1106,10 +1106,11 @@ function __readStructureOfContainer @pData
    
    # 1) Repeat for each control in the container
 #  MDW 2019.10.02 [[ feature_fast_stack_introspection ]]
-    local tControls
+    local x, tControls
 
     put the childControlIDs of the target into tControls
-    repeat with x = 1 to the number of lines in tControls
+    put 1 into x
+    repeat for each line tCardID in tControls
       # read the properties of the control
       dispatch function "__readPropertiesOfControl" to control x of the target with sControlPropertiesToRead, pData[x]
       
@@ -1121,6 +1122,10 @@ function __readStructureOfContainer @pData
          add the number of elements of pData[x]["controls"] to tControlsProcessedInContainer
          add tControlsProcessedInContainer to x
       end if
+        add 1 to x
+        if x > the number of lines in tControls then
+            exit repeat
+        end if
    end repeat
    
    return tControlsProcessedInContainer
