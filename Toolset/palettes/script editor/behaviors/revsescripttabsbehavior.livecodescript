@@ -203,6 +203,7 @@ command goNextTab
    put sTabMap[tTabNumber] into tObject
    
    revSESetCurrentObject tObject
+   dispatch "checkFolding" to field "Script" of the owner of me
 end goNextTab
 
 # Description
@@ -232,6 +233,7 @@ command goPreviousTab
    put sTabMap[tTabNumber] into tObject
    
    revSESetCurrentObject tObject
+   dispatch "checkFolding" to field "Script" of the owner of me
 end goPreviousTab
 
 
@@ -335,6 +337,7 @@ command addTab pObject
    unlock screen
    
    resize
+   send "checkFolding" to field "Script" of the owner of me in 0 milliseconds
 end addTab
 
 
@@ -453,6 +456,7 @@ command removeTab pObject, pDontCheckReference
       # The first history item will be the previously selected tab now we have deleted the currently selected one.
       if historyGet(1) is not empty then
          setCurrentTab historyGet(1)
+         send "checkFolding" to field "Script" of the owner of me in 0 milliseconds
       else
          # No previously selected tab is available, so fall back to using the first added tab. This shouldn't ever happen,
          # but it doesn't seem sensible to throw an error.
@@ -750,6 +754,7 @@ private command tabsMenuPick pItemName
    put line (the menuHistory of button "Active Tabs Menu" of me - 2) of the cFullItems of button "Active Tabs Menu" of me into tObject
    if there is a tObject then
       revSESetCurrentObject tObject
+      dispatch "checkFolding" to field "Script" of the owner of me
    end if
 end tabsMenuPick
 
@@ -832,6 +837,7 @@ private command historyMenuPick pItemName
    if there is a tObject then
       revSEAddTargetObject tObject
       revSESetCurrentObject tObject
+      dispatch "checkFolding" to field "Script" of the owner of me
    end if
 end historyMenuPick
   
@@ -927,6 +933,7 @@ on mouseUp pButtonNumber
          focus on nothing
 
          revSESetCurrentObject sTabMap[tClickedTabNumber]
+         dispatch "checkFolding" to field "Script" of the owner of me
       end if
    end if
    unlock screen
