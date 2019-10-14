@@ -114,13 +114,16 @@ on commandKeyDown pWhich
    end if
    
    local tFolding
-   dispatch function "sePrefGet" to field "Script" of  revTopMostScriptEditor() with "Editor,folding"
-   put the result into tFolding
-   if (revTopMostScriptEditor()) <> empty and (pWhich is "K" or pWhich is "U") and  \
-         tFolding then
-      if pWhich is "K" then send "foldAll" to field "Script" of  revTopMostScriptEditor()
-      if pWhich is "U" then send "unfoldAll" to group "Editor" of revTopMostScriptEditor()
-      pass commandKeyDown
+   if revTopMostScriptEditor() <> empty then
+      dispatch function "sePrefGet" to field "Script" of revTopMostScriptEditor() with "Editor,folding"
+      put the result into tFolding
+      if tFolding then
+         if (pWhich is "K" or pWhich is "U") then
+            if pWhich is "K" then send "foldAll" to field "Script" of  revTopMostScriptEditor()
+            if pWhich is "U" then send "unfoldAll" to group "Editor" of revTopMostScriptEditor()
+            pass commandKeyDown
+         end if
+      end if
    end if
    
    if the optionKey is down and pWhich is "S" and the shiftKey is not down then
