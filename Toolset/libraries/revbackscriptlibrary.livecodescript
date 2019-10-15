@@ -3335,8 +3335,6 @@ on ideMouseMove pX, pY, pTarget
       else
          unlock cursor
       end if
-   else
-      unlock cursor
    end if
 end ideMouseMove
 
