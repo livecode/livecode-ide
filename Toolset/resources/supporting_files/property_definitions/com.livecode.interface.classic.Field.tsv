@@ -60,6 +60,7 @@ ink
 textFont												
 textSize												
 textStyle												
+textDirection
 textAlign												
 fixedLineHeight												
 textHeight												

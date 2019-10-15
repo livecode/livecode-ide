@@ -180,6 +180,7 @@ tabGroupBehavior	Contents focus with keyboard	Basic	com.livecode.pi.boolean	true
 tabStops	Tab stops	Table	com.livecode.pi.string	true	false			
 text	Text	Basic	com.livecode.pi.text	false	false			tabStops|15
 textAlign	Text align	Text	com.livecode.pi.textalign	true	false			
+textDirection	Text direction	Text	com.livecode.pi.enum	true	false		auto	ltr,rtl,auto
 textFont	Font	Text	com.livecode.pi.font	true	false
 textHeight	Text height	Text	com.livecode.pi.integer	true	false				4		1			
 textSize	Text size	Text	com.livecode.pi.integer	true	false					1		1			
