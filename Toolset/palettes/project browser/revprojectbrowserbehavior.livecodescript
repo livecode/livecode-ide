@@ -76,7 +76,7 @@ on preOpenStack
    addFrameItem "groupControl","footer", "action", "Group controls", "folder open alt", "","groupControls", the long id of me
    addFrameItem "cloneControl","footer", "action", "Clone control", "files alt", "","cloneControls", the long id of me
    addFrameItem "deleteControl","footer", "action", "Delete control", "trash", "","deleteControls", the long id of me
-   addFrameItem "refreshControl","footer", "action", "Refresh display", "refresh", "","refreshProjectView", the long id of me
+   addFrameItem "refreshControl","footer", "action", "Refresh display", "refresh", "","doRefreshProjectView", the long id of me
 
    
    # Preferences
@@ -131,6 +131,21 @@ on preOpenStack
    set the rect of group "content" of card 1 of me to the contentRect of me
    ideSelectedObjectChanged
 end preOpenStack
+
+on doRefreshProjectView
+    local tStacks, tCards
+
+    lock screen
+    put the openstacks into tStacks
+    repeat for each line tStack in tStacks
+        put the cardIDs of stack tStack into tCards
+        repeat for each line tCardID in tCards
+            refreshChildren the long name of card id tCardID of stack tStack
+        end repeat
+    end repeat
+    refreshProjectView
+    unlock screen
+end doRefreshProjectView
 
 on resizeStack
    lock screen
