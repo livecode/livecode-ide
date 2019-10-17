@@ -1,4 +1,3 @@
-﻿script "revidelibrary"
 /**
 Main IDE library providing functionality for palettes and other IDE add-ons.
 
@@ -1079,20 +1078,12 @@ function __readStructureOfStack @pData
    dispatch function "__readPropertiesOfControl" to the target with sStackPropertiesToRead, pData
    
    # 2) Process any cards
-#  MDW 2019.10.02 [[ feature_fast_stack_introspection ]]
-    local x
-    local tCards
-
-    put the cardIDs of the target into tCards
-    put 1 into x
-    repeat for each line tCardID in tCards
-#   repeat with x = 1 to the number of cards of the target
+   repeat with x = 1 to the number of cards of the target
       # a) Get basic properties for the card
       dispatch function "__readPropertiesOfControl" to card x of the target with sCardPropertiesToRead, pData["cards"][x]
       
       # b) Process the card container for all its controls
       dispatch function "__readStructureOfContainer" to card x of the target with pData["cards"][x]["controls"]
-        add 1 to x
    end repeat
    
    # 3) Process any subsctacks
@@ -1105,16 +1096,14 @@ function __readStructureOfContainer @pData
    local tControlsProcessedInContainer
    
    # 1) Repeat for each control in the container
-#  MDW 2019.10.02 [[ feature_fast_stack_introspection ]]
-    local x, tControls
-
-    put the childControlIDs of the target into tControls
-    put 1 into x
-    repeat for each line tCardID in tControls
+   repeat with x = 1 to the number of controls of the target
       # read the properties of the control
       dispatch function "__readPropertiesOfControl" to control x of the target with sControlPropertiesToRead, pData[x]
       
-       #  if the control is a group
+      --local tName
+      --put the name of control x of the target into tName
+      
+      #  if the control is a group
       if the name of control x of the target begins with "group" then
          
          dispatch function "__readStructureOfContainer" to control x of the target with pData[x]["controls"]
@@ -1122,10 +1111,6 @@ function __readStructureOfContainer @pData
          add the number of elements of pData[x]["controls"] to tControlsProcessedInContainer
          add tControlsProcessedInContainer to x
       end if
-        add 1 to x
-        if x > the number of lines in tControls then
-            exit repeat
-        end if
    end repeat
    
    return tControlsProcessedInContainer
@@ -1192,11 +1177,12 @@ end __fetchPropertyCustomGetter
 # MDW 2019.10.02 [[ feature_fast_stack_introspection ]] added pProperties parameter for speed
 private on __fetchPropertyOfControl pProp, @xData, pProperties
    local tError
-   local tObjID
-
    put empty into tError
+   
+   local tObjID
+   put the long id of the target into tObjID
+   
    if pProperties is empty then
-      put the long id of the target into tObjID
       put __classicObjectProperties(tObjID) into pProperties
    end if
    
@@ -1260,27 +1246,27 @@ private on __fetchPropertyOfControl pProp, @xData, pProperties
    end if
 end __fetchPropertyOfControl
 
-# Used internally but not private. This function is dispatched to the object and reads the properties
+# Used internall but not private. This function is dispatched to the object and reads the properties
 # In the list. Sending it to the object allows the use of the target which reduces the lookup time
 # for each of the properties
 # MDW 2019.10.02 [[ feature_fast_stack_introspection ]] rewrote to take __classicObjectProperties out of the loop
-function __readPropertiesOfControl pList, @pData
-   local tObjID
-   put the long id of the target into tObjID
-   
-   local tProperties
-   put __classicObjectProperties(tObjID) into tProperties
-   
+function __readPropertiesOfControl pList, @pData, pProperties
    set the itemdelimiter to ";"
+   
+   if pProperties is empty then
+      local tObjID
+      put the long id of the target into tObjID
+      put __classicObjectProperties(tObjID) into pProperties
+   end if
    repeat for each line tProp in pList
       -- If this pseudo-property is actually multiple properties,
       -- the value is an array with keys the real property names
       if the number of items in tProp > 1 then
          repeat for each item tRealProp in tProp
-            __fetchPropertyOfControl tRealProp, pData[tRealProp], tProperties
+            __fetchPropertyOfControl tRealProp, pData[tRealProp], pProperties
          end repeat
       else
-         __fetchPropertyOfControl tProp, pData, tProperties
+         __fetchPropertyOfControl tProp, pData, pProperties
       end if
    end repeat
 end __readPropertiesOfControl
@@ -2066,6 +2052,7 @@ function ideMainStacks
    local tShowIDEStacks
    put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
    
+   local tStacks, tFilteredStacks
    if tShowIDEStacks then
       return the mainstacks
    else
@@ -2141,7 +2128,7 @@ private function __ideFilterObjectIDListWithPreference pObjectList
    return __ideRemoveIDEObjectIDsFromList(pObjectList)
 end __ideFilterObjectIDListWithPreference
 
-function revIDEStacksForDataView pIndex
+function revIDEStacksForDataView pIndex, pHideScriptOnlyStacks
    local tSortType, tSortOrder
    revIDEGetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
    
@@ -2149,6 +2136,16 @@ function revIDEStacksForDataView pIndex
    local tMainStacks, tInvertedMainStacks
    
    put ideMainStacks() into tMainStacks
+   if pHideScriptOnlyStacks is true then
+      local tStacks
+      repeat for each line tStack in tMainStacks
+         if "livecodescript" is in the long id of stack tStack then
+         else
+           put tStack & cr after tStacks
+         end if
+      end repeat
+      put tStacks into tMainStacks
+   end if
    if tSortType is "name" then
       if tSortOrder is "ascending" then
          sort lines of tMainStacks ascending
@@ -12345,3 +12342,4 @@ command ideSetWindowBoundingRect
       set the windowBoundingRect to tWindowRect
    end if
 end ideSetWindowBoundingRect
+
