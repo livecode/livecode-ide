@@ -68,6 +68,7 @@ command revInternal__LoadIfLibrary pLibrary
       else
          throw "not a library"
       end if
+      set the _ideoverride of stack pLibrary to true
       send tMsg to stack pLibrary
       local tStackName
       put the name of stack pLibrary into tStackName
