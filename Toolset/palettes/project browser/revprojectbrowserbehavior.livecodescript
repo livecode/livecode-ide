@@ -140,7 +140,7 @@ private command doRefreshProjectView
    repeat for each line tStack in tStacks
       put the cardIDs of stack tStack into tCards
       repeat for each line tCardID in tCards
-         refreshChildren the long name of card id tCardID of stack tStack
+         refreshChildren the long id of card id tCardID of stack tStack
       end repeat
    end repeat
    
