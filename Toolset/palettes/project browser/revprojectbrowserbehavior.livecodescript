@@ -133,7 +133,7 @@ on preOpenStack
 end preOpenStack
 
 on doRefreshProjectView
-    local tStacks, tCards
+    local tStacks, tCards, tControls
 
     lock screen
     put the openstacks into tStacks
@@ -142,6 +142,13 @@ on doRefreshProjectView
         repeat for each line tCardID in tCards
             refreshChildren the long name of card id tCardID of stack tStack
         end repeat
+    end repeat
+
+    put the controlIDs of card "list" of stack "revIDEprojectbrowser" into tControls
+    repeat for each line tGroup in tControls
+        if the short name of control id tGroup is "containerRow" then
+            set the visible of control id tGroup of card "list" of stack "revIDEprojectbrowser" to true
+        end if
     end repeat
     refreshProjectView
     unlock screen
