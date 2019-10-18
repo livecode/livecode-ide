@@ -76,7 +76,7 @@ on preOpenStack
    addFrameItem "groupControl","footer", "action", "Group controls", "folder open alt", "","groupControls", the long id of me
    addFrameItem "cloneControl","footer", "action", "Clone control", "files alt", "","cloneControls", the long id of me
    addFrameItem "deleteControl","footer", "action", "Delete control", "trash", "","deleteControls", the long id of me
-   addFrameItem "refreshControl","footer", "action", "Refresh display", "refresh", "","doRefreshProjectView", the long id of me
+   addFrameItem "refreshControl","footer", "action", "Refresh display", "refresh", "","panic", the long id of me
 
    
    # Preferences
@@ -132,27 +132,26 @@ on preOpenStack
    ideSelectedObjectChanged
 end preOpenStack
 
-on doRefreshProjectView
-    local tStacks, tCards, tControls
-
-    lock screen
-    put the openstacks into tStacks
-    repeat for each line tStack in tStacks
-        put the cardIDs of stack tStack into tCards
-        repeat for each line tCardID in tCards
-            refreshChildren the long name of card id tCardID of stack tStack
-        end repeat
-    end repeat
-
-    put the controlIDs of card "list" of stack "revIDEprojectbrowser" into tControls
-    repeat for each line tGroup in tControls
-        if the short name of control id tGroup is "containerRow" then
-            set the visible of control id tGroup of card "list" of stack "revIDEprojectbrowser" to true
-        end if
-    end repeat
-    refreshProjectView
-    unlock screen
+private command doRefreshProjectView
+   local tStacks, tCards
+   
+   lock screen
+   put the openstacks into tStacks
+   repeat for each line tStack in tStacks
+      put the cardIDs of stack tStack into tCards
+      repeat for each line tCardID in tCards
+         refreshChildren the long name of card id tCardID of stack tStack
+      end repeat
+   end repeat
+   
+   refreshProjectView
+   unlock screen
 end doRefreshProjectView
+ 
+on panic
+   dispatch "ResetView" to control "dvList" of card "list" of this stack
+   doRefreshProjectView
+end panic
 
 on resizeStack
    lock screen
