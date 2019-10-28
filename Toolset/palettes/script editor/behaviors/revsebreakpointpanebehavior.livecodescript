@@ -461,7 +461,7 @@ on menuPick pItemName
             if the cType of sSelectedItem is "breakpoint" then
                revDebuggerRemoveBreakpoint the cObject of sSelectedItem, the cLine of sSelectedItem
             else
-               revDebuggerRemoveWatch the cObject of sSelectedItem, the cHandler of sSelectedItem, the cVariable of sSelectedItem
+               revDebuggerRemoveWatch the cObject of sSelectedItem, the cHandler of sSelectedItem, the cVariable of sSelectedItem, the cCondition of sSelectedItem
             end if
          end if
       break

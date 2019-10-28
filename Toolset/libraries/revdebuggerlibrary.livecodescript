@@ -1139,12 +1139,12 @@ end revDebuggerAddWatch
 #   pVariable : the name of the variable being watched
 # Description
 #   Removes the specified watch, deactivating it first.
-command revDebuggerRemoveWatch pObject, pHandler, pVariable
+command revDebuggerRemoveWatch pObject, pHandler, pVariable, pCondition
    # Deactivate the watch then remove it from the object
-   revDebuggerDeactivateWatch pObject, pHandler, pVariable
+   revDebuggerDeactivateWatch pObject, pHandler, pVariable, pCondition
    
    local tWatch
-   put __BuildWatchLineFromDetails(pObject, pHandler, pVariable) into tWatch
+   put __BuildWatchLineFromDetails(pObject, pHandler, pVariable, pCondition) into tWatch
    
    local tStoredWatches
    put __GetWatchInformation(pObject, "watches") into tStoredWatches
@@ -1240,7 +1240,7 @@ end __GetWatchInformation
 #   pVariable : the name of the varaiable being watched
 # Description
 #   Deactivates the specified watch, by removing it from the watchedVariables.
-command revDebuggerDeactivateWatch pObject, pHandler, pVariable
+command revDebuggerDeactivateWatch pObject, pHandler, pVariable, pCondition
    --   local tWatch, tDataStore, tMetadataType
    --   if pObject is empty then
    --      put empty & comma & empty & comma & pVariable into tWatch
@@ -1255,7 +1255,7 @@ command revDebuggerDeactivateWatch pObject, pHandler, pVariable
    put __GetWatchInformation(pObject, "watches") into tStackWatches
    
    local tWatch
-   put __BuildWatchLineFromDetails(pObject, pHandler, pVariable) into tWatch
+   put __BuildWatchLineFromDetails(pObject, pHandler, pVariable, pCondition) into tWatch
    
    local tStackLineNumber
    put __WatchOffset(tWatch, tStackWatches) into tStackLineNumber
@@ -1542,11 +1542,11 @@ end __BreakpointOffset
 #   pWatches : the list of watches to search in
 private function __Watchoffset pWatch, pWatches
    local tMatchString
-   if the last char of pWatch is not comma then
-      put pWatch & comma into tMatchString
-   else
+   --if the last char of pWatch is not comma then
+      --put pWatch & comma into tMatchString
+   --else
       put pWatch into tMatchString
-   end if
+   --end if
    return lineOffset(tMatchString, pWatches)
 end __Watchoffset
 
