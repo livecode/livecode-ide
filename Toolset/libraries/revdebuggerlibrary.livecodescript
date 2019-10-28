@@ -1139,6 +1139,7 @@ end revDebuggerAddWatch
 #   pVariable : the name of the variable being watched
 # Description
 #   Removes the specified watch, deactivating it first.
+# 2019-10-27 MDW [[ fix_delete_watched_variable ]] added pCondition
 command revDebuggerRemoveWatch pObject, pHandler, pVariable, pCondition
    # Deactivate the watch then remove it from the object
    revDebuggerDeactivateWatch pObject, pHandler, pVariable, pCondition
@@ -1240,6 +1241,7 @@ end __GetWatchInformation
 #   pVariable : the name of the varaiable being watched
 # Description
 #   Deactivates the specified watch, by removing it from the watchedVariables.
+# 2019-10-27 MDW [[ fix_delete_watched_variable ]] added pCondition
 command revDebuggerDeactivateWatch pObject, pHandler, pVariable, pCondition
    --   local tWatch, tDataStore, tMetadataType
    --   if pObject is empty then
@@ -1542,11 +1544,9 @@ end __BreakpointOffset
 #   pWatches : the list of watches to search in
 private function __Watchoffset pWatch, pWatches
    local tMatchString
-   --if the last char of pWatch is not comma then
-      --put pWatch & comma into tMatchString
-   --else
-      put pWatch into tMatchString
-   --end if
+
+# 2019-10-27 MDW [[ fix_delete_watched_variable ]] no trailing comma is for watched variables
+   put pWatch into tMatchString
    return lineOffset(tMatchString, pWatches)
 end __Watchoffset
 

@@ -439,6 +439,7 @@ on mouseDown pButtonNumber
    pass mouseDown
 end mouseDown
 
+# 2019-10-27 MDW [[ fix_delete_watched_variable ]] added pCondition
 on menuPick pItemName
    if the short name of the target is not "Breakpoint Context Menu" then
       pass menuPick
