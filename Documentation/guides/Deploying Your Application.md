@@ -666,7 +666,7 @@ LiveCode Business Edition the remote debugger will detect any execution errors
 and present them.
 
 > **Note:** iOS devices connected via USB are detected as test targets in
-LiveCode Business Edition and apps will be installed on them, however, the will
+LiveCode Business Edition and apps will be installed on them, however, they will
 not be automatically launched.
 
 
