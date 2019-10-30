@@ -196,7 +196,7 @@ The following database drivers are available by default:
 - SQLite
 - PostgreSQL
 
-## Mac Deployment
+## Mac Deployment Settings
 
 ![](images/standalone-settings-mac.png)
 
@@ -220,7 +220,7 @@ Related lessons:
 
 * [Signing and Uploading apps to the Mac App Store](http://lessons.livecode.com/m/4071/l/876834-signing-and-uploading-apps-to-the-mac-app-store)
 
-## Windows Deployment
+## Windows Deployment Settings
 
 ![](images/standalone-settings-windows.png)
 
@@ -235,7 +235,7 @@ Figure 6 – Standalone Settings – Windows
 | **Version information**        | The version information to be stored as part of your application and displayed in the Windows property inspector and dialogs.                                                                                                                                                    |
 | **UAC Execution Level**        | Select the user account control level that applies to your application. For more information, consult [MSDN](https://msdn.microsoft.com/en-us/library/bb384608.aspx)                                                                                                             |
 
-## Linux Deployment
+## Linux Deployment Settings
 
 ![](images/standalone-settings-linux.png)
 
@@ -247,7 +247,7 @@ Figure 7 – Standalone Settings – Linux
 | **Build for Linux x64**         | Build a standalone for 64-bit Linux                                                                                                                                                                                                                          |
 | **Include**                     | Select built-in LiveCode dialogs to include. These dialogs are useful if your application may be run on a system that does not include these dialogs as part of the OS. You do not need to include these dialogs if you are running a recent version of GTK. |
 
-## iOS Deployment
+## iOS Deployment Settings
 
 ![](images/standalone-settings-ios-basic.png)
 
@@ -363,7 +363,7 @@ Related lessons:
 * [How do I Become an iOS Developer?](http://lessons.livecode.com/m/4069/l/565715-how-do-i-become-an-ios-developer)
 * [How do I build an iOS application?](http://lessons.livecode.com/m/4069/l/565713-how-do-i-build-an-ios-application)
 
-## Android Deployment
+## Android Deployment Settings
 
 ![](images/standalone-settings-android.png)
 
