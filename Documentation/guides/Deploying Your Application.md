@@ -422,7 +422,7 @@ Related lessons:
 * [LiveCode and Android Studio](http://lessons.livecode.com/m/4069/l/985962-livecode-and-android-studio)
 * [The Basics: How do I Create Hello World on Android?](http://lessons.livecode.com/m/4069/l/27733-the-basics-how-do-i-create-hello-world-on-android)
 
-#### HTML5 Deployment
+## HTML5 Deployment
 
 ![](images/standalone-settings-html5.png)
 
