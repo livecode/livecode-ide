@@ -1476,7 +1476,7 @@ function levelConnectors pObjectArray, pParentRow, pPosition
          put "branch"  into tLevelConnectors[1] 
       end if
    else if pObjectArray["type"] is "card" then
-      if word 1 of pObjectArray["owner"] is "stack" AND pObjectArray["owner"] contains "of" then
+      if word 1 of pObjectArray["owner"] is "stack" AND pObjectArray["owner"] contains "of stack " & quote then
          put sDisplayArray["objects"][pParentRow]["levels"] into tParentLevelConnectors
          if pPosition is "only" then 
             if tParentLevelConnectors[1] is "branch" then  put "vertical" into tLevelConnectors[1]
