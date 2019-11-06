@@ -435,7 +435,7 @@ command connectorResize pControl
    set the width of group pControl of me to 20
    set the top of group pControl of me to the top of me
    
-   set the width of widget "icon" of group pControl of me to 12
+   set the width of widget "icon" of group pControl of me to 13
    set the height of widget "icon" of group pControl of me to the width of widget "icon" of group pControl of me
    set the loc of widget "icon" of group pControl  of me to the loc of group pControl of me
 end connectorResize
