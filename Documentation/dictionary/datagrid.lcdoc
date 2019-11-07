@@ -1908,8 +1908,6 @@ the data will be added to the end of the existing data.
 
 Name: DeleteIndex 
 
-Synonyms: DeleteIndexes 
-
 Type: command 
 
 Associations: datagrid, datagrid commands
@@ -1920,19 +1918,48 @@ Summary: Deletes the specified indexes from the data grid.
 
 Description:
 
+Deletes the specified indexes from the data grid. pIndex is an
+integer.
+
+
+Name: DeleteIndexes
+
+Type: command 
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "DeleteIndexes" to group "DataGrid" with pIndexes 
+
+Summary: Deletes the specified indexes from the data grid. 
+
+Description:
+
 Deletes the specified indexes from the data grid. pIndexes is a comma
 delimited list of integers.
 
 
-Name: DeleteLine 
-
-Synonyms: DeleteLines 
+Name: DeleteLine
 
 Type: command 
 
 Associations: datagrid, datagrid commands
 
 Syntax: dispatch "DeleteLine" to group "DataGrid" with pLine
+
+Summary: Deletes the specified lines from the data grid. 
+
+Description:
+Deletes the specified line from the data grid. pLine is an 
+integer.
+
+
+Name: DeleteLines 
+
+Type: command 
+
+Associations: datagrid, datagrid commands
+
+Syntax: dispatch "DeleteLine" to group "DataGrid" with pLines
 
 Summary: Deletes the specified lines from the data grid. 
 
