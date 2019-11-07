@@ -1,1 +1,1 @@
-# # PB align widget "icon" with connectors
+# Align widget "icon" with connectors in Project Browser
