@@ -142,7 +142,6 @@ private command doRefreshProjectView
 end doRefreshProjectView
  
 on panic
-   dispatch "ResetView" to control "dvList" of card "list" of this stack
    doRefreshProjectView
 end panic
 
