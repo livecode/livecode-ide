@@ -136,15 +136,8 @@ private command doRefreshProjectView
    local tStacks, tCards
    
    lock screen
-   put the openstacks into tStacks
-   repeat for each line tStack in tStacks
-      put the cardIDs of stack tStack into tCards
-      repeat for each line tCardID in tCards
-         refreshChildren the long id of card id tCardID of stack tStack
-      end repeat
-   end repeat
-   
-   refreshProjectView
+   setUpProjectView # bn's implementation
+   buildProjectView true
    unlock screen
 end doRefreshProjectView
  
