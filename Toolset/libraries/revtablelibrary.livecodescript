@@ -504,6 +504,12 @@ on revWriteCellField pObject
   then set the htmltext of field tFieldName to tCurrentView
   else set the text of field tFieldName to tCurrentView
   set the itemDelimiter to tab
+  
+   # Patch for bug 18983
+   if the number of items of line tycell of field tFieldName < txcell then
+      put empty into item txcell of line tycell of field tFieldName
+   end if
+
   put the htmltext of item txcell of line tycell of field tFieldName into tCurrentHtmlText
   if tCurrentHtmltext contains "#9;" then
     put "<p></p>" into tCurrentHtmlText
