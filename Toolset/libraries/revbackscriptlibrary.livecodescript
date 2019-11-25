@@ -2481,26 +2481,17 @@ function revDBDriverPath pDriver, pPlatform, pArchitecture
    -- returns path to database driver from runtime or user runtime folder
    -- will be a folder on Mac OS X, a list of files on Windows
    
-   local tEnvironmentFolder, tUserFolder
-   switch pPlatform
-      case "MacOSX"
-         if pArchitecture is empty then
-            put "Universal" into pArchitecture
-         end if
-         put revEnvironmentRuntimePath() & "/Mac OS X/" & pArchitecture & "/Externals" into tEnvironmentFolder
-         put revEnvironmentUserRuntimePath() & "/Mac OS X/" & pArchitecture & "/Externals" into tUserFolder
-         break
-         
-      case "Windows"
-         put revEnvironmentRuntimePath() & "/Windows/x86-32/Externals" into tEnvironmentFolder
-         put revEnvironmentUserRuntimePath() & "/Windows/x86-32/Externals" into tUserFolder
-         break
-         
-      case "Linux"
-         put revEnvironmentRuntimePath() & "/Linux/" & pArchitecture & "/Externals" into tEnvironmentFolder
-         put revEnvironmentUserRuntimePath() & "/Linux/" & pArchitecture & "/Externals" into tUserFolder
-         break
-   end switch
+   local tPlatform, tEnvironmentFolder, tUserFolder
+   put pPlatform into tPlatform
+   if tPlatform is "MacOSX" then
+      put "Mac OS X" into tPlatform
+      if pArchitecture is empty then
+         put "Universal" into pArchitecture
+      end if
+   end if
+   
+   put revEnvironmentRuntimePath() & "/" & tPlatform & "/" & pArchitecture & "/Externals" into tEnvironmentFolder
+   put revEnvironmentUserRuntimePath() & "/" & tPlatform & "/" & pArchitecture & "/Externals" into tUserFolder
    
    local tEnvironmentFile, tUserFile, tLegacyFile
    put tEnvironmentFolder & slash & kDriverIndexSubFolder & slash & kDriverIndexName into tEnvironmentFile

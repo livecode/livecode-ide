@@ -464,7 +464,26 @@ command connectorResize pControl
    set the width of group pControl of me to 20
    set the top of group pControl of me to the top of me
    
-   set the width of widget "icon" of group pControl of me to 12
+   local tTextSize, tWidgetSize
+   put the effective textsize of me into tTextSize
+   switch 
+      case tTextSize >= 8 and tTextSize < 12
+         put 11 into tWidgetSize
+         break
+      case tTextSize >= 12 and tTextSize < 14
+         put 13 into tWidgetSize
+         break
+      case tTextSize >= 14 and tTextSize < 18
+         put 15 into tWidgetSize
+         break
+      case tTextSize >= 18
+         put 17 into tWidgetSize
+         break
+      default
+         put 13 into tWidgetSize
+   end switch
+   
+   set the width of widget "icon" of group pControl of me to tWidgetSize
    set the height of widget "icon" of group pControl of me to the width of widget "icon" of group pControl of me
    set the loc of widget "icon" of group pControl  of me to the loc of group pControl of me
 end connectorResize
