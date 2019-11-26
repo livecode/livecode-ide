@@ -4,6 +4,7 @@ title	Oval Graphic
 												
 -----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 name							Oval					
+label
 tooltip												
 style							oval	rectangle,roundrect,line,oval,regular,line,curve,polygon				
 opaque							true					

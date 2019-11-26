@@ -907,7 +907,7 @@ local sSavePreferencesMessage
 
 command revInternal__SavePreferences
    cancel sSavePreferencesMessage
-   send "__revInternal_SavePreferences" to me in 500 milliseconds
+   send "__revInternal_SavePreferences" to me in 30 seconds
    put the result into sSavePreferencesMessage
 end revInternal__SavePreferences
 
@@ -2212,6 +2212,18 @@ function revEnvironmentNonNativeBinariesPath pPlatform, pSDK
       case "Android"
       case "Android armv6"
          put slash & "android-armv6-bin" after tNonNativeBinariesPath
+         break
+      case "Android armv7"
+         put slash & "android-armv7-bin" after tNonNativeBinariesPath
+         break
+      case "Android arm64"
+         put slash & "android-arm64-bin" after tNonNativeBinariesPath
+         break
+      case "Android x86"
+         put slash & "android-x86-bin" after tNonNativeBinariesPath
+         break
+      case "Android x86_64"
+         put slash & "android-x86_64-bin" after tNonNativeBinariesPath
          break
       case "Emscripten"
       case "HTML5"

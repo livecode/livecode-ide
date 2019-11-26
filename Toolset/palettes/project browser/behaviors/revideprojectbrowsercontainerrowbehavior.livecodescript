@@ -22,7 +22,7 @@ on FillInData pDataA, pRow
    end if 
    
    -- Behaviors
-   if pDataA["behavior scriptlines"] is empty then
+   if pDataA["behavior"] is empty then
       repeat with i = 1 to 10
          hide grc ("behaviorScriptLines" & i) of me
       end repeat
@@ -31,18 +31,41 @@ on FillInData pDataA, pRow
       # check parent behaviors
       local tTargetBehavior
       local tBehaviorList
+      local tMissingBehaviorList
+      local tSkipRepeat
       
       put pDataA["behavior"] into tTargetBehavior
-      put tTargetBehavior & cr into tBehaviorList
-      repeat
-         put the behavior of tTargetBehavior into tTargetBehavior
-         if tTargetBehavior <> "" then
-            put tTargetBehavior & cr after tBehaviorList
-         else
-            exit repeat
+       
+      if tTargetBehavior <> empty then
+         if exists(tTargetBehavior) then
+            put tTargetBehavior & cr into tBehaviorList
+            put false into tSkipRepeat
+         else --##
+            put tTargetBehavior & cr into tBehaviorList
+            put tTargetBehavior & cr after tMissingBehaviorList
+            put true into tSkipRepeat
          end if
-      end repeat
-      delete char - 1 of tBehaviorList -- return
+      end if
+      
+      if not tSkipRepeat then
+         repeat
+            put the behavior of tTargetBehavior into tTargetBehavior
+            
+            if tTargetBehavior = empty then
+               exit repeat
+            end if
+           
+            if not (exists(tTargetBehavior)) then --##
+               put tTargetBehavior & cr after tBehaviorList
+               put tTargetBehavior & cr after tMissingBehaviorList
+               exit repeat
+            else
+               put tTargetBehavior & cr after tBehaviorList
+            end if
+         end repeat
+      end if
+      delete char -1 of tBehaviorList -- return
+      delete char -1 of tMissingBehaviorList -- return
       
       local tNoOfLInes
       local tCounter
@@ -51,6 +74,9 @@ on FillInData pDataA, pRow
       put min(the number of lines of tBehaviorList, 10) into tNoOfLines
       repeat with i = 1 to tNoOfLines
          set the toolTip of grc ("behaviorScriptLines" & i) of me to line i of tBehaviorList
+         if line i of tBehaviorList is among the lines of tMissingBehaviorList then
+            set the toolTip of grc ("behaviorScriptLines" & i) of me to ("Missing: " & line i of tBehaviorList)
+         end if
          show grc ("behaviorScriptLines" & i) of me
          put ("cBehaviorLongID" & i) into tCPName
          set the tCPName of me to line i of tBehaviorList
@@ -234,6 +260,7 @@ end dvRowControl
 
 setProp dvHilite[pHiliteColor] pBoolean
    # Override basic hilite feature...
+   local tCPName
    
    if pBoolean then
       set the foregroundColor of field "type" of me to revIDEColor("dataView_TextHiliteColor")
@@ -242,7 +269,12 @@ setProp dvHilite[pHiliteColor] pBoolean
       set the backgroundColor of field "scriptLines" of me to  revIDEColor("dataView_TextHiliteColor")
       repeat with i = 1 to 10
          set the foregroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("text_1")
-         set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_TextHiliteColor")
+         put ("cBehaviorLongID" & i) into tCPName
+         if exists(the tCPName of me) then
+            set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_TextHiliteColor")
+         else
+            set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_scriptErrorBackgroundColor")
+         end if
       end repeat
       set the colorOverlay["color"] of button "typeIcon" of me to revIDEColor("dataView_TextHiliteColor")
       set the foregroundColor of me to revIDEColor("dataView_disclosureIconHiliteColor")
@@ -262,10 +294,11 @@ setProp dvHilite[pHiliteColor] pBoolean
          set the backgroundColor of field "scriptLines" of me to revIDEColor("dataView_hiliteColor")
       end if
       
-      local tCPName
       repeat with i = 1 to 10
          put ("cBehaviorLongID" & i) into tCPName
          if exists(the tCPName of me) and the scriptStatus of the tCPName of me is "error" then
+            set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_scriptErrorBackgroundColor")
+         else if not (exists(the tCPName of me)) then
             set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_scriptErrorBackgroundColor")
          else
             set the backgroundColor of grc ("behaviorScriptLines" & i) of me to revIDEColor("dataView_hiliteColor")
@@ -284,33 +317,43 @@ on mouseUp
          edit the script of the cObjectLongID of me
          break
       case "behaviorScriptLines1"
+         checkExistence (the cBehaviorLongID1 of me), 1
          edit the script of the cBehaviorLongID1 of me
          break
       case "behaviorScriptLines2"
+         checkExistence (the cBehaviorLongID2 of me), 2
          edit the script of the cBehaviorLongID2 of me
          break
       case "behaviorScriptLines3"
+         checkExistence (the cBehaviorLongID3 of me), 3
          edit the script of the cBehaviorLongID3 of me
          break
       case "behaviorScriptLines4"
+         checkExistence (the cBehaviorLongID4 of me), 4
          edit the script of the cBehaviorLongID4 of me
          break
       case "behaviorScriptLines5"
+         checkExistence (the cBehaviorLongID5 of me), 5
          edit the script of the cBehaviorLongID5 of me
          break
       case "behaviorScriptLines6"
+         checkExistence (the cBehaviorLongID6 of me), 6
          edit the script of the cBehaviorLongID6 of me
          break
       case "behaviorScriptLines7"
+         checkExistence (the cBehaviorLongID7 of me), 7
          edit the script of the cBehaviorLongID7 of me
          break
       case "behaviorScriptLines8"
+         checkExistence (the cBehaviorLongID8 of me), 8
          edit the script of the cBehaviorLongID8 of me
          break
       case "behaviorScriptLines9"
+         checkExistence (the cBehaviorLongID9 of me), 9
          edit the script of the cBehaviorLongID9 of me
          break
       case "behaviorScriptLines10"
+         checkExistence (the cBehaviorLongID10 of me), 10
          edit the script of the cBehaviorLongID10 of me
          break
       case "icon"
@@ -332,8 +375,25 @@ on mouseDoubleUp
    goToObject the cObjectLongID of me
 end mouseDoubleUp
 
+command checkExistence pLongID, pOrdinal
+   local tGraphic
+   if exists(pLongID) then 
+      return empty
+   else
+      put ("behaviorScriptLines" & pOrdinal) into tGraphic
+      answer the toolTip of grc tGraphic of me
+      exit to top
+   end if
+end checkExistence
+
 on CloseFieldEditor pFieldEditor, pRow, pKey, pClosingTriggeredBy
    # The text the user entered is different than the current value of the target field.
+   if word 1 of the cObjectLongID of me is "stack" and \ 
+         not ideCheckStackName(the text of pFieldEditor) then
+      // Force a refresh
+      set the text of field "name" of me to the text of field "name" of me
+      exit CloseFieldEditor
+   end if
    set the textColor of field "name" of me to revIDEColor("text_3")
    set the text of field "name" of me to the text of pFieldEditor
    updateProperty the cObjectLongID of me, "name", the text of pFieldEditor
@@ -425,7 +485,26 @@ command connectorResize pControl
    set the width of group pControl of me to 20
    set the top of group pControl of me to the top of me
    
-   set the width of widget "icon" of group pControl of me to 12
+   local tTextSize, tWidgetSize
+   put the effective textsize of me into tTextSize
+   switch 
+      case tTextSize >= 8 and tTextSize < 12
+         put 11 into tWidgetSize
+         break
+      case tTextSize >= 12 and tTextSize < 14
+         put 13 into tWidgetSize
+         break
+      case tTextSize >= 14 and tTextSize < 18
+         put 15 into tWidgetSize
+         break
+      case tTextSize >= 18
+         put 17 into tWidgetSize
+         break
+      default
+         put 13 into tWidgetSize
+   end switch
+   
+   set the width of widget "icon" of group pControl of me to tWidgetSize
    set the height of widget "icon" of group pControl of me to the width of widget "icon" of group pControl of me
    set the loc of widget "icon" of group pControl  of me to the loc of group pControl of me
 end connectorResize

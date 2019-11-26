@@ -93,7 +93,14 @@ on ideOpenStack pTarget
       exit ideOpenStack
    end if
    
-   if the short name of ideStackOfObject(pTarget) is not the short name of me then
+   local tTargetStack
+   put the short name of ideStackOfObject(pTarget) into tTargetStack
+   
+   if the filename of stack (the mainstack of stack tTargetStack) is among the lines of revIDEGetAllPlugins() then
+      exit ideOpenStack
+   end if
+   
+   if tTargetStack is not the short name of me then
       startCenterClose
    end if
 end ideOpenStack
@@ -163,8 +170,8 @@ end socialMediaUnhiliteAll
 
 command recentFilesInitialise
    set the dgProps["hilite color"] of group "recentFiles" to uiColor("edition")
-   set the linkColor to uiColor("edition")
-   set the underlineLinks to false
+   set the linkColor of this stack to uiColor("edition")
+   set the underlineLinks of this stack to false
 end recentFilesInitialise
 
 command recentFilesSet

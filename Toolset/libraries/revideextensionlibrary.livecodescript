@@ -167,10 +167,10 @@ function revIDEExtensions pType, pStatus, pWithoutInvisible
    
    # Repeat over the extension array looking for elements with matching type
    local tExtensions, tExtension
-   repeat for each key tExtensionKey in sExtensions
-      put sExtensions[tExtensionKey] into tExtension
+   repeat for each key tCacheId in sExtensions
+      put sExtensions[tCacheId] into tExtension
       if tExtension["name"] is empty then 
-         delete variable sExtensions[tExtensionKey]
+         __extensionCacheRemove tCacheId
          next repeat
       end if
       if pType is not empty and tExtension["type"] is not pType then 
@@ -843,17 +843,32 @@ private function __fetchExtensionManifestData pFolder, pExtFile
    return tDataA
 end __fetchExtensionManifestData
 
+private command __extensionAddDependenciesToRequiresArray \
+         pExtension, @xRequiresA, @xExtensions
+
+   local tDependentsA
+   put revIDEExtensionProperty(pExtension, "requires") into tDependentsA
+
+   repeat for each element tElement in tDependentsA
+      if tElement is not among the keys of xRequiresA then
+         __extensionAddDependenciesToRequiresArray \
+               tElement, xRequiresA, xExtensions
+      end if
+      addToList tElement, xRequiresA[pExtension]
+   end repeat
+
+   put empty into xExtensions[pExtension]
+end __extensionAddDependenciesToRequiresArray
+
 function revIDEExtensionsOrderByDependency pExtensions
    # Accumulate an array of dependencies
-   local tRequiresA, tDependentsA
+   local tRequiresA, tExtensions
    repeat for each line tExtension in pExtensions
-      put revIDEExtensionProperty(tExtension, "requires") into tDependentsA
-      repeat for each element tElement in tDependentsA
-         addToList tElement, tRequiresA[tExtension]
-      end repeat
+      __extensionAddDependenciesToRequiresArray \
+            tExtension, tRequiresA, tExtensions
    end repeat
    
-   return extensionOrderByDependency(pExtensions, tRequiresA)
+   return extensionOrderByDependency(the keys of tExtensions, tRequiresA)
 end revIDEExtensionsOrderByDependency
 
 private function isUserExtension pData
@@ -1049,43 +1064,48 @@ private command __MapCodeLibraryForIDE pFolder
    end repeat
 end __MapCodeLibraryForIDE
 
-private command __LoadExtension pCacheIndex, pSourceType, pSourceFile, pFolder, pStatus, @xError
+private command __LoadExtension pCacheIndex, pExtensionType, pSourceType, \
+      pSourceFile, pFolder, pStatus, @xError
+   revInternal__Log "Message", the params
    if xError is empty then
       local tFileToLoad
-      if pSourceType is "lcb" then
-         local tResources, tModule, tCode
-         put revIDEExtensionBytecodeFilename(true) into tFileToLoad
-         put pFolder & slash & tFileToLoad into tModule
-         if there is no file tModule then
-            put revIDEExtensionBytecodeFilename(false) into tFileToLoad
-            put pFolder & slash & tFileToLoad into tModule
-         end if
-         put pFolder & slash & "resources" into tResources
-         put pFolder & slash & "code" into tCode
-         # map code before loading extension
-         if there is a folder tCode then
-            __MapCodeLibraryForIDE tCode
-         end if
-         # If we have a resources folder then load with resource path
-         if there is a folder tResources then
-            load extension from file tModule with resource path tResources
-         else
-            load extension from file tModule
-         end if
-      else
-         set the itemdelimiter to "."
-         revInternal__LoadLibrary item 1 of pSourceFile, pFolder & slash & pSourceFile
-         put pSourceFile into tFileToLoad
-      end if
-      if the result is not empty then
-         put toUpper(char 1 of the result) & \
-               char 2 to -1 of the result into xError
-         put "error" into pStatus
-      else
+      if not __extensionNeedsLoad(pExtensionType) then
          put "installed" into pStatus
+      else
+         if pSourceType is "lcb" then
+            local tResources, tModule, tCode
+            put revIDEExtensionBytecodeFilename(true) into tFileToLoad
+            put pFolder & slash & tFileToLoad into tModule
+            if there is no file tModule then
+               put revIDEExtensionBytecodeFilename(false) into tFileToLoad
+               put pFolder & slash & tFileToLoad into tModule
+            end if
+            put pFolder & slash & "resources" into tResources
+            put pFolder & slash & "code" into tCode
+            # map code before loading extension
+            if there is a folder tCode then
+               __MapCodeLibraryForIDE tCode
+            end if
+            # If we have a resources folder then load with resource path
+            if there is a folder tResources then
+               load extension from file tModule with resource path tResources
+            else
+               load extension from file tModule
+            end if
+         else
+            set the itemdelimiter to "."
+            revInternal__LoadLibrary item 1 of pSourceFile, pFolder & slash & pSourceFile
+            put pSourceFile into tFileToLoad
+         end if
+         if the result is not empty then
+            put toUpper(char 1 of the result) & \
+                  char 2 to -1 of the result into xError
+            put "error" into pStatus
+         else
+            put "installed" into pStatus
+         end if
       end if
    end if
-   
    __extensionPropertySet pCacheIndex, "status", pStatus
    __extensionPropertySet pCacheIndex, "error", xError
    __extensionPropertySet pCacheIndex, "file", tFileToLoad
@@ -1112,7 +1132,8 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
             revIDEExtensionGetLoadOnStartup(pID) into tLoadOnStartup
    end if
    if not pIsStartup or tLoadOnStartup is not false then
-      __LoadExtension tCacheIndex, "lcb", pSourceFile, pFolder, pStatus, pError
+      __LoadExtension tCacheIndex, pAdditionalInfoA["type"], "lcb", pSourceFile, \
+         pFolder, pStatus, pError
       -- If we have an error loading, try to recompile the extension
       if pError is not empty then
          if not pIsIDEExtension and pSourceFile is not empty then
@@ -1120,7 +1141,8 @@ private command __revIDELCBExtensionLoad pID, pFolder, pVersion, pStatus, \
                   revIDEExtensionBytecodeFilename(true)
             if the result is empty then
                local tNewError
-               __LoadExtension tCacheIndex, "lcb", pSourceFile, pFolder, pStatus, tNewError
+               __LoadExtension tCacheIndex, pAdditionalInfoA["type"], "lcb", \
+                  pSourceFile, pFolder, pStatus, tNewError
                put tNewError into pError
             end if
          end if
@@ -1190,6 +1212,25 @@ private function __UseTypeToKey pUseType
    end switch
 end __UseTypeToKey
 
+private function __extensionHasID pType
+   switch pType
+      case "snippet"
+         return false
+      default
+         return true
+   end switch
+end __extensionHasID
+
+private function __extensionNeedsLoad pType
+   switch pType
+      case "snippet"
+      case "sample"
+         return false
+      default
+         return true
+   end switch
+end __extensionNeedsLoad
+
 private command __revIDELCSExtensionLoad pFullPath, pFolder, pVersion, pStatus, \
       pError, pIsIDEExtension, pSourceFile, pAdditionalInfoA, pIsStartup
    
@@ -1203,25 +1244,33 @@ private command __revIDELCSExtensionLoad pFullPath, pFolder, pVersion, pStatus, 
       __extensionPropertySet tCacheIndex, "install_path", pFolder
    end if
    
+   if pAdditionalInfoA is empty then
+      put __fetchExtensionManifestData(pFolder, pSourceFile) into pAdditionalInfoA
+   end if
+   
+   local tType
+   put pAdditionalInfoA["type"] into tType
+   
    # Update name, status, error, and whether the extension comes with the IDE
    local tId
+   if __extensionHasID(tType) then
    try
       put the short name of stack (pFolder & slash & pSourceFile) into tId
    catch pError
    end try
+   else
+      # The manifest should contain an id
+      put pAdditionalInfoA["name"] into tId
+   end if
    
    local tLoadOnStartup
-   if pError is empty then
+   if pError is empty and __extensionNeedsLoad(tType) then
       put revIDEExtensionGetLoadOnStartup(tID) into tLoadOnStartup
    end if
-   if not pIsStartup or tLoadOnStartup is not false then
-      __LoadExtension tCacheIndex, "lcs", pSourceFile, pFolder, pStatus, pError
+   if not pIsStartup or (tLoadOnStartup is not false) then   
+      __LoadExtension tCacheIndex, tType, "lcs", pSourceFile, pFolder, pStatus, pError
    else
       __extensionPropertySet tCacheIndex, "status", "unloaded" 
-   end if
-   
-   if pAdditionalInfoA is empty then
-      put __fetchExtensionManifestData(pFolder, pSourceFile) into pAdditionalInfoA
    end if
    
    __extensionPropertySet tCacheIndex, "name", tId
@@ -1245,7 +1294,7 @@ private command __revIDELCSExtensionLoad pFullPath, pFolder, pVersion, pStatus, 
    __extensionPropertySet tCacheIndex, "source_file", pSourceFile
    __extensionPropertySet tCacheIndex, "ide", pIsIDEExtension
    __extensionPropertySet tCacheIndex, "source_type", "lcs"
-   __extensionPropertySet tCacheIndex, "type", "library"
+   __extensionPropertySet tCacheIndex, "type", pAdditionalInfoA["type"]
    __extensionPropertySet tCacheIndex, "uservisible", true
    __extensionPropertySet tCacheIndex, "support_files", pAdditionalInfoA["support_files"]
    
@@ -1261,6 +1310,14 @@ private command __revIDELCSExtensionLoad pFullPath, pFolder, pVersion, pStatus, 
       end if
    end if
    
+   # If this is not startup, then auto-launch snippet or sample stack
+   if not pIsStartup then
+      if tType is "snippet" then
+         revIDEExtensionShowSnippet pFolder & slash & pSourceFile
+      else if tType is "sample" then
+         revIDEExtensionOpenSample pFolder & slash & pSourceFile
+      end if
+   end if
    return pError
 end __revIDELCSExtensionLoad
 
@@ -1273,7 +1330,7 @@ command revIDEExtensionReload pTypeId
    end if
    local tError, tDataA
    put sExtensions[tCacheIndex] into tDataA
-   __LoadExtension tCacheIndex, tDataA["source_type"], \
+   __LoadExtension tCacheIndex, tDataA["type"], tDataA["source_type"], \
          tDataA["source_file"], tDataA["install_path"], \
          "", tError
    if tError is not empty then
@@ -1547,3 +1604,46 @@ command revIDEExtensionIconFromType pType, pID, @rIconName, @rIconPath
          break
    end switch
 end revIDEExtensionIconFromType
+
+command revIDEExtensionShowSnippet pSourceFile
+   local tSnippet
+   put revIDEUTF8FileContents(pSourceFile) into tSnippet
+   lock screen
+   revIDEOpenPalette("snippet viewer")
+   dispatch "revIDESnippetViewerSetSnippet" to stack \
+      revIDEPaletteToStackName("snippet viewer") with tSnippet
+   unlock screen
+end revIDEExtensionShowSnippet
+
+local sSampleFileName
+local sOpenedStacksA
+on ideOpenStack pCard
+   local tStack
+   put the long id of the owner of pCard into tStack
+   if tStack is the long id of stack sSampleFileName then
+      ## Clear the filename to force the user to choose save location if saving the stack
+      put the short name of tStack into sOpenedStacksA[sSampleFileName]
+      set the filename of tStack to empty
+      put empty into sSampleFileName
+      revIDEUnsubscribe "ideOpenStack"
+   end if
+end ideOpenStack
+
+command revIDEExtensionLaunchSampleStack pSampleStack
+    // Check if the sample stack has already been opened,
+    // i.e. if its name is mapped in the array. If so, just
+    // open it.
+    if there is a stack (sOpenedStacksA[pSampleStack]) then
+        open stack sOpenedStacksA[pSampleStack]
+        exit revIDEExtensionLaunchSampleStack
+    end if
+    
+    // Otherwise open the stack from the file. Wait until we
+    // get the openStack message before emptying the filename
+    // otherwise we will get a long id clash
+    revIDESubscribe "ideOpenStack"
+    put pSampleStack into sSampleFileName
+    
+    ## Open the sample stack
+    open stack pSampleStack
+end revIDEExtensionLaunchSampleStack

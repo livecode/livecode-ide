@@ -69,6 +69,7 @@ on editorUpdate
       if the result is empty then
          put tKey into field "value" of me
          put item -1 of tPath into field "key" of me
+         select the text of field "key" of me
       else
          put empty into field "key" of me
          put empty into field "value" of me
@@ -90,9 +91,10 @@ end editorUpdate
 constant kControlGap = 5
 constant kKeyFieldHeight = 21
 constant kLabelFieldHeight = 21
-constant kValueFieldHeight = 63
+constant kValueFieldHeight = 126
 constant kLabelSize = 50
 constant kSetButtonsHeight = 30
+constant kWidgetHeight = 150
 
 on editorResize
    lock screen
@@ -111,9 +113,16 @@ on editorResize
    set the lockLoc of group "Set buttons" of me to true
    send "groupResize kLabelSize, kControlGap" to group "Set buttons" of me
    
+   local tTopGroupHeight
+   put the bottom of group "background" into tTopGroupHeight
+   
    # Use all space not taken by other elements for main array display
-   local tWidgetHeight
-   put the height of me - (4 * kControlGap + kLabelFieldHeight + kKeyFieldHeight + kValueFieldHeight + kSetButtonsHeight) into tWidgetHeight
+   local tWidgetHeight, tValueHeight
+   put kWidgetHeight into tWidgetHeight
+   put max(the height of this card - ( 6 * kControlGap + kLabelFieldHeight  \
+         + kKeyFieldHeight + kValueFieldHeight + kSetButtonsHeight  \
+         + tWidgetHeight + tTopGroupHeight), 0) into tValueHeight
+
    set the height of widget 1 of me to tWidgetHeight
    set the width of widget 1 of me to the width of me
    set the left of widget 1 of me to the left of me
@@ -135,7 +144,7 @@ on editorResize
    set the left of field "value label" of me to the left of me
    
    set the width of field "value" of me to the width of me - kLabelSize - kControlGap
-   set the height of field "value" of me to kValueFieldHeight
+   set the height of field "value" of me to kValueFieldHeight + tValueHeight
    set the top of field "value" of me to the bottom of field "key" of me + kControlGap
    set the left of field "value" of me to the right of field "value label" of me + kControlGap
    

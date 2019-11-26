@@ -103,11 +103,11 @@ private function __MenuActionsForRow pDataA
          put "Uninstall" & return after tActions
       end if
    else if pDataA["status"] is "installed" then
-      if not pDataA["_ide"] then
+      if _canLoad(pDataA) then
          put "Unload" & return after tActions
-         if not pDataA["ide"] then
-            put "Uninstall" & return after tActions
          end if
+      if not pDataA["_ide"] and not pDataA["ide"] then
+         put "Uninstall" & return after tActions
       end if
    else if pDataA["status"] is "error" then
       if not pDataA["ide"] then
@@ -122,9 +122,13 @@ private function __MenuActionsForRow pDataA
          put "!c" before tShow
       end if
       put tShow after tActions
+   else if pDataA["type"] is "sample" then
+      put "Open stack" & return after tActions
+   else if pDataA["type"] is "snippet" then
+      put "Show snippet" & return after tActions
    end if
    
-   if not pDataA["_ide"] then
+   if _canLoad(pDataA) then
       local tLoadOnStartup
       put "Load on startup/|Toggle Load" & return into tLoadOnStartup
       if revIDEExtensionGetLoadOnStartup(pDataA["name"]) is not false then
@@ -133,11 +137,11 @@ private function __MenuActionsForRow pDataA
       put tLoadOnStartup after tActions
    end if
    
-   put "Show Documentation" & return after tActions
+   put "Show documentation" & return after tActions
    
    local tSampleList
    if pDataA["samples"] is not empty then
-      put "Sample Stacks" & return after tActions
+      put "Sample stacks" & return after tActions
       put pDataA["samples"] into tSampleList
       repeat for each line tSample in the keys of tSampleList
          put tab & tSample & return after tActions
@@ -145,10 +149,22 @@ private function __MenuActionsForRow pDataA
       if the last char of tActions is return then delete the last char of tActions
       set the cSampleStacks of me to pDataA["samples"]
    else
-      put "(Sample Stacks" & return after tActions
+      put "(Sample stacks" & return after tActions
    end if
    return tActions
 end __MenuActionsForRow
+
+private function _canLoad pDataA
+   if pDataA["_ide"] then
+      return false
+   end if
+   switch pDataA["type"]
+      case "snippet"
+      case "sample"
+         return false
+   end switch
+   return true
+end _canLoad
 
 on LayoutControl pControlRect
    
@@ -285,6 +301,12 @@ on menuPick pAction
          break
       case "Show Documentation"
          revIDEGoToExtensionAPI tKind
+         break
+      case "Open stack"
+         launchExtensionSampleStack tKind
+         break
+      case "Show snippet"
+         showExtensionSnippet tKind
          break
    end switch
 end menuPick

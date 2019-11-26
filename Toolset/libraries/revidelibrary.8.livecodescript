@@ -2280,9 +2280,11 @@ Example: set revIDEGetPreference("text size") to 12
 Returns (Any): The value of the preference
 */
 on revIDESetPreference pPreferenceName, pValue
-   set the pPreferenceName of stack "revpreferences" to pValue
-   revInternal__SavePreferences
-   ideMessageSend "idePreferenceChanged:" & pPreferenceName,pValue
+   if the pPreferenceName of stack "revpreferences" is not pValue then
+      set the pPreferenceName of stack "revpreferences" to pValue
+      revInternal__SavePreferences
+      ideMessageSend "idePreferenceChanged:" & pPreferenceName,pValue
+   end if
 end revIDESetPreference
 
 command revIDESetPreferenceOfSet pSetName, pPreferenceName, pValue
@@ -4012,7 +4014,11 @@ function revIDESpecialFolderPath pKey, pParam
          return item 1 to -3 of the filename of stack "home" & "/Toolset"
          break
       case "Toolchain"
-         return item 1 to -3 of the filename of stack "home" & "/Toolchain"
+         if revEnvironmentIsInstalled() then
+            return item 1 to -3 of the filename of stack "home" & "/Toolchain"
+         else
+            return revEnvironmentBinariesPath()
+         end if
          break
       case "Object Property Definitions"
          return item 1 to -3 of the filename of stack "home" & "/Toolset/resources/supporting_files/property_definitions"
@@ -4348,7 +4354,7 @@ Returns a list of all the display names of stacks recognised by the IDE as a pal
 */
 function revIDEAvailablePalettes
    return "Menubar,Tools,Inspector,Message Box,Project Browser,Extension Manager,Extension Builder,Start Center,Welcome,Menu Builder,Message Watcher,Plugin Preferences," \
-   & "Standalone Settings,About,Dictionary,Guide,Resource Center,Preferences,Search"	
+   & "Standalone Settings,About,Dictionary,Guide,Resource Center,Preferences,Search,Snippet Viewer"
 end revIDEAvailablePalettes
 
 function revIDEPaletteToStackName pPalette
@@ -4397,6 +4403,8 @@ function revIDEPaletteToStackName pPalette
          return "revDictionary"
       case "resource center"
          return "revResourceCenter"
+      case "snippet viewer"
+         return "revIDESnippetViewer"
    end switch
 end revIDEPaletteToStackName
 
@@ -4624,6 +4632,7 @@ command revIDEOpenPalette pPaletteName
       case "standalone settings"
       case "message watcher"
       case "tools"
+      case "snippet viewer"
          palette stack tStackName
          break
       case "search"
@@ -5106,6 +5115,27 @@ private on __setPropertyOfObject pObject, pProperty, pValue
    
 end __setPropertyOfObject
 
+function ideCheckStackName pName
+   if char 1 to 3 of pName is "rev" then
+      answer warning revIDELocalise("Using rev in the first three characters of a stack name is reserved for use by the LiveCode development environment and advanced users creating Plug-ins. If you use these characters, your stack may not behave as expected.") with revIDELocalise("OK") and revIDELocalise("Cancel")
+      if it is revIDELocalise("Cancel") then
+         return false
+      end if
+   end if
+   if pName is a number then
+      beep
+      answer error revIDELocalise("You cannot set the name of a stack to a number.")
+      return false
+   end if
+   if pName contains quote then 
+      beep
+      answer error revIDELocalise("The name of the stack cannot contain quotes")
+      return false
+   end if 
+   
+   return true
+end ideCheckStackName
+
 on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
    local tThrottlePropertyChanged
    put false into tThrottlePropertyChanged
@@ -5127,27 +5157,14 @@ on revIDEPropertySet pObjectList, pProperty, pValue, pLockUpdates
          
          # If stack name is changed, use new name when setting edited
          if tStack is tObject and pProperty is "name" then
-            local tOldName
-            put the short name of tStack into tOldName
-            if char 1 to 3 of pValue is "rev" then
-               answer warning revIDELocalise("Using rev in the first three characters of a stack name is reserved for use by the LiveCode development environment and advanced users creating Plug-ins. If you use these characters, your stack may not behave as expected.") with revIDELocalise("OK") and revIDELocalise("Cancel")
-               if it is revIDELocalise("Cancel") then
-                  set the name of tStack to tOldName
-                  exit revIDEPropertySet
-               end if
-            end if
-            if pValue is a number then 
-               beep
-               answer error revIDELocalise("You cannot set the name of a stack to a number.")
+            
+            if not ideCheckStackName(pValue) then
+               local tOldName
+               put the short name of tStack into tOldName
                set the name of tStack to tOldName
                exit revIDEPropertySet
             end if
-            if pValue contains quote then 
-               beep
-               answer error revIDELocalise("The name of the stack cannot contain quotes")
-               set the name of tStack to tOldName
-               exit revIDEPropertySet
-            end if
+            
             put pValue into tStackName
          else
             put the short name of tStack into tStackName
@@ -6513,14 +6530,7 @@ on revIDETogglePaletteView
    unlock screen
 end revIDETogglePaletteView
 
-on revIDEPopupContextualMenu pTargets
-   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
-end revIDEPopupContextualMenu
-
-local sPluginsA
-on revIDEUpdatePlugins
-   global gREVStartupList, gREVShutdownlist, gREVDontLoadMenus
-   
+function revIDEGetAllPlugins
    local tUserPlugins
    put revAbsoluteFolderListing(revEnvironmentUserPluginsPath()) into tUserPlugins
    
@@ -6536,6 +6546,19 @@ on revIDEUpdatePlugins
    if tDevelopmentPlugins is not empty then
       put revCombineFilePaths(tFinal,tDevelopmentPlugins) into tFinal
    end if
+   return tFinal
+end revIDEGetAllPlugins
+   
+on revIDEPopupContextualMenu pTargets
+   dispatch "revMenubarPopupContextualMenu" to stack revIDEPaletteToStackName("menubar") with pTargets
+end revIDEPopupContextualMenu
+
+local sPluginsA
+on revIDEUpdatePlugins
+   global gREVStartupList, gREVShutdownlist, gREVDontLoadMenus
+   
+   local tFinal
+   put revIDEGetAllPlugins() into tFinal
    
    put empty into gREVStartupList
    put empty into gREVShutdownList
@@ -8086,13 +8109,18 @@ on revIDECut
    end if
    
    lock screen
-   lock messages
+   
    if the selectedImage is not empty then
       # If the there is a selection in an image using the image selection tool
       # Then make sure no text is selected before doing the cut
-      if the selectedText is not empty then select empty
+      if the selectedText is not empty then 
+         lock messages
+         select empty
+         unlock messages
+      end if
       set the defaultStack to revTargetStack(the long id of the selectedImage)
       cut
+      unlock screen
       exit revIDECut
    end if
    
@@ -8100,7 +8128,7 @@ on revIDECut
    if revCheckGroupDelete() then
       cut
    end if
-   unlock messages
+   
    unlock screen
    
    ideMessageSend "ideSelectedObjectChanged"
@@ -8517,7 +8545,9 @@ on ideStyleText pSelectedChunk, pSelectedObject, pIsField, pWhich, pValue
 
          if pWhich is "superscript" then put -4 into tTextShiftAmount
          else put 4 into tTextShiftAmount
-         if the textShift of tTarget is a number then put 0 into tTextShiftAmount
+         if the textShift of tTarget is a number AND the textShift of tTarget is not 0 then 
+            put 0 into tTextShiftAmount
+         end if
 
          set the textShift of tTarget to tTextShiftAmount
          break
@@ -9291,7 +9321,8 @@ on revIDEToggleReshapeGraphic
       revInternal__LoadLibrary "revReshapeLibrary"
       revSetMarkers
    else
-      revSetMarkers true
+      revSetMarkers "true"
+
       revInternal__UnloadLibrary "revReshapeLibrary"
    end if
 end revIDEToggleReshapeGraphic

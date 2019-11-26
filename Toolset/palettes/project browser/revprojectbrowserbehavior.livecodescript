@@ -6,7 +6,7 @@ on arrowKey pDirection
    put the dvHilitedRows of group "objectList" of me into tHilitedRow
    
    -- up and down are handled by the data view
-   if the number of items of tHilitedRow is 1 then
+   if the number of items of tHilitedRow is 1 and not (the dvIsFieldEditor of the target) then
       switch pDirection
          case "left"
             if getRowExpanded(getAbsoluteRow(tHilitedRow)) then
@@ -14,7 +14,7 @@ on arrowKey pDirection
             end if
             break
          case "right"
-             if not getRowExpanded(getAbsoluteRow(tHilitedRow)) then
+            if not getRowExpanded(getAbsoluteRow(tHilitedRow)) then
                toggleGroup tHilitedRow, true
             end if
             break
@@ -1476,7 +1476,7 @@ function levelConnectors pObjectArray, pParentRow, pPosition
          put "branch"  into tLevelConnectors[1] 
       end if
    else if pObjectArray["type"] is "card" then
-      if word 1 of pObjectArray["owner"] is "stack" AND pObjectArray["owner"] contains "of" then
+      if word 1 of pObjectArray["owner"] is "stack" AND the owner of pObjectArray["owner"] is not empty then
          put sDisplayArray["objects"][pParentRow]["levels"] into tParentLevelConnectors
          if pPosition is "only" then 
             if tParentLevelConnectors[1] is "branch" then  put "vertical" into tLevelConnectors[1]

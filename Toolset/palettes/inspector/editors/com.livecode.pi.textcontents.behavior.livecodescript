@@ -10,6 +10,10 @@ on editorInitialize
    set the itemdelimiter to "."
    put item -1 of the editorProperty["editor"] of me into sTextType
    
+   set the toolTip of button "wrap text" of me to "wrap text"
+   set the toolTip of button "show grid" of me to "show grid"
+   set the toolTip of button "import" of me to "import file"
+   
    set the editorExpandVertical of me to true
 end editorInitialize
 
@@ -41,6 +45,14 @@ constant kMaxHeight = 800
 on editorResize
    lock screen
    lock messages
+   local tManualHeight, tManualGroupHeight
+   put getManualHeight() into tManualHeight
+   if tManualHeight is not empty then
+      put tManualHeight - the height of group "controls" of me - kControlGap - 1 - the height of group "background" into tManualGroupHeight
+      set the height of me to tManualGroupHeight
+      set the height of the owner of me to tManualGroupHeight
+   end if
+
    set the topleft of field "rowlabel" of me to the topleft of me
    set the topright of group "controls" of me to the topright of me
    local tRect
@@ -48,8 +60,13 @@ on editorResize
    put item 2 of tRect + the height of group "controls" of me + kControlGap into item 2 of tRect
    
    local tHeight
-   put the formattedHeight of field "htmltext" of me into tHeight
-   put max(tHeight, item 4 of tRect - item 2 of tRect) into tHeight
+   if tManualHeight is not empty then
+      put tManualGroupHeight - kControlGap  into tHeight
+   else
+      put the formattedHeight of field "htmltext" of me into tHeight
+      put max(tHeight, item 4 of tRect - item 2 of tRect) into tHeight
+   end if
+   
    put min(tHeight, kMaxHeight) into tHeight
    put item 2 of tRect + tHeight into item 4 of tRect
    set the rect of field "htmltext" of me to tRect
@@ -99,11 +116,18 @@ on mouseUp
       case "show grid"
          local tGrid
          put not the hilite of the target into tGrid
+         set the hilite of the target to tGrid
          set the hGrid of fld "HtmlText" to tGrid
          set the vGrid of fld "HtmlText" to tGrid
-         set the tabStops of fld "HtmlText" to 150
-         set the dontWrap of fld "HtmlText" to tGrid
-         set the hScrollbar of fld "HtmlText" to tGrid
+         if tGrid then
+            set the tabStops of fld "HtmlText" to 150
+            set the dontWrap of fld "HtmlText" to tGrid
+            set the hScrollbar of fld "HtmlText" to tGrid
+         else
+            set the tabStops of fld "HtmlText" to 75
+            set the dontWrap of fld "HtmlText" to not the hilite of button "wrap text"
+            set the hScrollbar of fld "HtmlText" to not the hilite of button "wrap text"
+         end if
          break
       case "import"
          local tFile

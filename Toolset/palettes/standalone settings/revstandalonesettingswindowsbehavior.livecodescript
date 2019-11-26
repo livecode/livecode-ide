@@ -2,8 +2,15 @@
 on preOpenCard
    local tStandaloneSettingsA
    put getSettings() into tStandaloneSettingsA
-   set the hilite of btn "Windows" of group "platforms" to tStandaloneSettingsA["Windows"] = true
-   set the enabled of group "Windows" to tStandaloneSettingsA["Windows"] = true
+   set the itemdelimiter to ","
+   local tEnabled
+   put false into tEnabled
+   repeat for each item tItem in "Windows,Windows x86-64"
+   		put tStandaloneSettingsA[tItem] = true or tEnabled into tEnabled
+   		set the hilite of btn tItem of group "platforms" to tStandaloneSettingsA[tItem] = true
+   end repeat
+
+   set the enabled of group "Windows" to tEnabled
    put tStandaloneSettingsA["Windows,iconFile"] into fld "iconFile"
    put tStandaloneSettingsA["Windows,documenticonFile"] into fld "documenticonFile"
    put tStandaloneSettingsA["Windows,fileDescription"] into fld "fileDescription"

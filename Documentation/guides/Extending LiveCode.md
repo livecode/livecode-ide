@@ -107,8 +107,15 @@ in the IDE and in the online portal.
 	metadata title is "My Pink Circle"
 	metadata author is "Benjamin Beaumont"
 	metadata version is "1.0.0"
+	metadata platforms is "desktop,mobile"
 
 	end widget
+
+> **Note:** If the module makes use of external code that is only
+> available on specific Operating Systems or Platforms, use the "os"
+> and/or "platforms" metadata keys. The values are the same as can be
+> found in the LiveCode Documentation Format Reference. This data will
+> also appear in the dictionary.
 
 #### Importing libraries
 The LiveCode builder syntax is broken down into **modules**. There are 3 
@@ -771,37 +778,71 @@ This can be bound to using the following:
 
 ##### Using compiled libraries
 
-Extensions can include compiled libraries on which they depend. The 
-libraries must be compiled for each platform and architecture they are 
-required on and placed folders named with a platform ID in the extension 
+Extensions can include compiled libraries on which they depend. The
+libraries must be compiled for each platform and architecture they are
+required on and placed folders named with a platform ID in the extension
 code folder. The platform ID folder names are in the form:
 
-	<architecture>-<platform>[-<options>]
-	
-See the [platform ID specification](https://github.com/livecode/livecode/blob/develop/docs/development/platform-id.md) 
-for more details.
+    <architecture>-<platform>[-<options>]
 
-On all platforms with the exception of iOS, only dynamically linked 
-libraries are supported.
+See the [platform ID](https://github.com/livecode/livecode/blob/develop/docs/development/platform-id.md)
+specification for more details.
 
-On iOS 8+ dynamically linked frameworks (.framework) are supported and 
-on all versions of iOS statically linked frameworks and libraries (.a) 
-are supported. Static linking is not yet supported in iOS simulator 
-builds.
+###### Dynamic Linking
 
-If the iOS library requires linker dependencies a text file (.txt) may 
-be included to list them in the form:
+On all platforms with the exception of iOS devices only dynamically linked
+libraries are supported. Static linking is not yet supported in iOS simulator
+builds. On iOS 8+ devices dynamically linked frameworks (`.framework`) are
+supported.
 
-	{library | [weak-]framework} <name>
-	
-Additionally, on iOS the .lcext extension is used to identify code 
-resources that conform to the exported symbols and sectors of externals. 
-Specifically they have a `__deps` sector that contains the content of 
-the dependencies file mentioned above and they export a `LibInfo` struct 
-named `__libinfoptr_<libraryname>`. Examples of generating .lcext files 
-are available in the LiveCode source repository. This is a more 
-efficient means of inclusion as it allows the compiler to strip unused 
-symbols.
+###### Static Code Libraries for iOS Device Builds
+
+Static libraries and frameworks for iOS must be compiled into a lcext object.
+Use the [build-module-lcext-ios.sh shell script](https://github.com/livecode/livecode/blob/develop/tools/build-module-lcext-ios.sh)
+as an example of how to do so.
+
+The script has the following inputs in order:
+
+- The path to the module compiled to C++ with using `lc-compile` with the
+`--forcebuiltins --outputauxc OUTPUTFILE` options. The output file inclues both
+the module and shims for any C foreign bindings. Use a `.cpp` extension so the
+compiler treats the file correctly.
+- The deps file which is a text file listing required dependencies when linking
+the object where each line is in the form `{library | [weak-]framework} <name>`
+- Lcext output file path (must use the lcext extesion).
+- The full name of the module. For example, `com.livecode.library.timezone`.
+- The output file path for the ios module. This should be named `module.lcm` and
+be next to the lcext object in the code folder. This is a dummy module we include
+in standalones that is just the name to be loaded as the actual module code is
+already linked into the executable.
+- one or more full paths to static libraries. If linking a static framework the
+static library is located at `<name>.framework/<name>`
+
+###### Java and Android Libraries
+
+Libraries to load on android (`.jar` & `.aar`) may be placed in the code
+folder `jvm-android`. 
+
+Java libraries to load on all platforms supporting Java may be placed in the
+code folder `jvm`.
+
+###### Example Directory Structure
+
+    module.lcm
+    manifest.xml
+    api.lcdoc
+    library.lcb
+    resources/image.png
+    code/universal-mac/library.dylib
+    code/x86-win/library.dll
+    code/x86-linux/library.so
+    code/x86_64-linux/library.so
+    code/armv6-android/library.so
+    code/jvm-android/library.aar
+    code/jvm/library.jar
+    code/universal-ios-iphoneos11.4/library.lcext
+    code/universal-ios-iphoneos11.4/module.lcm
+    code/universal-ios-iphonesimulator11.4/library.dylib
 
 #### Java
 
@@ -830,7 +871,7 @@ pseudo-randomly generated UUID as a string:
 
 	metadata title is "Java UUID"
 	metadata author is "LiveCode"
-	metadata version is "1.0.0"	
+	metadata version is "1.0.0"
 	
 	// Bind to the static randomUUID() method of the java.util.UUID class
 	__safe foreign handler JNI_RandomUUID() returns JObject \
@@ -1030,7 +1071,7 @@ method to allocate an instance, and then call `initWithVoice:` on it:
 The `+` indicates this is a class method, i.e. we don't require an 
 instance of the class to call the method. 
 
-	foreign handler Objc_NSSpeechSynthesizerInitWithVoice(in pSynthesizer as ObjcId, in pVoice as optional ObjcId) returns ObjcId \
+	foreign handler Objc_NSSpeechSynthesizerInitWithVoice(in pSynthesizer as ObjcRetainedId, in pVoice as optional ObjcId) returns optional ObjcRetainedId \
 		binds to "objc:NSSpeechSynthesizer.-initWithVoice:"
 		
 The `-` here indicates this is an instance method, i.e. we require an 
@@ -2288,12 +2329,9 @@ player object, and more.
 
 ### The Externals SDK
 
-We provide a developer kit for writing externals which includes 
-documentation and examples. You may download this kit from:
+Occasionally LiveCode Builder may not be what you need to create your extension. We provide a legacy developer kit for writing externals in C++ which includes documentation and examples. 
 
-<http://downloads.runrev.com/resources/externals/revexternalssdk.zip>
-
-The following newsletter articles will also help you get started:
+The following newsletter articles will help you get started:
 
 * [External Writing for the Uninitiated – Part 1](http://newsletters.livecode.com/november/issue13/newsletter5.php)
 

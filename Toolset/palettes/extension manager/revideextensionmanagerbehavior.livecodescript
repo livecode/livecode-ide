@@ -12,6 +12,8 @@ on preOpenStack
    # Navigation
    addFrameItem "widget","header", "navigation", "Widgets", "", "","showList", the long id of me,"widget"
    addFrameItem "library","header", "navigation", "Libraries", "", "","showList", the long id of me,"library"
+   addFrameItem "sample","header", "navigation", "Sample Stacks", "", "","showList", the long id of me,"sample"
+   addFrameItem "snippet","header", "navigation", "Snippets", "", "","showList", the long id of me,"snippet"
    addFrameItem "store","header", "navigation", "Store", "", "","showExtensionStore", the long id of me,"store"
    addFrameItem "install", "header", "action", "Install extension", "plus", "","installNew", the long id of me
    

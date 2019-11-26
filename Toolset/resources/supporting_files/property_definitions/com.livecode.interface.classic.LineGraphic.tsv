@@ -3,6 +3,7 @@ type	graphic tool
 												
 -----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----	-----
 name							Line					
+label
 tooltip												
 style							line	rectangle,roundrect,line,oval,regular,line,curve,polygon				
 opaque							false					
