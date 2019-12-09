@@ -3429,7 +3429,9 @@ command scriptFormat pScope, pDontGroup
       if tStart > tEnd then
          put tFirstSelectionOffset into tLastSelectionOffset
       else
-         put(the number of chars of line 1 to (tLine + (tSelectionLineCount - 1)) of tNewScript - the number of chars of line 1 to (tLine + (tSelectionLineCount - 1)) of tScript) into tLastSelectionOffset      end if
+         put(the number of chars of line 1 to (tLine + (tSelectionLineCount - 1)) of tNewScript \
+               - the number of chars of line 1 to (tLine + (tSelectionLineCount - 1)) of tScript) into tLastSelectionOffset
+      end if
       
       if tStart is not empty then
          if tStart > tEnd then
