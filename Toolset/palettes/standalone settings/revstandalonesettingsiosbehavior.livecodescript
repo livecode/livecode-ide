@@ -173,6 +173,7 @@ on updateSettings
    put computeDefault(tSettings["ios,iOS 7 ipad icon"], empty) into field "iOS 7 iPad Icon"
    put computeDefault(tSettings["ios,iOS 7 ipad retina icon"], empty) into field "iOS 7 iPad Retina Icon"
    put computeDefault(tSettings["ios,iPad Pro 12.9 icon"], empty) into field "iPad Pro 12.9 Icon"
+   put computeDefault(tSettings["ios,iPad Pro 11 icon"], empty) into field "iPad Pro 11 Icon"
    put computeDefault(tSettings["ios,iphone splash"], empty) into field "iPhone Splash"
    put computeDefault(tSettings["ios,retina splash"], empty) into field "Retina Splash"
    put computeDefault(tSettings["ios,iphone 4inch splash"], empty) into field "iPhone 4Inch Splash"
@@ -191,6 +192,8 @@ on updateSettings
    put computeDefault(tSettings["ios,ipad retina landscape splash"], empty) into field "iPad Retina Landscape Splash"   
    put computeDefault(tSettings["ios,ipad pro 12.9 portrait splash"], empty) into field "iPad Pro 12.9 Portrait Splash"
    put computeDefault(tSettings["ios,ipad pro 12.9 landscape splash"], empty) into field "iPad Pro 12.9 Landscape Splash"  
+   put computeDefault(tSettings["ios,ipad pro 11 portrait splash"], empty) into field "iPad Pro 11 Portrait Splash"
+   put computeDefault(tSettings["ios,ipad pro 11 landscape splash"], empty) into field "iPad Pro 11 Landscape Splash"
    
    local tProfiles, tProfileIndex
    put empty into tProfileIndex
@@ -356,6 +359,8 @@ command updateOrientationSettings
       set the enabled of group "iPad Retina Landscape Splash" to (tSupportedOrientations contains "landscape")
       set the enabled of group "iPad Pro 12.9 Portrait Splash" to (tSupportedOrientations contains "portrait")
       set the enabled of group "iPad Pro 12.9 Landscape Splash" to (tSupportedOrientations contains "landscape")
+      set the enabled of group "iPad Pro 11 Portrait Splash" to (tSupportedOrientations contains "portrait")
+      set the enabled of group "iPad Pro 11 Landscape Splash" to (tSupportedOrientations contains "landscape")
    end if
    
    if the enabled of button "iPhone Intial Orientation" then
@@ -386,6 +391,7 @@ command enableDeviceSpecificSettings pDevices
    set the enabled of group "iOS 7 iPad Icon" to (2 is among the items of pDevices)
    set the enabled of group "iOS 7 iPad Retina Icon" to (2 is among the items of pDevices)
    set the enabled of group "iPad Pro 12.9 Icon" to (2 is among the items of pDevices)
+   set the enabled of group "iPad Pro 11 Icon" to (2 is among the items of pDevices)
    set the enabled of group "iPhone Splash" to (1 is among the items of pDevices)
    set the enabled of group "Retina Splash" to (1 is among the items of pDevices)
    set the enabled of group "iPhone 4Inch Splash" to (1 is among the items of pDevices)
@@ -404,6 +410,8 @@ command enableDeviceSpecificSettings pDevices
    set the enabled of group "iPad Retina Landscape Splash" to (2 is among the items of pDevices)
    set the enabled of group "iPad Pro 12.9 Portrait Splash" to (2 is among the items of pDevices)
    set the enabled of group "iPad Pro 12.9 Landscape Splash" to (2 is among the items of pDevices)
+   set the enabled of group "iPad Pro 11 Portrait Splash" to (2 is among the items of pDevices)
+   set the enabled of group "iPad Pro 11 Landscape Splash" to (2 is among the items of pDevices)
    set the enabled of button "iPhone Intial Orientation" to (1 is among the items of pDevices)  
    set the enabled of group "iPad Initial Orientations" to (2 is among the items of pDevices)
    
