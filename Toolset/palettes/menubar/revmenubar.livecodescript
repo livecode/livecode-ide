@@ -251,6 +251,8 @@ on setMenuProperties
    local tScreenRect
    put revIDEStackScreenRect(the short name of this stack, true) into tScreenRect
    
+   // 2020.02.29 mdw [[ bugfix_16880 ]]
+   set the minHeight of me to 19
    if the platform is not "MacOS" then
       if item 3 of the screenRect is 800 then
          set the topLeft of me to item 1 to 2 of tScreenRect
