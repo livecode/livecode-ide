@@ -547,7 +547,11 @@ command updateViewingPane pViewType, pObjectId
             revOnlinePrefSet "stack Id", pObjectId
          end if
       else
-         set the cStack of group "stack" of me to revOnlinePrefGet("stack id")
+         local tStackId
+         put revOnlinePrefGet("stack id") into tStackId
+         if tStackId is not empty then
+            set the cStack of group "stack" of me to revOnlinePrefGet("stack id")
+         end if
       end if
    else if the cViewType of group "viewing pane" of me is "user" then
       --rvoUpdateTooltip "Retrieving user details ..."
