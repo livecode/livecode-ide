@@ -249,7 +249,6 @@ on updateSettings
    
    set the label of button "Minimum iOS Version" to computeDefault(tSettings["ios,minimum version"], "8.0") && "or later"
    set the hilite of button "Persistent WiFi" to computeDefault(tSettings["ios,persistent wifi"], "false")
-   set the hilite of button "Enable Background Execution" to computeDefault(tSettings["ios,enable background execution"],"false")
    set the hilite of button "Background Audio" to computeDefault(tSettings["ios,background audio"], "false")
    set the hilite of button "Location Update" to computeDefault(tSettings["ios,background location update"], "false")
    set the hilite of button "VoIP" to computeDefault(tSettings["ios,background voip"], "false")
@@ -519,7 +518,7 @@ on updateIosSettingState
    set the enabled of button "iOSTabMenu" to (the hilite of button "Build for iOS")
    set the enabled of group "Basic Settings" to (the hilite of button "Build for iOS")
    set the enabled of group "Requirement" to (the hilite of button "Build for iOS")
-   set the enabled of group "Background Modes" to (the hilite of button "Enable Background Execution")
+   set the enabled of group "Background Modes" to (the hilite of button "Build for iOS")
    set the enabled of group "Icons" to (the hilite of button "Build for iOS")
    set the enabled of group "Splash" to (the hilite of button "Build for iOS")
    set the enabled of button "Supported Devices" to (the hilite of button "Build for iOS")
