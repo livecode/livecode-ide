@@ -2082,6 +2082,7 @@ function autoCompleteIFsAreBalanced pLineNumber, pScript
       if tCharBegin is 0 then exit repeat
       put offset(tEndAsterix, pScript) into tCharEnd
       if tCharEnd = 0 then exit repeat
+      if tCharBegin > tCharEnd then exit repeat
       delete char tCharBegin to tCharEnd of pScript
    end repeat
 
