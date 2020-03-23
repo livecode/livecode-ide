@@ -677,6 +677,9 @@ private function textFormatSelection pText
    put pText into tTextLines
    split tTextLines by return
    
+   local tLastCharIsReturn
+   put (char -1 of pText is return) into tLastCharIsReturn
+   
    get textFormatLine(1, tTextLines, tPreviousLine)
    put firstWordToEnd(tTextLines[1]) into tTextLines[1]
    put tTextLines[1] into tResult
@@ -699,6 +702,10 @@ private function textFormatSelection pText
       
       put return & tTextLines[tIndex] after tResult
    end repeat
+   
+   if char -1 of tResult is not return and tLastCharIsReturn then
+      put return after tResult
+   end if
    
    if line -1 of pText = "" then put cr after tResult
    
