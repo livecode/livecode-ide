@@ -2480,8 +2480,10 @@ on backspaceKey
          put __GetPreference("editor,autoformat", true) into tAutoFormat
          
          if tAutoFormat then
+            if tTo is 0 then put 1 into tTo
             put caretPositionLeft(tLineStart, tTo, tScript) + 1 into tAt
          else
+            if tTo is 0 then put 1 into tTo
             put tTo into tAt
          end if
          put tTo - tAt + 1 into tLength
