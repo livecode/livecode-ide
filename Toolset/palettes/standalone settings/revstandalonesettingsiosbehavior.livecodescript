@@ -101,6 +101,12 @@ on updateSettings
       set the hilite of button "beta_version" to false
    end if 
    
+   if tSettings["ios,supports dark mode"] is not empty and tSettings["ios,supports dark mode"] then
+      set the hilite of button "supports dark mode" to true
+   else
+      set the hilite of button "supports dark mode" to false
+   end if 
+   
    -- MM-2011-09-28: Attempt to port previous icon and splash settings and then remove.
    --
    if tSettings["ios,icon"] is not empty then
