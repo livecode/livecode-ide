@@ -135,37 +135,6 @@ on updateSettings
       storeSetting "icon", empty
    end if
    
-   if tSettings["ios,splash"] is not empty then
-      local tSplash
-      put stripSuffix(tSettings["ios,splash"], ".png,-@2x.png,-Landscape.png,-Portrait") into tSplash    
-      if not (tSplash begins with slash) then
-         put utilityTargetStackPath() & slash before tSplash
-      end if
-      
-      get tSplash & ".png"
-      if there is a file it and getImageDimensions(it) is "320,480" then
-         put it into tSettings["ios,iphone splash"]
-         storeSetting("iphone splash", utilityMakePathRelative(it, utilityTargetStackPath()))
-      end if
-      get tSplash & "@2x.png"
-      if there is a file it and getImageDimensions(it) is "640,960" then
-         put it into tSettings["ios,retina splash"]
-         storeSetting("retina splash", utilityMakePathRelative(it, utilityTargetStackPath()))
-      end if
-      get tSplash & "-Portrait.png"
-      if there is a file it and getImageDimensions(it) is "768,1024" then
-         put it into tSettings["ios,ipad landscape splash"]
-         storeSetting("ipad landscape splash", utilityMakePathRelative(it, utilityTargetStackPath()))
-      end if
-      get tSplash & "-Landscape.png"
-      if there is a file it and getImageDimensions(it) is "1024,768" then
-         put it into tSettings["ios,ipad portrait splash"]
-         storeSetting("ipad portrait splash", utilityMakePathRelative(it, utilityTargetStackPath()))
-      end if    
-      
-      storeSetting "splash", empty
-   end if
-   
    -- MM-2011-09-28: Sepearate out the icons and splash screens so the user can specify the values per device.
    --
    put computeDefault(tSettings["ios,AppStore icon"], empty) into field "AppStore Icon"
@@ -180,26 +149,11 @@ on updateSettings
    put computeDefault(tSettings["ios,iOS 7 ipad retina icon"], empty) into field "iOS 7 iPad Retina Icon"
    put computeDefault(tSettings["ios,iPad Pro 12.9 icon"], empty) into field "iPad Pro 12.9 Icon"
    put computeDefault(tSettings["ios,iPad Pro 11 icon"], empty) into field "iPad Pro 11 Icon"
-   put computeDefault(tSettings["ios,iphone splash"], empty) into field "iPhone Splash"
-   put computeDefault(tSettings["ios,retina splash"], empty) into field "Retina Splash"
-   put computeDefault(tSettings["ios,iphone 4inch splash"], empty) into field "iPhone 4Inch Splash"
-   put computeDefault(tSettings["ios,iPhone 6 splash"], empty) into field "iPhone 6 Splash"   
-   put computeDefault(tSettings["ios,iPhone 6 Plus Portrait splash"], empty) into field "iPhone 6 Plus Portrait Splash"   
-   put computeDefault(tSettings["ios,iPhone 6 Plus Landscape splash"], empty) into field "iPhone 6 Plus Landscape Splash"
-   put computeDefault(tSettings["ios,iPhone X Portrait splash"], empty) into field "iPhone X Portrait Splash"   
-   put computeDefault(tSettings["ios,iPhone X Landscape splash"], empty) into field "iPhone X Landscape Splash"
-   put computeDefault(tSettings["ios,iPhone XR Portrait splash"], empty) into field "iPhone XR Portrait Splash" 
-   put computeDefault(tSettings["ios,iPhone XR Landscape splash"], empty) into field "iPhone XR Landscape Splash"
-   put computeDefault(tSettings["ios,iPhone XSMAX Portrait splash"], empty) into field "iPhone XSMAX Portrait Splash" 
-   put computeDefault(tSettings["ios,iPhone XSMAX Landscape splash"], empty) into field "iPhone XSMAX Landscape Splash" 
-   put computeDefault(tSettings["ios,ipad portrait splash"], empty) into field "iPad Portrait Splash"
-   put computeDefault(tSettings["ios,ipad landscape splash"], empty) into field "iPad Landscape Splash"
-   put computeDefault(tSettings["ios,ipad retina portrait splash"], empty) into field "iPad Retina Portrait Splash"
-   put computeDefault(tSettings["ios,ipad retina landscape splash"], empty) into field "iPad Retina Landscape Splash"   
-   put computeDefault(tSettings["ios,ipad pro 12.9 portrait splash"], empty) into field "iPad Pro 12.9 Portrait Splash"
-   put computeDefault(tSettings["ios,ipad pro 12.9 landscape splash"], empty) into field "iPad Pro 12.9 Landscape Splash"  
-   put computeDefault(tSettings["ios,ipad pro 11 portrait splash"], empty) into field "iPad Pro 11 Portrait Splash"
-   put computeDefault(tSettings["ios,ipad pro 11 landscape splash"], empty) into field "iPad Pro 11 Landscape Splash"
+   
+   put computeDefault(tSettings["ios,launch-image-1x"], empty) into field "launch-image-1x"
+   put computeDefault(tSettings["ios,launch-image-2x"], empty) into field "launch-image-2x"
+   put computeDefault(tSettings["ios,launch-image-3x"], empty) into field "launch-image-3x"
+   set the backColor of graphic "launch-backcolor" to computeDefault(tSettings["ios,launch-backcolor"], "0,0,0")
    
    local tProfiles, tProfileIndex
    put empty into tProfileIndex
@@ -353,31 +307,6 @@ command updateOrientationSettings
       set the hilite of button i of group "iPad Initial Orientations" to \
             it is among the items of tSupportedOrientations
    end repeat
-   
-   -- Set the enabled of the iPad splash screens selectors based on the orientations set.
-   -- Possibly turn this off, might be quite annoying.
-   --
-   if the enabled of group "iPad Initial Orientations" then
-      set the enabled of group "iPad Portrait Splash" to (tSupportedOrientations contains "portrait")
-      set the enabled of group "iPad Landscape Splash" to (tSupportedOrientations contains "landscape")
-      set the enabled of group "iPad Retina Portrait Splash" to (tSupportedOrientations contains "portrait")
-      set the enabled of group "iPad Retina Landscape Splash" to (tSupportedOrientations contains "landscape")
-      set the enabled of group "iPad Pro 12.9 Portrait Splash" to (tSupportedOrientations contains "portrait")
-      set the enabled of group "iPad Pro 12.9 Landscape Splash" to (tSupportedOrientations contains "landscape")
-      set the enabled of group "iPad Pro 11 Portrait Splash" to (tSupportedOrientations contains "portrait")
-      set the enabled of group "iPad Pro 11 Landscape Splash" to (tSupportedOrientations contains "landscape")
-   end if
-   
-   if the enabled of button "iPhone Intial Orientation" then
-      set the enabled of group "iPhone 6 Plus Portrait Splash" to tInitialOrientation contains "portrait"
-      set the enabled of group "iPhone 6 Plus Landscape Splash" to tInitialOrientation contains "landscape"
-      set the enabled of group "iPhone X Portrait Splash" to tInitialOrientation contains "portrait"
-      set the enabled of group "iPhone X Landscape Splash" to tInitialOrientation contains "landscape"
-      set the enabled of group "iPhone XR Portrait Splash" to tInitialOrientation contains "portrait"
-      set the enabled of group "iPhone XR Landscape Splash" to tInitialOrientation contains "landscape"
-      set the enabled of group "iPhone XSMAX Portrait Splash" to tInitialOrientation contains "portrait"
-      set the enabled of group "iPhone XSMAX Landscape Splash" to tInitialOrientation contains "landscape"
-   end if
 end updateOrientationSettings
 
 -- MM-2011-09-28: Enable/disable setting device specif settings based on the currently selected device list.
@@ -397,26 +326,6 @@ command enableDeviceSpecificSettings pDevices
    set the enabled of group "iOS 7 iPad Retina Icon" to (2 is among the items of pDevices)
    set the enabled of group "iPad Pro 12.9 Icon" to (2 is among the items of pDevices)
    set the enabled of group "iPad Pro 11 Icon" to (2 is among the items of pDevices)
-   set the enabled of group "iPhone Splash" to (1 is among the items of pDevices)
-   set the enabled of group "Retina Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPhone 4Inch Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPhone 6 Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPhone 6 Plus Portrait Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPhone 6 Plus Landscape Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPhone X Portrait Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPhone X Landscape Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPhone XR Portrait Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPhone XR Landscape Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPhone XSMAX Portrait Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPhone XSMAX Landscape Splash" to (1 is among the items of pDevices)
-   set the enabled of group "iPad Portrait Splash" to (2 is among the items of pDevices)
-   set the enabled of group "iPad Landscape Splash" to (2 is among the items of pDevices)
-   set the enabled of group "iPad Retina Portrait Splash" to (2 is among the items of pDevices)
-   set the enabled of group "iPad Retina Landscape Splash" to (2 is among the items of pDevices)
-   set the enabled of group "iPad Pro 12.9 Portrait Splash" to (2 is among the items of pDevices)
-   set the enabled of group "iPad Pro 12.9 Landscape Splash" to (2 is among the items of pDevices)
-   set the enabled of group "iPad Pro 11 Portrait Splash" to (2 is among the items of pDevices)
-   set the enabled of group "iPad Pro 11 Landscape Splash" to (2 is among the items of pDevices)
    set the enabled of button "iPhone Intial Orientation" to (1 is among the items of pDevices)  
    set the enabled of group "iPad Initial Orientations" to (2 is among the items of pDevices)
    
