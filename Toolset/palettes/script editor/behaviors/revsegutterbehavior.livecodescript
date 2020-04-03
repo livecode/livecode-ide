@@ -442,9 +442,9 @@ private command updateBreakpointPositions pObject, pOffset, pOldNumber, pNewNumb
       local tScript
       put textGetScript() into tScript
       repeat for each line tBreakpoint in tBreakpoints
-         if (item -1 of tBreakpoint >= tLineIndex and item -1 of tBreakpoint < (tLineIndex - (pNewNumber - pOldNumber))) and revDebuggerNextAvailableBreakpoint(tScript, item -1 of tBreakpoint - 1 + (pNewNumber - pOldNumber)) <> item -1 of tBreakpoint + (pNewNumber - pOldNumber) then
+         if (item -1 of tBreakpoint > tLineIndex and item -1 of tBreakpoint <= (tLineIndex - (pNewNumber - pOldNumber))) and revDebuggerNextAvailableBreakpoint(tScript, item -1 of tBreakpoint - 1 + (pNewNumber - pOldNumber)) <> item -1 of tBreakpoint + (pNewNumber - pOldNumber) then
             revDebuggerRemoveBreakpoint item 1 to -2 of tBreakpoint, item -1 of tBreakpoint
-         else if item -1 of tBreakpoint > (tLineIndex + pNewNumber - pOldNumber) then
+         else if item -1 of tBreakpoint >= (tLineIndex - (pNewNumber - pOldNumber)) then
             # If the breakpoint was below the removed lines, move it up
             revDebuggerMoveBreakpoint item 1 to -2 of tBreakpoint, item -1 of tBreakpoint, item 1 to -2 of tBreakpoint, item -1 of tBreakpoint + (pNewNumber - pOldNumber)
          end if
