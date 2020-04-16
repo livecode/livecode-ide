@@ -3054,6 +3054,7 @@ command actionSelectAll
    
    if word 1 of the name of the focusedObject is "field" then
       select char 1 to -1 of the focusedObject
+      send "scrollbarDrag" to the focusedObject
    end if
    unlock messages
 end actionSelectAll
