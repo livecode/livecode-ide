@@ -338,11 +338,15 @@ Figure 10 – Standalone Settings – iOS Icons
 Figure 11 – Standalone Settings – iOS Splash
 
 | &nbsp;| &nbsp;|
-|---------------------------------|-------------------------------------------------------------------------------------------------------------|
-| **Launch Image**                | Choose a png image. This will be centered on screen. A 2732x2732 image will cover all current devices.      |
-| **2x Launch Image**             | Choose a png image. This will be centered on screen. A 5464x5464 image will cover all current devices.      |
-| **3x Launch Image**             | Choose a png image. This will be centered on screen. A 8196x8196 image will cover all current devices.      |
-| **Background Color**            | Choose a background color for transparent areas and/or areas of the screen the launch image does not cover. |
+|-------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| **Launch Image**                                | Choose a png image. This will be centered on screen. |
+| **2x Launch Image**                             | Choose a png image. This will be centered on screen. |
+| **3x Launch Image**                             | Choose a png image. This will be centered on screen. |
+| **Dark Mode Launch Image**                      | Choose a png image for use in dark mode. This will be centered on screen. |
+| **Dark Mode 2x Launch Image**                   | Choose a png image for use in dark mode. This will be centered on screen. |
+| **Dark Mode 3x Launch Image**                   | Choose a png image for use in dark mode. This will be centered on screen. |
+| **Background Color**                            | Choose a background color for transparent areas and/or areas of the screen the launch image does not cover. |
+| **Use system background color**                 | Use the system background color instead of a chosen color. This will use a dark color in dark mode and  light color in light mode. |
 
 Related lessons:
 
