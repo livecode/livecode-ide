@@ -150,10 +150,16 @@ on updateSettings
    put computeDefault(tSettings["ios,iPad Pro 12.9 icon"], empty) into field "iPad Pro 12.9 Icon"
    put computeDefault(tSettings["ios,iPad Pro 11 icon"], empty) into field "iPad Pro 11 Icon"
    
-   put computeDefault(tSettings["ios,launch-image-1x"], empty) into field "launch-image-1x"
-   put computeDefault(tSettings["ios,launch-image-2x"], empty) into field "launch-image-2x"
-   put computeDefault(tSettings["ios,launch-image-3x"], empty) into field "launch-image-3x"
-   set the backColor of graphic "launch-backcolor" to computeDefault(tSettings["ios,launch-backcolor"], "0,0,0")
+   put computeDefault(tSettings["ios,launch-image-light-1x"], empty) into field "launch-image-light-1x"
+   put computeDefault(tSettings["ios,launch-image-light-2x"], empty) into field "launch-image-light-2x"
+   put computeDefault(tSettings["ios,launch-image-light-3x"], empty) into field "launch-image-light-3x"
+   put computeDefault(tSettings["ios,launch-image-dark-1x"], empty) into field "launch-image-dark-1x"
+   put computeDefault(tSettings["ios,launch-image-dark-2x"], empty) into field "launch-image-dark-2x"
+   put computeDefault(tSettings["ios,launch-image-dark-3x"], empty) into field "launch-image-dark-3x"
+   
+   set the opaque of graphic "launch-backcolor" to tSettings["ios,launch-backcolor"] is not empty
+   set the hilite of button "Use system background color" to tSettings["ios,launch-backcolor"] is empty
+   set the backColor of graphic "launch-backcolor" to tSettings["ios,launch-backcolor"]
    
    local tProfiles, tProfileIndex
    put empty into tProfileIndex
