@@ -3284,7 +3284,12 @@ constant kHandleSize = 5
 on ideMouseMove pX, pY, pTarget
    if the tool is not "pointer tool" then exit ideMouseMove
    
-   if pTarget is among the lines of the selectedObjects then
+   local tOldCursor
+   if the lockcursor then
+      put the cursor into tOldCursor
+   end if
+   
+   if pTarget is among the lines of the selectedObjects and not (the lockLoc of pTarget)  then
       local tRect
       put the rect of pTarget into tRect
       local tLeft = false
@@ -3336,7 +3341,11 @@ on ideMouseMove pX, pY, pTarget
          unlock cursor
       end if
    else
-      unlock cursor
+      if tOldCursor is not empty and tOldCursor is not among the items of "83,84,31,30" then
+         set the cursor to tOldCursor
+      else
+         unlock cursor
+      end if
    end if
 end ideMouseMove
 
