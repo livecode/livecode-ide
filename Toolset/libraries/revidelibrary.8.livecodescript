@@ -9774,7 +9774,7 @@ command revIDERestoreDevelopmentTools
          
          # OK-2008-05-23 : If tMode is empty, it means that the stack's mode matched its style at the time of closing
          # and this means that no mode change is required.
-         lock messages
+         # 2019-12-23 MDW [[ fix_restore_dev_tools ]] removed extra lock messages command
          switch tMode
             case "toplevel"
                go stack tStackName as toplevel
