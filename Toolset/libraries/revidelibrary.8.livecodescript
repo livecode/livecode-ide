@@ -11695,7 +11695,8 @@ private function shouldShow pType, pFilter
    return pType is among the items of pFilter
 end shouldShow
 
-function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
+# 2019-12-12 MDW [[ sort_behavior_script_list ]] allow separately sorted lists
+function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter, pSortItem
    local tStack, tDefaultStack
    local tStacks,tCards,tControls,tStackList
    local tNumControls, tNumCards
@@ -11741,6 +11742,10 @@ function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
             put tab & l & "s" & cr & tControlsArray[l] & cr after tControlsList
          end repeat
       end if
+        if pSortItem is not empty then
+            sort tControlsList by word 1 of each
+            sort tControlsList by word pSortItem of each
+        end if
    end if
    
    if shouldShow("card", pTypeFilter) then
@@ -11757,6 +11762,10 @@ function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
       sort lines of tCards by item 2 of each
       
       put tab & "Card" & cr before tCards
+      if pSortItem is not empty then
+          sort tCards by word 1 of each
+          sort tCards by word pSortItem of each
+      end if
    end if
    set the defaultStack to tDefaultStack
    
@@ -11790,9 +11799,17 @@ function revIDEObjectSelectionMenu pTargetObjects, pTypeFilter
       sort lines of tStacks by item 2 of each
       if tStacks is empty then put "(" & tab & "Stack" into tStacks
       else put tab & "Stack" & cr before tStacks
+      if pSortItem is not empty then
+          sort tStacks by word 1 of each
+          sort tStacks by word pSortItem of each
+      end if
    end if
    
    local tMenu
+   if pSortItem is not empty then
+       sort tControls by item 1 of each
+       sort tControls by item pSortItem of each
+   end if
    if the number of lines in tControls > 20 then 
       replace cr with cr & tab & tab in tCards
       replace cr with cr & tab & tab in tStacks
