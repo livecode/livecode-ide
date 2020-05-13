@@ -1,8 +1,9 @@
 ﻿script "com.livecode.pi.customprops.behavior"
-local sPropSet, sHilitePath
+local sPropSet, sHilitePath, sReselect
 
 on editorInitialize
    put empty into sPropSet
+   put false into sReselect
    put the editorLabel of me into field "rowlabel" of me
    set the rowShowLabel of me to false
    set the label of button "customPropertySet" of group "Set buttons" of me to "customKeys"
@@ -69,7 +70,10 @@ on editorUpdate
       if the result is empty then
          put tKey into field "value" of me
          put item -1 of tPath into field "key" of me
-         select the text of field "key" of me
+         if sReselect then
+            select the text of field "key" of me
+            put false into sReselect
+         end if
       else
          put empty into field "key" of me
          put empty into field "value" of me
@@ -371,6 +375,7 @@ function revValidSetName pWhich
 end revValidSetName
 
 on hiliteChanged
+   put true into sReselect
    checkRehilite
    editorUpdate
    put empty into sHilitePath
