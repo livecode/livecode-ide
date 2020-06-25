@@ -368,7 +368,7 @@ private command _CreateMobileScroller
       mobileControlSet sScrollerId, "canBounce", "true"
       mobileControlSet sScrollerId, "pagingEnabled", "false"
       mobileControlSet sScrollerId, "canScrollToTop", "true"
-      mobileControlSet sScrollerId, "delayTouches", "false"
+      mobileControlSet sScrollerId, "delayTouches", "true"
       mobileControlSet sScrollerId, "canCancelTouches", "true"
       __PollVisibility
    end if
