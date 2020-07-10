@@ -2062,6 +2062,10 @@ function autoCompleteIFsAreBalanced pLineNumber, pScript
       put offset(tBeginAsterix, pScript) into tCharBegin
       if tCharBegin is 0 then exit repeat
       put offset(tEndAsterix, pScript) into tCharEnd
+      -- MDW 2020.07.10 [[ bugfix_22826 ]]
+      if tCharEnd is 0 then
+        exit repeat -- avoid an endless loop
+      end if
       delete char tCharBegin to tCharEnd of pScript
    end repeat
 
