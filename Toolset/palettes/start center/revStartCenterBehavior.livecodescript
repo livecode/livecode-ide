@@ -341,21 +341,120 @@ function tilesArray pState
          put "lc-ipad-landscape" into tArray[4]["icon"]
          put "lc-ipad-landscape-filled" into tArray[4]["hoverIcon"]
          
-         put "iPhone 6" into tArray[5]["label"]
-         put "newIphone6" into tArray[5]["tag"]
+         put "Phone" into tArray[5]["label"]
+         put "newphone" into tArray[5]["tag"]
+         put "lc-iphone" into tArray[5]["icon"]
+         put "lc-iphone-filled" into tArray[5]["hoverIcon"]
+         break
+         
+      case "newPhone"
+         put "SE" into tArray[1]["label"]
+         put "newIphoneSE" into tArray[1]["tag"]
+         put "lc-iphone" into tArray[1]["icon"]
+         put "lc-iphone-filled" into tArray[1]["hoverIcon"]
+         
+         put "6s/7/8" into tArray[2]["label"]
+         put "newIphone6s78" into tArray[2]["tag"]
+         put "lc-iphone" into tArray[2]["icon"]
+         put "lc-iphone-filled" into tArray[2]["hoverIcon"]
+         
+         put "6s+/7+/8+" into tArray[3]["label"]
+         put "newIphone6sPlus7Plus8Plus" into tArray[3]["tag"]
+         put "lc-iphone" into tArray[3]["icon"]
+         put "lc-iphone-filled" into tArray[3]["hoverIcon"]
+         
+         put "X/XS/11 Pro" into tArray[4]["label"]
+         put "newIphoneXXS11Pro" into tArray[4]["tag"]
+         put "lc-iphone" into tArray[4]["icon"]
+         put "lc-iphone-filled" into tArray[4]["hoverIcon"]
+         
+         put "XR/11" into tArray[5]["label"]
+         put "newIphoneXR11" into tArray[5]["tag"]
          put "lc-iphone" into tArray[5]["icon"]
          put "lc-iphone-filled" into tArray[5]["hoverIcon"]
          
-         put "iPhone 5" into tArray[6]["label"]
-         put "newIphone5" into tArray[6]["tag"]
+         put "XS Max/11 Pro Max" into tArray[6]["label"]
+         put "newIphoneXSMax11ProMax" into tArray[6]["tag"]
          put "lc-iphone" into tArray[6]["icon"]
          put "lc-iphone-filled" into tArray[6]["hoverIcon"]
          
-         put "iPhone 4" into tArray[7]["label"]
-         put "newIphone4" into tArray[7]["tag"]
+         put "Android 6-inch generic" into tArray[7]["label"]
+         put "android6inchgeneric" into tArray[7]["tag"]
          put "lc-iphone" into tArray[7]["icon"]
          put "lc-iphone-filled" into tArray[7]["hoverIcon"]
          
+         break
+      case "newTabletPortrait"
+         put "9.7-inch" into tArray[1]["label"]
+         put "newTablet9.7portrait" into tArray[1]["tag"]
+         put "lc-ipad-portrait" into tArray[1]["icon"]
+         put "lc-ipad-portrait-filled" into tArray[1]["hoverIcon"]
+         
+         put "10.2-inch" into tArray[2]["label"]
+         put "newTablet10.2portrait" into tArray[2]["tag"]
+         put "lc-ipad-portrait" into tArray[2]["icon"]
+         put "lc-ipad-portrait-filled" into tArray[2]["hoverIcon"]
+         
+         put "10.5-inch" into tArray[3]["label"]
+         put "newTablet10.5portrait" into tArray[3]["tag"]
+         put "lc-ipad-portrait" into tArray[3]["icon"]
+         put "lc-ipad-portrait-filled" into tArray[3]["hoverIcon"]
+         
+         put "11-inch" into tArray[4]["label"]
+         put "newTablet11portrait" into tArray[4]["tag"]
+         put "lc-ipad-portrait" into tArray[4]["icon"]
+         put "lc-ipad-portrait-filled" into tArray[4]["hoverIcon"]
+         
+         put "12.9-inch" into tArray[5]["label"]
+         put "newTablet12.9portrait" into tArray[5]["tag"]
+         put "lc-ipad-portrait" into tArray[5]["icon"]
+         put "lc-ipad-portrait-filled" into tArray[5]["hoverIcon"]
+         
+         put "10-inch" into tArray[6]["label"]
+         put "newTablet10portrait" into tArray[6]["tag"]
+         put "lc-ipad-portrait" into tArray[6]["icon"]
+         put "lc-ipad-portrait-filled" into tArray[6]["hoverIcon"]
+         
+         put "7-inch" into tArray[7]["label"]
+         put "newTablet7portrait" into tArray[7]["tag"]
+         put "lc-ipad-portrait" into tArray[7]["icon"]
+         put "lc-ipad-portrait-filled" into tArray[7]["hoverIcon"]
+         break
+      case "newTabletLandscape"
+         put "9.7-inch" into tArray[1]["label"]
+         put "newTablet9.7landscape" into tArray[1]["tag"]
+         put "lc-ipad-landscape" into tArray[1]["icon"]
+         put "lc-ipad-landscape-filled" into tArray[1]["hoverIcon"]
+         
+         put "10.2-inch" into tArray[2]["label"]
+         put "newTablet10.2landscape" into tArray[2]["tag"]
+         put "lc-ipad-landscape" into tArray[2]["icon"]
+         put "lc-ipad-landscape-filled" into tArray[2]["hoverIcon"]
+         
+         put "10.5-inch" into tArray[3]["label"]
+         put "newTablet10.5landscape" into tArray[3]["tag"]
+         put "lc-ipad-landscape" into tArray[3]["icon"]
+         put "lc-ipad-landscape-filled" into tArray[3]["hoverIcon"]
+         
+         put "11-inch" into tArray[4]["label"]
+         put "newTablet11landscape" into tArray[4]["tag"]
+         put "lc-ipad-landscape" into tArray[4]["icon"]
+         put "lc-ipad-landscape-filled" into tArray[4]["hoverIcon"]
+         
+         put "12.9-inch" into tArray[5]["label"]
+         put "newTablet12.9landscape" into tArray[5]["tag"]
+         put "lc-ipad-landscape" into tArray[5]["icon"]
+         put "lc-ipad-landscape-filled" into tArray[5]["hoverIcon"]
+         
+         put "10-inch" into tArray[6]["label"]
+         put "newTablet10landscape" into tArray[6]["tag"]
+         put "lc-ipad-landscape" into tArray[6]["icon"]
+         put "lc-ipad-landscape-filled" into tArray[6]["hoverIcon"]
+         
+         put "7-inch" into tArray[7]["label"]
+         put "newTablet7landscape" into tArray[7]["tag"]
+         put "lc-ipad-landscape" into tArray[7]["icon"]
+         put "lc-ipad-landscape-filled" into tArray[7]["hoverIcon"]
          break
    end switch
    return tArray
@@ -496,6 +595,20 @@ on startCenterAction pAction
          put tilesArray(pAction) into tArray
          tilesUpdate tArray
          break
+      case "newphone"
+         put "Home / New / Phone" into field "breadcrumb"
+         set the textStyle of word 1 of field "breadcrumb" to "link"
+         put tilesArray(pAction) into tArray
+         tilesUpdate tArray
+         break
+      case "newTabletPortrait"
+      case "newTabletLandscape"
+         put "Home / New / Tablet" into field "breadcrumb"
+         set the textStyle of word 1 of field "breadcrumb" to "link"
+         put tilesArray(pAction) into tArray
+         tilesUpdate tArray
+         break
+         
       case "samples"
          revIDELaunchResource "sample stacks"
          break
@@ -550,20 +663,68 @@ on startCenterAction pAction
       case "newScriptOnlyStack"
          revIDEActionNewScriptOnlyStack
          break
-      case "newTabletPortrait"
+      case "newIphoneSE"
+         revIDEActionNewMainstack "iPhone SE (320x568)"
+         break
+      case "newIphone6s78"
+         revIDEActionNewMainstack "iPhone 6s/7/8 (375x667)"
+         break
+      case "newIphone6sPlus7Plus8Plus"
+         revIDEActionNewMainstack "iPhone 6s+/7+/8+ (414x736)"
+         break
+      case "newIphoneXXS11Pro"
+         revIDEActionNewMainstack "iPhone X/XS/11 Pro (375x812)"
+         break
+      case "newIphoneXR11"
+         revIDEActionNewMainstack "iPhone XR/11 (414x896)"
+         break
+      case "newIphoneXSMax11ProMax"
+         revIDEActionNewMainstack "iPhone XS Max / 11 Pro Max (414x896)"
+         break
+      case "android6inchgeneric"
+         revIDEActionNewMainstack "Generic Android 6-inch Phone (412,775)"
+         break
+      case "newTablet9.7portrait"
          revIDEActionNewMainstack "iPad/Tablet Portrait (768x1024)"
          break
-      case "newTabletLandscape"
-         revIDEActionNewMainstack "iPad/Tablet Lanscape (1024x768)"
+      case "newTablet10.2portrait"
+         revIDEActionNewMainstack "iPad/Tablet Portrait (810x1080)"
          break
-      case "newIphone6"
-         revIDEActionNewMainstack "iPhone 6 (375x667)"
+      case "newTablet10.5portrait"
+         revIDEActionNewMainstack "iPad/Tablet Portrait (834x1112)"
          break
-      case "newIphone5"
-         revIDEActionNewMainstack "iPhone 5 (320x568)"
+      case "newTablet11portrait"
+         revIDEActionNewMainstack "iPad/Tablet Portrait (834x1194)"
          break
-      case "newIphone4"
-         revIDEActionNewMainstack "iPhone 4 (320x480)"
+      case "newTablet12.9portrait"
+         revIDEActionNewMainstack "iPad 12.9-inch/Tablet Portrait (1024x1366)"
+         break
+      case "newTablet10portrait"
+         revIDEActionNewMainstack "Generic Android 10-inch Tablet Portrait (720x1280)"
+         break
+      case "newTablet7portrait"
+         revIDEActionNewMainstack "Generic Android 7-inch Tablet Portrait (600x1024)"
+         break
+      case "newTablet9.7landscape"
+         revIDEActionNewMainstack "iPad/Tablet Landscape (1024x768)"
+         break
+      case "newTablet10.2landscape"
+         revIDEActionNewMainstack "iPad/Tablet Landscape (1080x810)"
+         break
+      case "newTablet10.5landscape"
+         revIDEActionNewMainstack "iPad/Tablet Landscape (1112x834)"
+         break
+      case "newTablet11landscape"
+         revIDEActionNewMainstack "iPad/Tablet Landscape (1194x834)"
+         break
+      case "newTablet12.9landscape"
+         revIDEActionNewMainstack "iPad 12.9-inch/Tablet Landscape (1366x1024)"
+         break
+      case "newTablet10landscape"
+         revIDEActionNewMainstack "Generic Android 10-inch Tablet Landscape (1280x720)"
+         break
+      case "newTablet7landscape"
+         revIDEActionNewMainstack "Generic Android 7-inch Tablet Landscape (1024x600)"
          break
    end switch
 end startCenterAction

@@ -1364,16 +1364,39 @@ private function revMenubarFileMenu pContext
       put true into tCanSaveStack
    end if
    
+   local sDeviceList
+   put  \
+         "Generic Android 6-inch Phone (412,775)" & return & \
+         "Generic Android 7-inch Phablet (600, 1024)" & return & \
+         "Generic Android 10-inch Tablet Portrait (720,1280)" & return & \
+         "Generic Android 10-inch Tablet Landscape 1280,720)" & return & \
+         "iPhone SE (320x568)" & return & \
+         "iPhone 6s//7//8 (375x667)" & return & \
+         "iPhone 6s+//7+//8+ (414x736)" & return & \
+         "iPhone X//XS//11 Pro (375x812)" & return & \
+         "iPhone XR//11 (414x896)" & return & \
+         "iPhone XS Max//11 Pro Max (414x896)" & return & \
+         "iPad 9.7-inch//Tablet Portrait (768x1024)" & return & \
+         "iPad 9.7-inch//Tablet Landscape (1024x768)" & return & \
+         "iPad 10.2-inch//Tablet Portrait (810x1080)" & return & \
+         "iPad 10.2-inch//Tablet Landscape (1080x810)" & return & \
+         "iPad 10.5-inch//Tablet Portrait (834x1112)" & return & \
+         "iPad 10.5-inch//Tablet Landscape (1112x834)" & return & \
+         "iPad 11-inch//Tablet Portrait (834x1194)" & return & \
+         "iPad 11-inch//Tablet Landscape (1194x834)" & return & \
+         "iPad 12.9-inch//Tablet Portrait (1024x1366)" & return & \
+         "iPad 12.9-inch//Tablet Landscape (1366x1024)" \
+         into sDeviceList
+   
    local tFile
    put "&New Stack" & return after tFile
    put tab & "Default Size" & return after tFile
    put tab & "-" & return after tFile
-   put tab & "iPhone 4 (320x480)" & return after tFile
-   put tab & "iPhone 5 (320x568)" & return after tFile
-   put tab & "iPhone 6 (375x667)" & return after tFile
-   put tab & "iPhone 6 Plus (414x736)" & return after tFile
-   put tab & "iPad//Tablet Portrait (768x1024)" & return after tFile
-   put tab & "iPad//Tablet Landscape (1024x768)" & return after tFile
+   
+   repeat for each line tDevice in sDeviceList
+      put tab & tDevice & return after tFile
+   end repeat
+   
    put tab & "-" & return after tFile
    put tab & "Script only Stack" & return after tFile
    
