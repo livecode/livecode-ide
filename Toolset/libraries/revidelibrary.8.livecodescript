@@ -7231,6 +7231,9 @@ on revIDEImportControl pType, pFileName, pReferenced
    set the name of tCreatedControlID to the last item of pFileName
    unlock messages
    unlock screen
+   if not (pReferenced is true) then
+      ideMessageSend "ideNewControl", tCreatedControlID
+   end if
    return tCreatedControlID
 end revIDEImportControl
 
