@@ -687,10 +687,6 @@ on newScrollbar
 end newScrollbar
 
 on newImage
-   if the width of the target < 9 and the height of the target < 9 then
-      set the width of the target to the cREVImageWidth of stack "revPreferences"
-      set the height of the target to the cREVImageHeight of stack "revPreferences"
-   end if
    set the cREVGeneral["revUniqueID"] of the target to the milliseconds
    // PM-2015-09-17: [[ Bug 13826 ]] Allow a new image to appear offscreen
    revUpdateAOControls
