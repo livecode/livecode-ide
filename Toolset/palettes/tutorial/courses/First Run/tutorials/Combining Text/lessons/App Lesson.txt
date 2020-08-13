@@ -33,7 +33,15 @@ action
 end step
 
 step "Tutorial Intro 2"
-	In this tutorial, we will have a template email, which is placed in a field called "template", a record, which is placed in a field called "record", and an output field, which is called "output". We also have a button called "Create email".
+	In this tutorial, we will have
+
+	- a template email, which is placed in a field called "template"
+
+	- a record, which is placed in a field called "record"
+
+	- an output field, which is called "output"
+
+	- a button called "Create email"
 action
 	interlude
 	go to step "Address by name 1"
@@ -49,7 +57,7 @@ action
 end step
 
 step "Address by name 2"
-	To make changes first ensure you are in 'Edit' mode.
+	To make changes first ensure the 'Pointer' tool is selected.
 action
 	highlight tool "Edit Mode"
 	wait until the tool is edit
@@ -65,10 +73,10 @@ action
 end step
 
 step "Address by name 3"
-	Open the Script editor for the button by clicking the 'Code' button in the Toolbar.
+	Open the Script Editor for the button by clicking the 'Code' button in the Toolbar.
 action
 		highlight toolbar "Code"
-		wait until there is a script editor for button "Create"
+		wait until there is a Script Editor for button "Create"
 	go to step "Address by name 4"
 end step
 
@@ -76,6 +84,8 @@ step "Address by name 4"
 	Add this handler to the button script. We will explain this line by line in a moment.
 
 	Don't forget to click the 'Apply' button when you have finished.
+
+	Remember you can also use Cmd-<Return> or <Enter> to apply your code.
 script
 	on mouseUp
 		put field "template" into field "output"
@@ -130,7 +140,7 @@ action
 end step
 
 step "Run mode 1"
-	Take a look at what this does by switching into 'Run' mode on the Tools palette. You will see a personalized email to Mr Miller in the "output" field.
+	Take a look at what this does by switching into 'Run' mode on the Tools Palette. You will see a personalized email to Mr Miller in the "output" field.
 
 	Select 'Run mode' in the Tools Palette.
 action
@@ -179,7 +189,7 @@ action
 end step
 
 step "Video choice 3"
-	Open the Script editor for the button by clicking the 'Code' button in the Toolbar.
+	Open the Script Editor for the button by clicking the 'Code' button in the Toolbar.
 action
 		highlight toolbar "Code"
 		wait until there is a script editor for button "Create"
@@ -190,6 +200,8 @@ step "Video choice 4"
 	Add this handler to the button script. We will explain this line by line in a moment.
 
 	Don't forget to click the 'Apply' button when you have finished.
+
+	Remember you can also use Cmd-<Return> or <Enter> to apply your code.
 script
 	on mouseUp
 		put field "template" into field "output"
@@ -249,9 +261,7 @@ action
 end step
 
 step "Run mode 2"
-	Take a look at what this does by switching into 'Run' mode on the Tools palette.
-
-	Select 'Run mode' in the Tools Palette.
+	To take a look at what this does choose the 'Browse' tool on the Tools Palette.
 action
 	highlight tool "Run Mode"
 	wait until the tool is run

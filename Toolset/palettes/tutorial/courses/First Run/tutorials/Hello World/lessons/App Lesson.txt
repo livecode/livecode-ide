@@ -29,7 +29,12 @@ step "Stack Interlude"
 	We start by creating the User Interface (UI) for the Hello World app.
 
 	The first step is to create a new LiveCode app at the default size.
+action
+	interlude
+	go to step "Stack Interlude 2"
+end step
 
+step "Stack Interlude 2"
 	Click on the File menu, and select 'New Stack' → 'Default Size'.
 action
 	highlight menu item "Default Size" of menu item "New Stack" of menu "File"
@@ -61,7 +66,7 @@ action
 end step
 
 step "Set Stack Properties"
-	Click on the 'Inspector' icon on the Toolbar to open the Property
+	Click on the 'Inspector' button on the Toolbar to open the Property
 	Inspector.
 action
 	highlight toolbar "Inspector"
@@ -137,7 +142,7 @@ action
 end step
 
 step "Open Property Inspector"
-	Click on the 'Inspector' icon in the Toolbar to open the Property Inspector
+	Click on the 'Inspector' button in the Toolbar to open the Property Inspector
 	for the button.
 
 	Remember that properties control how objects look and behave and can be set using the Property Inspector.
@@ -148,8 +153,10 @@ action
 end step
 
 step "Set button name"
-	Set the 'Name' property of the button to "Say Hello" and press 
-	the <Return> key. You will see the Name appear on the button.
+	Set the 'Name' property of the button to "Say Hello" and press
+	the <Return> key.
+
+	You will see the name appear on the button.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of button "Hello" is "Say Hello"
@@ -163,8 +170,14 @@ step "Events and messages interlude"
 	to make it interactive.
 
 	LiveCode apps work by responding to 'messages', which are usually triggered by some kind of user action. A message might tell the app that the user has
-	clicked on a button or typed in a field. You add code to tell the app what
-	to do when a message is received.
+	clicked on a button or typed in a field.
+action
+	interlude
+	go to step "Events and messages interlude 2"
+end step
+
+step "Events and messages interlude 2"
+	You add code to tell the app what to do when a message is received.
 
 	Each object has it's own individual code, so different buttons can respond to
 	messages in different ways.
@@ -195,10 +208,19 @@ step "Script Editor Interlude"
 	The Script Editor is a window that allows you to add code to the
 	objects on your stack.
 
+	Each object has its own tab in the Script Editor.
+action
+	interlude
+	go to step "Script Editor Interlude 2"
+end step
+
+step "Script Editor Interlude 2"
 	Any code you have added in the Script Editor does not become live
 	until you click on the 'Apply' button. When this is clicked, you will
 	get feedback about whether the code you have written has any
 	errors in it or not.
+
+	You can also use Cmd-<Return> or <Enter> to apply your code.
 action
 	interlude
 	highlight "Apply" of script editor for button "Hello"
@@ -212,7 +234,12 @@ step "mouseUp message"
 	user clicks on the button.
 
 	We will add code to display a message to the user saying "Hello World!"
+action
+	highlight script editor for button "Hello"
+	go to step "mouseUp message 2"
+end step
 
+step "mouseUp message 2"
 	Add this handler to the button script.
 
 	Don't forget to click the 'Apply' button when you have finished.
@@ -223,6 +250,14 @@ script
 action
 	highlight script editor for button "Hello"
 	wait until button "Hello" is scripted
+	go to step "mouseUp message 3"
+end step
+
+step "mouseUp message 3"
+	The "answer" command shows the user a message on a popup window, with an "OK" button to allow the user to dismiss the popup.
+action
+	interlude
+	highlight line "answer" of Script Editor for button "Hello"
 	go to step "Edit Tool Interlude"
 end step
 
@@ -231,9 +266,19 @@ skip point
 step "Edit Tool Interlude"
 	LiveCode has two modes: Edit mode and Run mode.
 
+	You can switch between Edit and Run mode by choosing the corresponding tool in the Tools Palette.
+action
+	interlude
+	highlight tool "Edit Mode"
+	go to step "Edit Tool Interlude 2"
+end step
+
+step "Edit Tool Interlude 2"
 	Up until now you have been in Edit mode all the time. In Edit mode
 	you can add, edit and move objects on your stack. You can also select objects
 	to change their properties or add code to them.
+
+	Choose the 'Pointer' tool to go into Edit mode.
 action
 	interlude
 	highlight tool "Edit Mode"
@@ -244,14 +289,22 @@ step "Run Tool Interlude"
 	In Run mode your app is live - objects will behave as they would for
 	the app user. For example, clicking on the 'Say Hello' button will show a hello message.
 
-	To test the code you have just added, we are going to enter Run mode and click the button.
+	Choose the 'Browse' tool to go into Run mode.
+action
+	interlude
+	highlight tool "Run Mode"
+	go to step "Run Tool Interlude 2"
+end step
 
-	Select 'Run mode' in the Tools Palette.
+step "Run Tool Interlude 2"
+	Choose the 'Browse' tool in the Tools Palette to see your changes in action.
 action
 	highlight tool "Run Mode"
 	wait until the tool is run
 	go to step "Test Button"
 end step
+
+skip point
 
 step "Test Button"
 	Click on the 'Say Hello' button to see the message.
@@ -262,7 +315,7 @@ action
 end step
 
 step "Next Steps"
-	That's it, you have finished your app.
+	Congratulations on completing your first LiveCode app.
 
 	Why don't you try customizing it by changing the message or adding multiple buttons that display different messages.
 

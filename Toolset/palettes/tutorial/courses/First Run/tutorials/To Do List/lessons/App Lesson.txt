@@ -51,14 +51,14 @@ step "Stack Interlude"
 	The first step in creating a LiveCode application is creating a
 	stack. A stack is the canvas for your app. Every window you see in LiveCode
 	is a stack.
-
-	In this tutorial we will create our stack at iPhone 5 size.
 action
 	interlude
 	go to step "Create Mainstack"
 end step
 
 step "Create Mainstack"
+	In this tutorial we will create our stack at iPhone 5 size.
+
 	Click on the File menu, and select 'New Stack' → 'iPhone 5 (320x568)'.
 action
     highlight menu item "iPhone 5 (320x568)" of menu item "New Stack" of menu "File"
@@ -97,7 +97,7 @@ action
 end step
 
 step "Set Stack Properties"
-	Click on the Inspector icon on the Toolbar to open the Property
+	Click on the 'Inspector' button on the Toolbar to open the Property
 	Inspector.
 action
 	highlight toolbar "Inspector"
@@ -145,7 +145,7 @@ action
 end step
 
 step "Create Add Icon"
-	The first object we will add is an 'add' icon. The user will click on this to
+	The first object we will add is an 'Add' icon. The user will click on this to
 	add a new item to the list.
 
 	Drag an SVG Icon from the Tools Palette onto your stack.
@@ -188,8 +188,7 @@ end step
 step "Open Property Inspector"
 	Next we need to set some properties of the icon.
 
-	Click on the Inspector icon in the Toolbar to open the Property Inspector for the
-	icon.
+	Click on the 'Inspector' button in the Toolbar to open the Property Inspector for the icon.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for widget "add"
@@ -215,7 +214,9 @@ step "Set add icon"
 
 	Click on the 'Preset' property where it shows a star. This will pop up a
 	set of icons for you to choose from. Choose the plus icon, its name in the
-	list is 'plus'. You might need to scroll the list of icons to find the one you want.
+	list is 'plus'.
+
+	You might need to scroll the list of icons to find the one you want.
 action
 	highlight property "iconPresetName" of section "Basic"
 	wait until the iconPresetName of widget "add" is "plus"
@@ -267,8 +268,7 @@ end step
 step "Task List PI"
 	As before we need to set some properties of the field.
 
-	Click on the Inspector icon in the Toolbar to open the Property Inspector for the
-	field.
+	Click on the 'Inspector' button in the Toolbar to open the Property Inspector for the field.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for field "taskList"
@@ -279,7 +279,7 @@ step "Set task list name"
 	Again, we want to give the field a short descriptive name to make things
 	easier when we write code.
 
-	Set the name of the field to "TaskList" and press the <Return> key.
+	Set the 'Name' of the field to "TaskList" and press the <Return> key.
 action
 	highlight property "name" of section "Basic"
 	wait until the name of field "taskList" is "TaskList"
@@ -289,8 +289,9 @@ end step
 skip point
 
 step "Set task list contents"
-	We want the task list to start off empty. Delete the default contents from
-	the field and click away to allow the change to take effect.
+	We want the task list to start off empty.
+
+	Delete the default contents from the field.
 action
 	highlight property "styledText" of section "contents"
 	wait until the text of field "taskList" is ""
@@ -300,13 +301,18 @@ end step
 skip point
 
 step "Events and messages interlude"
-	Now that the first part of the UI is complete the next stage is to add code to the app
-	to allow the user to interact with it.
+	Now that the first part of the UI is complete the next stage is to add code to the app to allow the user to interact with it.
 
 	LiveCode apps work by responding to 'messages', which are usually triggered by
 	some kind of user action. A message might tell the app that the user has
-	clicked on a button or typed in a field. You add code to tell the app what
-	to do when a message is received.
+	clicked on a button or typed in a field.
+action
+	interlude
+	go to step "Events and messages interlude 2"
+end step
+
+step "Events and messages interlude 2"
+	You add code to tell the app what to do when a message is received.
 
 	Each object has its own individual code, so different buttons can respond to
 	messages in different ways.
@@ -326,7 +332,7 @@ action
 end step
 
 step "Open Add Script"
-	Select the Add icon then click the Code button in the Toolbar.
+	Select the Add icon then click the 'Code' button in the Toolbar.
 action
 	highlight toolbar "Code"
 	wait until there is a script editor for widget "add"
@@ -337,10 +343,19 @@ step "Script Editor Interlude"
 	The Script Editor is a window that allows you to add code to the
 	objects on your stack.
 
+	Each object has its own tab on the Script Editor.
+action
+	interlude
+	go to step "Script Editor Interlude 2"
+end step
+
+step "Script Editor Interlude 2"
 	The code you have added in the Script Editor does not become live
 	until you click on the 'Apply' button. When this is clicked, you will
 	get feedback about whether the code you have written has any
 	errors in it or not.
+
+	You can also use Cmd-<Return> or <Enter> to apply your code.
 action
 	interlude
 	highlight "Apply" of script editor for widget "header"
@@ -356,7 +371,12 @@ step "mouseUp message"
 	We will add code to add a new task to the list. When the user clicks
 	the 'add' icon the app asks the user to enter a task and adds it to the
 	bottom of the list.
+action
+	interlude
+	go to step "mouseUp message 2"
+end step
 
+step "mouseUp message 2"
 	Add this handler to the script of 'add' icon.
 
 	Don't forget to click the 'Apply' button when you have finished.
@@ -385,7 +405,31 @@ step "Explain ask"
 action
 	interlude
 	highlight line "ask" of script editor for widget "add"
-	go to step "Edit Tool Interlude""
+	go to step "Explain if 1"
+end step
+
+step "Explain if 1"
+	The 'if' control structure allows you to execute different blocks of code depending on a condition.
+action
+	interlude
+	highlight line "if field" of script editor for widget "add"
+	go to step "Explain if 2"
+end step
+
+step "Explain if 2"
+	If the list is empty we can put the new task straight into the field.
+action
+	interlude
+	highlight line "put it into" of script editor for widget "add"
+	go to step "Explain if 3"
+end step
+
+step "Explain if 3"
+	If there is already something in the list we create a new line and then put the new task at the end of the list.
+action
+	interlude
+	highlight line "put return & it" of script editor for widget "add"
+	go to step "Edit Tool Interlude"
 end step
 
 skip point
@@ -393,9 +437,19 @@ skip point
 step "Edit Tool Interlude"
 	LiveCode has two modes: Edit mode and Run mode.
 
+	You can switch between Edit and Run mode by choosing the corresponding tool in the Tools Palette.
+action
+	interlude
+	highlight tool "Edit Mode"
+	go to step "Edit Tool Interlude 2"
+end step
+
+step "Edit Tool Interlude 2"
 	Up until now you have been in Edit mode all the time. In Edit mode
 	you can add, edit and move objects on your stack. You can also select objects
 	to change their properties or add code to them.
+
+	Choose the 'Pointer' tool to go into Edit mode.
 action
 	interlude
 	highlight tool "Edit Mode"
@@ -404,23 +458,33 @@ end step
 
 step "Run Tool Interlude"
 	In Run mode your app is live - objects will behave as they would for
-	the app user. For example, clicking on the 'Add' button will allow you to add
-	a task to the list.
+	the app user. For example, clicking on the 'Say Hello' button will show a hello message.
 
-	To test the code you have just added, we are going to enter Run mode and try
-	adding a task to the list.
+	Choose the 'Browse' tool to go into Run mode.
 action
-		interlude
-    highlight tool "Run Mode"
-	  go to step "Test Task List"
+	interlude
+	highlight tool "Run Mode"
+	go to step "Run Tool Interlude 2"
 end step
 
-step "Test Task List"
-	Select 'Run mode' in the Tools Palette.
+step "Run Tool Interlude 2"
+	To test the code you have just added, we are going to choose the 'Browse' tool and click the button.
+
+	Choose the 'Browse' tool in the Tools Palette to see your changes in action.
 action
-    highlight tool "Run Mode"
-    wait until the tool is run
-	  go to step "Add task"
+	highlight tool "Run Mode"
+	wait until the tool is run
+	go to step "Test Task List"
+end step
+
+skip point
+
+step "Test Task List"
+	Choose the 'Browse' tool in the Tools Palette.
+action
+	highlight tool "Run Mode"
+	wait until the tool is run
+	go to step "Add task"
 end step
 
 skip point
@@ -436,7 +500,7 @@ end step
 skip point
 
 step "Return to Edit Mode"
-	Change back to Edit mode to continue working on the app.
+	Choose the 'Pointer' tool to continue working on the app.
 action
 	highlight tool "Edit Mode"
 	wait until the tool is edit
@@ -495,7 +559,7 @@ end step
 step "Open Delete Property Inspector"
 	Next we need to set the properties of the 'Delete' icon.
 
-	Click on the Inspector icon on the Toolbar to open the Property Inspector for the
+	Click on the 'Inspector' button on the Toolbar to open the Property Inspector for the
 	SVG icon.
 action
 	highlight toolbar "Inspector"
@@ -504,7 +568,7 @@ action
 end step
 
 step "Set delete name"
-	Set the name property of the SVG Icon to "Delete" and press the 
+	Set the name property of the SVG Icon to "Delete" and press the
 	<Return> key.
 action
 	highlight property "name" of section "Basic"
@@ -534,7 +598,7 @@ action
 end step
 
 step "Open Delete Script"
-	Select the 'Delete' icon then click the Code icon in the Toolbar to open the Script Editor for the icon.
+	Select the 'Delete' icon then click the 'Code' button in the Toolbar to open the Script Editor for the icon.
 action
 	highlight toolbar "Code"
 	wait until there is a script editor for widget "delete"
@@ -542,13 +606,19 @@ action
 end step
 
 step "Delete mouseUp"
-	Just like for the 'Add' icon the 'Delete' icon will respond to the 
+	Just like for the 'Add' icon the 'Delete' icon will respond to the
 	'mouseUp' message.
 
-	When the user clicks on the 'Delete' icon the task that is selected 
-	in the list will be deleted. We will confirm the deletion with the 
+	When the user clicks on the 'Delete' icon the task that is selected
+	in the list will be deleted. We will confirm the deletion with the
 	user before deleting the task.
+action
+	interlude
+	highlight script editor for widget "delete"
+	go to step "Delete mouseUp 2"
+end step
 
+step "Delete mouseUp 2"
 	Add this handler to the script of the 'Delete' icon.
 
 	Don't forget to click the 'Apply' button when you have added the code.
@@ -564,14 +634,47 @@ script
 action
 	highlight script editor for widget "delete"
 	wait until widget "delete" is scripted
+	go to step "Explain answer"
+end step
+
+step "Explain answer"
+	The "answer" command shows the user a message in a popup window, with buttons to allow them to choose an option.
+
+	In this case the options are "Yes" and "No".
+action
+	interlude
+	highlight line "answer" of script editor for widget "delete"
+	go to step "Explain if 4"
+end step
+
+step "Explain if 4"
+	We will use an 'if' statement because we only want to delete the task if the user chooses 'Yes'.
+action
+	interlude
+	highlight line "if it is" of script editor for widget "delete"
+	go to step "Explain if 5"
+end step
+
+step "Explain if 5"
+	The hilitedLine of field "TaskList" tells us the line number of the highlighted line
+action
+	interlude
+	highlight line "delete line" of script editor for widget "delete"
+	go to step "Explain if 6"
+end step
+
+step "Explain if 6"
+	Delete line <x> of field "TaskList". This will delete the selected task.
+action
+	interlude
+	highlight line "delete line" of script editor for widget "delete"
 	go to step "Run mode 2"
 end step
 
 step "Run mode 2"
-	To test the code you have just added enter Run mode and delete the first
-	task by selecting the line in the list and clicking on the 'Delete' icon.
+	Now test the deletion code you have just added.
 
-	Start by entering Run mode.
+	Choose the 'Browse' tool in the Tools Palette.
 action
     highlight tool "Run Mode"
 		wait until the tool is run
@@ -579,7 +682,7 @@ action
 end step
 
 step "Test Delete Task"
-	Select the first task and click the 'Delete' icon. Answer 'Yes' when 
+	Select the first task and click the 'Delete' icon. Answer 'Yes' when
 	presented with the delete options.
 
 	The task will be deleted from the list.
@@ -590,7 +693,7 @@ action
 end step
 
 step "Return to Edit Mode 2"
-	Change back to 'Edit' mode to continue working on the app.
+	Choose the 'Pointer' tool to continue working on the app.
 action
 	highlight tool "Edit Mode"
 	wait until the tool is edit

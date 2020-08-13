@@ -29,18 +29,29 @@ action
 end step
 
 step "Start button code 1"
-	The stack consists of a clock background image, a graphic used as the "seconds" hand and a "Start/Stop" button to start the seconds hand ticking.
+	The stack consists of
 
-	We will be creating the motion of the second hand by adjusting the Start angle on the "seconds" graphic to give us the effect of movement.
+	- a clock background image
 
-	To start the seconds hand ticking we will add code to the "Start" button.
+	- a graphic used as the "seconds" hand
+
+	- a "Start/Stop" button to start or stop the seconds hand ticking
 action
 	interlude
 	go to step "Start button code 2"
 end step
 
 step "Start button code 2"
-	To make changes select 'Edit' mode.
+	We will be creating the motion of the second hand by adjusting the Start angle on the "seconds" graphic to give us the effect of movement.
+
+	To start the seconds hand ticking we will add code to the "Start" button.
+action
+	interlude
+	go to step "Start button code 2a"
+end step
+
+step "Start button code 2a"
+	To make changes first ensure the 'Pointer' tool is selected.
 action
 	highlight tool "Edit Mode"
 	wait until the tool is edit
@@ -56,10 +67,10 @@ action
 end step
 
 step "Start button code 3"
-		Open the Script editor for the button by clicking the 'Code' button in the Toolbar.
+		Open the Script Editor for the button by clicking the 'Code' button in the Toolbar.
 action
 		highlight toolbar "Code"
-		wait until there is a script editor for button "start"
+		wait until there is a Script Editor for button "start"
 		go to step "Start button code 4"
 end step
 
@@ -67,6 +78,8 @@ step "Start button code 4"
 	Add this handler to the button script. We'll go through the code one line at a time next.
 
 	Don't forget to click the 'Apply' button when you have finished.
+
+	Remember you can also use Cmd-<Return> or <Enter> to apply your code.
 script
 	local sTimerID
 
@@ -146,6 +159,8 @@ step "Start button code 11"
 	Add this handler to the button script. We'll go through the code one line at a time next.
 
 	Don't forget to click the 'Apply' button when you have finished.
+
+	Remember you can also use Cmd-<Return> or <Enter> to apply your code.
 script
 	local sTimerID
 
@@ -169,16 +184,16 @@ script
 		put the result into sTimerID
 	end updateClock
 action
-	highlight script editor for button "start"
+	highlight Script Editor for button "start"
 	wait until button "start" is scripted
 	go to step "Start button code 12"
 end step
 
 step "Start button code 12"
-	 First, we set the item delimiter - the character used to separate items in our string - to colon. This is because time is formatted separated by a colon e.g.
+	 First, we set the item delimiter - the character used to separate items in our string - to colon. This is because the time format uses colons to separate hours, minutes and seconds.
 action
 	interlude
-	highlight line "set the itemDel to" of script editor for button "start"
+	highlight line "set the itemDel to" of Script Editor for button "start"
 	go to step "Start button code 13"
 end step
 
@@ -227,9 +242,7 @@ action
 end step
 
 step "Run mode"
-	Try is out by switching into 'Run' mode on the Tools palette.
-
-	Select 'Run mode' in the Tools Palette.
+	To try it out choose the 'Browse' tool on the Tools Palette.
 action
 	highlight tool "Run Mode"
 	wait until the tool is run

@@ -102,10 +102,10 @@ action
 end step
 
 step "Set Stack Properties"
-	Click on the Inspector icon on the toolbar to open the property 
-	inspector.
+	Click on the 'Inspector' button on the Toolbar to open the Property
+	Inspector.
 action
-	highlight toolbar "Inspector"
+	highlight Toolbar "Inspector"
 	wait until there is an inspector for stack "Mainstack"
 	go to step "Property Inspector Interlude"
 end step
@@ -157,7 +157,7 @@ action
 end step
 
 step "Create Header Widget"
-	Drag a header bar widget from the tools palette onto your stack.
+	Drag a header bar widget from the Tools Palette onto your stack.
 action
 	highlight tool "Create com.livecode.widget.headerBar"
 	capture the next new widget of stack "Mainstack" as "Header"
@@ -195,10 +195,10 @@ action
 end step
 
 step "Open Property Inspector"
-	Click on the toolbar icon to open the property inspector for the 
+	Click on the 'Inspector' button on the Toolbar icon to open the Property Inspector for the
 	header bar.
 action
-	highlight toolbar "Inspector"
+	highlight Toolbar "Inspector"
 	wait until there is an inspector for widget "Header"
 	go to step "Set Calculator Header Name"
 end step
@@ -260,7 +260,7 @@ end step
 
 step "Create Navigation Bar Widget"
 	Create a navigation bar widget by dragging it onto your stack from
-	the tools palette.
+	the Tools Palette.
 action
 	highlight tool "Create com.livecode.widget.navbar"
 	capture the next new widget of stack "Mainstack" as "Footer"
@@ -380,9 +380,9 @@ action
 end step
 
 step "Set Entry Background Properties"
-	Open the property inspector for the graphic.
+	Open the Property Inspector for the graphic.
 action
-	highlight toolbar "Inspector"
+	highlight Toolbar "Inspector"
 	wait until there is an inspector for graphic "Entry Background"
 	go to step "Set Entry Background Border"
 end step
@@ -415,7 +415,7 @@ action
 end step
 
 step "Create Height Label Field"
-	Drag a label field from the tools palette onto your stack.
+	Drag a label field from the Tools Palette onto your stack.
 action
 	highlight tool "Create Label Field"
 	capture the next new field of stack "Mainstack" as "Height Label"
@@ -449,7 +449,7 @@ action
 end step
 
 step "Set Height Label Properties"
-	Open the property inspector for the label field.
+	Open the Property Inspector for the label field.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for field "Height Label"
@@ -466,7 +466,7 @@ action
 end step
 
 step "Create Weight Label Field"
-	Drag a label field from the tools palette onto your stack.
+	Drag a label field from the Tools Palette onto your stack.
 action
 	highlight tool "Create Label Field"
 	capture the next new field of stack "Mainstack" as "Weight Label"
@@ -517,7 +517,7 @@ action
 end step
 
 step "Create Height Entry Field"
-	Drag an editable text field from the tools palette onto your stack.
+	Drag an editable text field from the Tools Palette onto your stack.
 action
 	highlight tool "Create Field"
 	capture the next new field of stack "Mainstack" as "Height Field"
@@ -564,9 +564,9 @@ action
 end step
 
 step "Set Height Field Properties"
-	Open the property inspector for the field.
+	Open the Property Inspector for the field.
 action
-	highlight toolbar "Inspector"
+	highlight Toolbar "Inspector"
 	wait until there is an inspector for field "Height Field"
 	go to step "Set Height Field Name"
 end step
@@ -581,7 +581,7 @@ action
 end step
 
 step "Create Weight Entry Field"
-	Drag an editable text field from the tools palette onto your stack.
+	Drag an editable text field from the Tools Palette onto your stack.
 action
 	highlight tool "Create Field"
 	capture the next new field of stack "Mainstack" as "Weight Field"
@@ -667,7 +667,7 @@ action
 end step
 
 step "Set Calculate Graphic Properties"
-	Open the property inspector for the graphic.
+	Open the Property Inspector for the graphic.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for graphic "Calculate Background"
@@ -683,7 +683,7 @@ action
 end step
 
 step "Create Calculate Button"
-	Drag a button from the tools palette onto your stack.
+	Drag a button from the Tools Palette onto your stack.
 action
 	highlight tool "Create Button"
 	capture the next new button of stack "Mainstack" as "Calculate"
@@ -717,7 +717,7 @@ action
 end step
 
 step "Set Calculate Button Properties"
-	Open the property inspector for the button.
+	Open the Property Inspector for the button.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for button "Calculate"
@@ -818,7 +818,7 @@ action
 end step
 
 step "Create Results Label Field"
-	Drag a label field from the tools palette onto your stack.
+	Drag a label field from the Tools Palette onto your stack.
 action
 	highlight tool "Create Label Field"
 	capture the next new field of stack "Mainstack" as "Results Label"
@@ -852,7 +852,7 @@ action
 end step
 
 step "Set Results Label Properties"
-	Open the property inspector for the label field.
+	Open the Property Inspector for the label field.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for field "Results Label"
@@ -885,7 +885,7 @@ action
 end step
 
 step "Create Results Field"
-	Drag a label field from the tools palette onto your stack.
+	Drag a label field from the Tools Palette onto your stack.
 action
 	highlight tool "Create Label Field"
 	capture the next new field of stack "Mainstack" as "Results"
@@ -919,7 +919,7 @@ action
 end step
 
 step "Set Results Properties"
-	Open the property inspector for the label field.
+	Open the Property Inspector for the label field.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for field "Results"
@@ -987,15 +987,15 @@ action
 end step
 
 step "Set Advice Properties"
-	Open the property inspector for the label field.
+	Open the Property Inspector for the label field.
 action
-	highlight toolbar "Inspector"
+	highlight Toolbar "Inspector"
 	wait until there is an inspector for field "Advice"
 	go to step "Set Advice Name"
 end step
 
 step "Set Advice Name"
-	Set the 'Name' property of the field to "advice", and press 
+	Set the 'Name' property of the field to "advice", and press
 	<Return>.
 action
 	highlight property "name" of section "Basic"
@@ -1027,7 +1027,7 @@ action
 end step
 
 step "Set Calculator Card Properties"
-	Open the property inspector for this card by selecting 'Object' → 
+	Open the Property Inspector for this card by selecting 'Object' →
 	Card Inspector from the menubar.
 action
 	highlight menu item "Card Inspector" of menu "Object"
@@ -1096,7 +1096,7 @@ action
 end step
 
 step "Set Group Properties"
-	Open the property inspector for the new group.
+	Open the Property Inspector for the new group.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for group "Background Group"
@@ -1127,7 +1127,7 @@ action
 end step
 
 step "Set Chart Card Properties"
-	Open the property inspector for this card by selecting 'Object' → 
+	Open the Property Inspector for this card by selecting 'Object' →
 	'Card Inspector' from the menubar.
 action
 	highlight menu item "Card Inspector" of menu "Object"
@@ -1164,7 +1164,7 @@ action
 end step
 
 step "Set Chart Properties"
-	Open the property inspector for the chart widget.
+	Open the Property Inspector for the chart widget.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for widget "BMI Chart"
@@ -1230,7 +1230,7 @@ action
 end step
 
 step "Set Footer Properties Again"
-	Open the property inspector for the navigation bar.
+	Open the Property Inspector for the navigation bar.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for widget "Footer"
@@ -1293,108 +1293,127 @@ action
 end step
 
 step "Open Navigation Bar Script Editor"
-	Click the Code button on the toolbar to open the script editor for
+	Click the 'Code' button on the Toolbar to open the Script Editor for
 	the navigation bar.
 action
-	highlight toolbar "Code"
-	wait until there is a script editor for widget "Footer"
+	highlight Toolbar "Code"
+	wait until there is a Script Editor for widget "Footer"
 	go to step "Script Editor Interlude"
 end step
 
 step "Script Editor Interlude"
 	The Script Editor is a window that allows you to add code to the
 	objects on your stack.
-	
-	LiveCode apps work by executing code in response to 'messages', 
-	which are usually triggered by some kind of user action. 
 
-	When an object is sent a message, it will execute the code in the 
+	LiveCode apps work by executing code in response to 'messages',
+	which are usually triggered by some kind of user action.
+
+	When an object is sent a message, it will execute the code in the
 	appropriate block of code, or 'handler'.
-action 
+action
 	interlude
-	highlight script editor for widget "Footer"
+	highlight Script Editor for widget "Footer"
 	go to step "Script Editor Apply"
 end step
 
 step "Script Editor Apply"
-	The script entered into the script editor does not become live 
-	until you click on the 'Apply' button. When this is clicked, you will 
-	get feedback about whether the script you have written has any 
+	The script entered into the Script Editor does not become live
+	until you click on the 'Apply' button. When this is clicked, you will
+	get feedback about whether the script you have written has any
 	errors in it or not.
+
+	You can also use Cmd-<Return> or <Enter> to apply your code.
 action
 	interlude
-	highlight "Apply" of script editor for widget "Footer"
-	go to step "Set Navigation Bar Script"	
+	highlight "Apply" of Script Editor for widget "Footer"
+	go to step "Set Navigation Bar Script"
 end step
 
-step "Set Navigation Bar Script"	
+step "Set Navigation Bar Script"
 	When the navigation bar is clicked by the user, it is sent a message
-	with the name 'hiliteChanged'. 
-	
-	We want to handle the 'hiliteChanged' message, and go to the card 
-	corresponding to the item the user clicked on.	 
-	
-	Either add the 'go to card' command to the navigation bar's 
-	'on hiliteChanged' handler, or copy the script using the Copy Script 
-	To Editor Button, and click the script editor's 'Apply' button.
+	with the name 'hiliteChanged'.
+
+	We want to handle the 'hiliteChanged' message, and go to the card
+	corresponding to the item the user clicked on.
+
+	Either add the 'go to card' command to the navigation bar's
+	'on hiliteChanged' handler, or copy the script using the Copy Script
+	To Editor Button, and click the Script Editor's 'Apply' button.
 script
 	on hiliteChanged
 		go to card the hilitedItemName of me
 	end hiliteChanged
 action
-	highlight script editor for widget "Footer"
+	highlight Script Editor for widget "Footer"
 	wait until widget "Footer" is scripted
 	go to step "Explain Go To Card"
 end step
 
 step "Explain Go To Card"
-	We have named our cards "calculator" and "chart", the same as the 
-	names of the navigation items in the navigation bar (LiveCode is not 
+	We have named our cards "calculator" and "chart", the same as the
+	names of the navigation items in the navigation bar (LiveCode is not
 	case-sensitive by default). So going to the appropriate card is as
 	simple as going to the card corresponding to the 'hilitedItemName'.
 action
 	interlude
-	highlight line "go to card" of script editor for widget "Footer"
+	highlight line "go to card" of Script Editor for widget "Footer"
 	go to step "Script Editor Errors Tab"
 end step
 
 step "Script Editor Errors Tab"
-	If there are any errors in script, they will appear in the errors 
-	tab of the script editor. It will tell you where the error has 
-	occurred. You can double-click the error to highlight the 
+	If there are any errors in script, they will appear in the errors
+	tab of the Script Editor. It will tell you where the error has
+	occurred. You can double-click the error to highlight the
 	appropriate line of code.
-	
-	If there were no errors, it will display the text "No errors 
+
+	If there were no errors, it will display the text "No errors
 	occurred".
 action
 	interlude
-	highlight "Errors" of script editor for widget "Footer"
+	highlight "Errors" of Script Editor for widget "Footer"
 	go to step "Run Edit Tools Interlude"
 end step
 
 skip point
 
 step "Run Edit Tools Interlude"
-	LiveCode has two modes: edit mode and run mode. 
-	
-	Up until now you have been in edit mode all the time. In edit mode
-	you can click or drag to select objects on your stack, and move and 
-	resize them. 
-	
-	You can enter edit mode by clicking this tool in the tools palette.
+	LiveCode has two modes: Edit mode and Run mode.
+
+	You can switch between Edit and Run mode by choosing the corresponding tool in the Tools Palette.
 action
 	interlude
 	highlight tool "Edit Mode"
+	go to step "Edit Tool Interlude 2"
+end step
+
+step "Edit Tool Interlude 2"
+	Up until now you have been in Edit mode all the time. In Edit mode
+	you can add, edit and move objects on your stack. You can also select objects
+	to change their properties or add code to them.
+
+	Choose the 'Pointer' tool to go into Edit mode.
+action
+	interlude
+	highlight tool "Edit Mode"
+	go to step "Run Tool Interlude"
+end step
+
+step "Run Tool Interlude"
+	In Run mode your app is live - objects will behave as they would for
+	the app user. For example, clicking on the navigation bar will cause
+	the navigate message to be sent to it.
+
+	Choose the 'Browse' tool to go into Run mode.
+action
+	interlude
+	highlight tool "Run Mode"
 	go to step "Test Navigation"
 end step
 
 step "Test Navigation"
-	In run mode your app is live - objects will behave as they would for 
-	the app user. For example, clicking on the navigation bar will cause
-	the navigate message to be sent to it.
-	
-	To demonstrate the code you have just added, we are going to enter
-	run mode and test going between the cards.
+	To demonstrate the code you have just added we are going to choose the 'Browse' tool and test going between the cards.
+
+	Choose the 'Browse' tool.
 action
     highlight tool "Run Mode"
     wait until the tool is run
@@ -1410,7 +1429,7 @@ action
 end step
 
 step "Enter Edit Mode"
-	Change back to edit mode to continue making changes to the app.
+	Choose the 'Pointer' tool to continue working on the app.
 action
 	highlight tool "Edit Mode"
 	wait until the tool is edit
@@ -1522,8 +1541,7 @@ action
 end step
 
 step "Open Calculate Button Script"
-	Open the script editor for the button, by clicking the 'Code' 
-	toolbar icon.
+	Open the Script Editor for the button, by clicking the 'Code' button on the Toolbar.
 action
 	highlight toolbar "Code"
 	wait until there is a script editor for button "Calculate"
@@ -1710,8 +1728,7 @@ end step
 skip point
 
 step "Open Calculate Button Script Again"
-	Open the script editor for the button, by clicking the 'Code' 
-	toolbar icon.
+	Open the Script Editor for the button, by clicking the 'Code' button on the Toolbar.
 action
 	highlight toolbar "Code"
 	wait until there is a script editor for button "Calculate"
@@ -1780,7 +1797,7 @@ action
 end step
 
 step "Re-enter Edit Mode Again"
-	Change the mode back to edit mode to continue making changes to the 
+	Choose the 'Pointer' tool to continue making changes to the
 	app.
 action
 	highlight tool "Edit Mode"
@@ -1799,9 +1816,8 @@ action
 	go to step "Open Calculator Header Script"
 end step
 
-step "Open Calculator Header Script"	
-	Open the script editor for the header bar, by clicking the 'Code' 
-	toolbar icon.
+step "Open Calculator Header Script"
+	Open the Script Editor for the header bar, by clicking the 'Code' button on the Toolbar.
 action
 	highlight toolbar "Code"
 	wait until there is a script editor for widget "Header"
@@ -2024,7 +2040,7 @@ action
 end step
 
 step "Enter Edit Mode Again"
-	Change the mode back to edit mode to continue making changes to the 
+	Choose the 'Pointer' tool to continue making changes to the
 	app.
 action
 	highlight tool "Edit Mode"
@@ -2123,7 +2139,7 @@ action
 end step
 
 step "Set Browser Card Properties"
-	Open the property inspector for this card by selecting 'Object' → 
+	Open the Property Inspector for this card by selecting 'Object' →
 	'Card Inspector' from the menubar.
 action
 	highlight menu item "Card Inspector" of menu "Object"
@@ -2141,7 +2157,7 @@ action
 end step
 
 step "Open Browser Card Script"
-	Open the script editor for this card, by selecting 'Card Script' 
+	Open the Script Editor for this card, by selecting 'Card Script'
 	from the 'Object' menu.
 action	
 	highlight menu item "Card Script" of menu "Object"
@@ -2174,7 +2190,7 @@ action
 end step
 
 step "Set Footer Properties Once More"
-	Open the property inspector for the navigation bar.
+	Open the Property Inspector for the navigation bar.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for widget "Footer"
@@ -2258,7 +2274,7 @@ action
 end step
 
 step "Open Browser Inspector"
-	Open the property inspector for the browser widget.
+	Open the Property Inspector for the browser widget.
 action
 	highlight toolbar "Inspector"
 	wait until there is an inspector for widget "Browser"
@@ -2276,8 +2292,8 @@ action
 end step
 
 step "Final Browse Mode"
-	Finally, enter browse mode and use your app as it would be by a 
-	user. 
+	Finally, choose the 'Browse' too and use your app as it would be used by a
+	user.
 action
 	highlight tool "Run Mode"
 	wait until the tool is run
