@@ -264,6 +264,8 @@ private command debugControlsUpdate pMode
    end if
    
    set the cContexts of button "Debug Context" of me to tFilteredContexts
+# 2019-11-12 MDW [[ fix_debug_context_tooltip ]]
+   set the tooltip of button "Debug Context" to the label of button "Debug Context"
    unlock screen
 end debugControlsUpdate
 
