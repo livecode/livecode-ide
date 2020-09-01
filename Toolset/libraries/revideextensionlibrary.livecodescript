@@ -1248,6 +1248,12 @@ private command __revIDELCSExtensionLoad pFullPath, pFolder, pVersion, pStatus, 
       put pAdditionalInfoA["name"] into tId
    end if
    
+   if not revEnvironmentIsInstalled() and \
+         (tId & comma) is in the stackFiles of stack "Home" then
+      delete stack tId
+      put the filename of stack tId into pSourceFile
+   end if
+   
    local tLoadOnStartup
    if pError is empty and __extensionNeedsLoad(tType) then
       put revIDEExtensionGetLoadOnStartup(tID) into tLoadOnStartup
