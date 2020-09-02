@@ -439,6 +439,7 @@ on mouseDown pButtonNumber
    pass mouseDown
 end mouseDown
 
+# 2019-10-27 MDW [[ fix_delete_watched_variable ]] added pCondition
 on menuPick pItemName
    if the short name of the target is not "Breakpoint Context Menu" then
       pass menuPick
@@ -461,7 +462,7 @@ on menuPick pItemName
             if the cType of sSelectedItem is "breakpoint" then
                revDebuggerRemoveBreakpoint the cObject of sSelectedItem, the cLine of sSelectedItem
             else
-               revDebuggerRemoveWatch the cObject of sSelectedItem, the cHandler of sSelectedItem, the cVariable of sSelectedItem
+               revDebuggerRemoveWatch the cObject of sSelectedItem, the cHandler of sSelectedItem, the cVariable of sSelectedItem, the cCondition of sSelectedItem
             end if
          end if
       break
