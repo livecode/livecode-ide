@@ -6630,6 +6630,7 @@ on revIDEOpenPlugin pName
    else 
       do "go stack" && quote &  tStackPath & quote && "as" && tMode
    end if
+   set the _ideoverride of stack tStackPath to true
 end revIDEOpenPlugin
 
 function revIDELocalise pString, pSubstitutions
