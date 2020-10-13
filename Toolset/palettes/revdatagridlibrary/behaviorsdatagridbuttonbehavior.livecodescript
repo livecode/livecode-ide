@@ -9987,11 +9987,11 @@ end EditModeHideActionControl
 -- These messages are handled at this point of the message path to allow
 -- users to potentially handle them at group level.
 
-on RowLeftSwipeControlClicked
+on RowLeftSwipeControlClicked pTarget
    DeleteIndex the dgIndex of the target
 end RowLeftSwipeControlClicked
 
-on RowRightSwipeControlClicked
+on RowRightSwipeControlClicked pTarget
    DeleteIndex the dgIndex of the target
 end RowRightSwipeControlClicked
 
