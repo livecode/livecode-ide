@@ -1402,7 +1402,6 @@ command revInternal__InitialiseDefaults
          break
       case "Windows"
          set the hidePalettes to false
-         set the shellCommand to "cmd.exe"
          hide stack "revCursors"
          break
       case "Linux"

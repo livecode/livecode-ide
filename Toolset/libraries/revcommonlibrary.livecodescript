@@ -132,12 +132,7 @@ end revRunningWindowsNT
 on revSetWindowsShellCommand
   if the platform is not "Win32" then exit revSetWindowsShellCommand
   set the hideConsoleWindows to true
-  if $COMSPEC is not empty then set the shellCommand to $COMSPEC
-  else
-    --just in case some windows versions don't use $COMSPEC
-    if revRunningWindowsNT() then set the shellCommand to "cmd.exe"
-    else set the shellCommand to "command.com"
-  end if
+  set the shellCommand to $COMSPEC
 end revSetWindowsShellCommand
 
 
