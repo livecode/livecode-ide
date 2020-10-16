@@ -2665,7 +2665,8 @@ customized.
 Only data grids form type data grids with <fixed row height> can be put into
 edit mode.
 
-Related: edit mode action control (property), edit mode reorder control (property),
+Related: edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
 EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
 EditModeActionSelectControlClicked (message),
 EditModeActionControlClicked (message), EditModeActionControlHidden (message),
