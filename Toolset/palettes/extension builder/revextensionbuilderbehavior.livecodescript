@@ -420,7 +420,12 @@ on resizeStack
    set the topleft of image "icon_retina" of me to tLeft,tTop
    put the right of image "icon_retina" of me + tPadding into tLeft
    set the topleft of image "icon" of me to tLeft,tTop
-   
+   put the right of image "icon" of me + tPadding into tLeft
+   set the topLeft of field "label_svgicon_absent" to tLeft, tTop
+   set the topLeft of widget "svgicon_retina" of me to tLeft, tTop
+   put the right of widget "svgicon_retina" of me into tLeft
+   set the topLeft of widget "svgicon" of me to tLeft, tTop
+
    # Resources
    put item 1 of tRect + tMargin into tLeft
    put item 3 of tRect - tMargin into tRight
@@ -446,7 +451,7 @@ on resizeStack
    set the width of field "label_api" of me to tLabelWidth
    set the topleft of field "label_api" of me to tLeft,tTop
    put the right of field "label_api" of me + tPadding into tLeft
-   set the rect of field "message_api" of me to tLeft, tTop, tRight, tTop+the formattedheight of field "message_api" of me  -  the margins of field "message_api" of me
+   set the rect of field "message_api" of me to tLeft, tTop, tRight, tTop+the formattedheight of field "message_api" of me  -  (the margins of field "message_api" of me / 2)
    
    # Guide
    put item 1 of tRect + tMargin into tLeft
@@ -454,7 +459,7 @@ on resizeStack
    set the width of field "label_guide" of me to tLabelWidth
    set the topleft of field "label_guide" of me to tLeft,tTop
    put the right of field "label_guide" of me + tPadding into tLeft
-   set the rect of field "message_guide" of me to tLeft, tTop, tRight, tTop+the formattedheight of field "message_guide" of me -  the margins of field "message_guide" of me
+   set the rect of field "message_guide" of me to tLeft, tTop, tRight, tTop+the formattedheight of field "message_guide" of me -  (the margins of field "message_guide" of me / 2)
    
    # Console
    put item 1 of tRect + tMargin into tLeft
