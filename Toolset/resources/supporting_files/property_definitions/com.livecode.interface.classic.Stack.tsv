@@ -19,7 +19,6 @@ startupIconic							false
 destroyStack							false					
 destroyWindow							false					
 cantDelete							false					
-cantModify							false					
 cantAbort							false					
 stackFiles												
 externals												
