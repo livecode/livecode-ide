@@ -1263,7 +1263,7 @@
 					   tHTML += '<li><span class="lcdoc_parameterValue">';
 					   tHTML += value.value + '</span>';
 					   if (nonEmptyElement(value, "description"))
-						   tHTML += ' -' + value.description;
+						   tHTML += ' -  ' + value.description;
 					   tHTML += '</li>';
 				   });
 				   tHTML += "</ul>";
