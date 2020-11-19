@@ -2658,16 +2658,17 @@ Description:
 
 Use the <dgEditMode> property to put the data grid into or take it out of edit
 mode. When in edit mode, the data grid displays an action control of the left
-hand side of each row (as defined by ) and a reorder control on the right. The
-appearance and behavior of these controls can be customized.
+hand side of each row (as defined by <edit mode action control>) and a reorder 
+control on the right. The appearance and behavior of these controls can be 
+customized.
 
 Only data grids form type data grids with <fixed row height> can be put into
 edit mode.
 
-Related: edit mode action control (property), edit mode action select control
-(property), edit mode reorder control (property),
-EditModeShowActionControlForIndex (command), EditModeHideActionControl
-(command), EditModeActionSelectControlClicked (message),
+Related: edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message),
 EditModeActionControlClicked (message), EditModeActionControlHidden (message),
 GetEditModeActionControl (message), GetEditModeActionSelectControl (message),
 GetEditModeReorderControl (message)
@@ -2708,8 +2709,9 @@ data grids left and right, gradually revealing controls at either side of the
 row. The default appearance of the revealed controls and the behavior of the
 swipe actions can be customized.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeShowControlForIndexAndSide (command),
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), 
+RowSwipeShowControlForIndexAndSide (command),
 RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
 (message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
 (message), RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden
@@ -2734,12 +2736,13 @@ Use <edit mode action control> to specify the action control to display when the
 data grid is in edit mode. This defaults to a red delete button. Set to empty to
 prevent the action control from being displayed.
 
-Related: dgEditMode(property), edit mode action select control (property), edit
-mode reorder control (property), EditModeShowActionControlForIndex (command),
-EditModeHideActionControl (command), EditModeActionSelectControlClicked
-(message), EditModeActionControlClicked (message), EditModeActionControlHidden
-(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
-(message), GetEditModeReorderControl (message)
+Related: dgEditMode(property), edit mode action select control (property), 
+edit mode reorder control (property), EditModeShowActionControlForIndex (command),
+EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message), 
+EditModeActionControlClicked (message), EditModeActionControlHidden (message), 
+GetEditModeActionControl (message), GetEditModeActionSelectControl (message), 
+GetEditModeReorderControl (message)
 
 
 Name: edit mode action select control
@@ -2760,12 +2763,12 @@ Use <edit mode action select control> to specify the action select control to
 display when the data grid is in edit mode. This defaults to a red stop icon.
 Set to empty to prevent the action select control from being displayed.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-reorder control (property), EditModeShowActionControlForIndex (command),
-EditModeHideActionControl (command), EditModeActionSelectControlClicked
-(message), EditModeActionControlClicked (message), EditModeActionControlHidden
-(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
-(message), GetEditModeReorderControl (message)
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode reorder control (property), EditModeShowActionControlForIndex (command),
+EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message), EditModeActionControlClicked (message), 
+EditModeActionControlHidden (message), GetEditModeActionControl (message), 
+GetEditModeActionSelectControl (message), GetEditModeReorderControl (message)
 
 
 Name: edit mode reorder control
@@ -2786,12 +2789,13 @@ the data grid is in edit mode. This defaults to a grey reorder icon. Set to
 empty to prevent the reorder control from being displayed, turning dynamic
 reordering off for the data grid.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-action select control (property), EditModeShowActionControlForIndex (command),
-EditModeHideActionControl (command), EditModeActionSelectControlClicked
-(message), EditModeActionControlClicked (message), EditModeActionControlHidden
-(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
-(message), GetEditModeReorderControl (message)
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode action select control (property), 
+EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message), 
+EditModeActionControlClicked (message), EditModeActionControlHidden (message), 
+GetEditModeActionControl (message), GetEditModeActionSelectControl (message), 
+GetEditModeReorderControl (message)
 
 
 Name: left swipe control
@@ -2813,10 +2817,11 @@ Set to empty to prevent drags and swipes to the right.
 
 Related: enable swipe (property),  right swipe control (property),
 RowSwipeShowControlForIndexAndSide (command), RowSwipeHideControl (message),
-RowSwipedRight (message), RowSwipedLeft (message), RowLeftSwipeControlClicked
-(message), RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked
-(message), RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden
-(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+RowSwipedRight (message), RowSwipedLeft (message), 
+RowLeftSwipeControlClicked (message), 
+RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked (message), 
+RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden (message), 
+GetLeftSwipeControl (message), GetRightSwipeControl (message)
 
 
 Name: right swipe control
@@ -2838,10 +2843,11 @@ background. Set to empty to prevent drags and swipes to the left.
 
 Related: enable swipe (property), left swipe control (property),
 RowSwipeShowControlForIndexAndSide (command), RowSwipeHideControl (message),
-RowSwipedRight (message), RowSwipedLeft (message), RowLeftSwipeControlClicked
-(message), RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked
-(message), RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden
-(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+RowSwipedRight (message), RowSwipedLeft (message), 
+RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked (message), 
+RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden (message), 
+RowRightSwipeControlHidden (message), GetLeftSwipeControl (message), 
+GetRightSwipeControl (message)
 
 
 Name: EditModeShowActionControlForIndex
@@ -2860,12 +2866,13 @@ Description:
 Display the action control for the data grid row with the given index. The data
 grid must be in edit mode for the action control to be displayed.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-action select control (property), edit mode reorder control (property),
-EditModeHideActionControl (command), EditModeActionSelectControlClicked
-(message), EditModeActionControlClicked (message), EditModeActionControlHidden
-(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
-(message), GetEditModeReorderControl (message)
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
+EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message), 
+EditModeActionControlClicked (message), EditModeActionControlHidden (message), 
+GetEditModeActionControl (message), GetEditModeActionSelectControl (message), 
+GetEditModeReorderControl (message)
 
 
 Name: EditModeHideActionControl
@@ -2910,12 +2917,13 @@ Description:
 Display the data grid swipe control on the given side of the row with the given
 index. <enable swipe> must be true for swipe controls to be displayed.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeHideControl (message), RowSwipedRight (message),
-RowSwipedLeft (message), RowLeftSwipeControlClicked (message),
-RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked (message),
-RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden (message),
-GetLeftSwipeControl (message), GetRightSwipeControl (message)
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), RowSwipeHideControl (message), 
+RowSwipedRight (message), RowSwipedLeft (message), 
+RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked (message), 
+RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden (message), 
+RowRightSwipeControlHidden (message), GetLeftSwipeControl (message), 
+GetRightSwipeControl (message)
 
 
 Name: RowSwipeHideControl
@@ -2935,12 +2943,13 @@ will prevent the hide from being animated. This is useful if you wish to hide
 the row instantly, for example when deleting, but don't want to turn off
 animations globally.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeShowControlForIndexAndSide (command), RowSwipedRight
- (message), RowSwipedLeft (message), RowLeftSwipeControlClicked (message),
- RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked (message),
- RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden (message),
- GetLeftSwipeControl (message), GetRightSwipeControl (message)
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), RowSwipeShowControlForIndexAndSide (command), 
+RowSwipedRight (message), RowSwipedLeft (message), 
+RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked (message), 
+RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden (message), 
+RowRightSwipeControlHidden (message), GetLeftSwipeControl (message), 
+GetRightSwipeControl (message)
 
 
 Name: EditModeActionSelectControlClicked
@@ -2977,12 +2986,12 @@ template when the user clicks on a row's action select control. Handle
 
 The default behavior is to show the edit mode action control.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-action select control (property), edit mode reorder control (property),
-EditModeShowActionControlForIndex (command), EditModeHideActionControl
-(command), EditModeActionControlClicked (message), EditModeActionControlHidden
-(message), GetEditModeActionControl (message), GetEditModeActionSelectControl
-(message), GetEditModeReorderControl (message)
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
+EditModeActionControlClicked (message), EditModeActionControlHidden (message), 
+GetEditModeActionControl (message), GetEditModeActionSelectControl (message), 
+GetEditModeReorderControl (message)
 
 
 Name: EditModeActionControlClicked
@@ -3028,12 +3037,12 @@ when the user clicks on a row's action control. Handle
 
 The default behavior is to delete the current row.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-action select control (property), edit mode reorder control (property),
-EditModeShowActionControlForIndex (command), EditModeHideActionControl
-(command), EditModeActionSelectControlClicked (message),
-EditModeActionControlHidden (message), GetEditModeActionControl (message),
-GetEditModeActionSelectControl (message), GetEditModeReorderControl (message)
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message), EditModeActionControlHidden (message), 
+GetEditModeActionControl (message), GetEditModeActionSelectControl (message), 
+GetEditModeReorderControl (message)
 
 
 Name: EditModeActionControlHidden
@@ -3053,12 +3062,12 @@ when an action control is visible and the user clicks on the data grid,
 resulting in the action control being hidden. Handle
 <EditModeActionControlHidden> to perform a custom action on hide.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-action select control (property), edit mode reorder control (property),
-EditModeShowActionControlForIndex (command), EditModeHideActionControl
-(command), EditModeActionSelectControlClicked (message),
-EditModeActionControlClicked (message), GetEditModeActionControl (message),
-GetEditModeActionSelectControl (message), GetEditModeReorderControl (message)
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message), EditModeActionControlClicked (message), 
+GetEditModeActionControl (message), GetEditModeActionSelectControl (message), 
+GetEditModeReorderControl (message)
 
 
 Name: RowSwipedRight
@@ -3084,8 +3093,8 @@ perform a custom action on a right swipe.
 
 The default action is to show the left swipe control.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeShowControlForIndexAndSide (command),
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), RowSwipeShowControlForIndexAndSide (command),
 RowSwipeHideControl (message), RowSwipedLeft (message),
 RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked (message),
 RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden (message),
@@ -3116,8 +3125,8 @@ perform a custom action on a left swipe.
 
 The default action is to show the right swipe control.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeShowControlForIndexAndSide (command),
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), RowSwipeShowControlForIndexAndSide (command),
 RowSwipeHideControl (message), RowSwipedRight (message),
 RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked (message),
 RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden (message),
@@ -3163,12 +3172,13 @@ when the user clicks on the left hand side swipe control. Handle
 
 The default action is to delete the current row.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeShowControlForIndexAndSide (command),
-RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
-(message), RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked
-(message), RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden
-(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), 
+RowSwipedLeft (message), RowLeftSwipeControlClicked (message), 
+RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden (message), 
+RowRightSwipeControlHidden (message), GetLeftSwipeControl (message), 
+GetRightSwipeControl (message)
 
 
 Name: RowRightSwipeControlClicked
@@ -3209,12 +3219,13 @@ when the user clicks on the right hand side swipe control. Handle
 
 The default action is to delete the current row.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeShowControlForIndexAndSide (command),
-RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
-(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
-(message), RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden
-(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), 
+RowSwipedLeft (message), RowLeftSwipeControlClicked (message), 
+RowLeftSwipeControlClicked (message), RowLeftSwipeControlHidden (message), 
+RowRightSwipeControlHidden (message), GetLeftSwipeControl (message), 
+GetRightSwipeControl (message)
 
 
 Name: RowLeftSwipeControlHidden
@@ -3234,12 +3245,13 @@ an left hand side swipe control is visible and the user clicks on the data grid,
 resulting in the swipe control being hidden. Handle <RowLeftSwipeControlHidden>
 to perform a custom action on hide.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeShowControlForIndexAndSide (command),
-RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
-(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
-(message), RowRightSwipeControlClicked (message), RowRightSwipeControlHidden
-(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), 
+RowSwipedLeft (message), RowLeftSwipeControlClicked (message), 
+RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked (message), 
+RowRightSwipeControlHidden (message), GetLeftSwipeControl (message), 
+GetRightSwipeControl (message)
 
 
 Name: RowRightSwipeControlHidden
@@ -3259,12 +3271,13 @@ when an right hand side swipe control is visible and the user clicks on the data
 grid, resulting in the swipe control being hidden. Handle
 <RowRightSwipeControlHidden> to perform a custom action on hide.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeShowControlForIndexAndSide (command),
-RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
-(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
-(message), RowRightSwipeControlClicked (message), RowRightSwipeControlHidden
-(message), GetLeftSwipeControl (message), GetRightSwipeControl (message)
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), 
+RowSwipedLeft (message), RowLeftSwipeControlClicked (message), 
+RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked (message), 
+RowRightSwipeControlHidden (message), GetLeftSwipeControl (message), 
+GetRightSwipeControl (message)
 
 
 Name: GetEditModeActionControl
@@ -3299,10 +3312,10 @@ result in no control being displayed.
 
 Handing this message will override the <edit mode action control> property.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-action select control (property), edit mode reorder control (property),
-EditModeShowActionControlForIndex (command), EditModeHideActionControl
-(command), EditModeActionSelectControlClicked (message),
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message), 
 EditModeActionControlClicked (message), EditModeActionControlHidden (message),
 GetEditModeActionSelectControl (message), GetEditModeReorderControl (message)
 
@@ -3345,12 +3358,12 @@ Returning empty will result in no control being displayed.
 Handing this message will override the <edit mode action select control>
 property.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-action select control (property), edit mode reorder control (property),
-EditModeShowActionControlForIndex (command), EditModeHideActionControl
-(command), EditModeActionSelectControlClicked (message),
-EditModeActionControlClicked (message), EditModeActionControlHidden (message),
-GetEditModeActionControl (message), GetEditModeReorderControl (message)
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message), EditModeActionControlClicked (message), 
+EditModeActionControlHidden (message), GetEditModeActionControl (message), 
+GetEditModeReorderControl (message)
 
 
 Name: GetEditModeReorderControl
@@ -3391,10 +3404,10 @@ result in no control being displayed.
 
 Handing this message will override the <edit mode reorder control> property.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-action select control (property), edit mode reorder control (property),
-EditModeShowActionControlForIndex (command), EditModeHideActionControl
-(command), EditModeActionSelectControlClicked (message),
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message),
 EditModeActionControlClicked (message), EditModeActionControlHidden (message),
 GetEditModeActionControl (message), GetEditModeActionSelectControl (message)
 
@@ -3437,12 +3450,13 @@ result in no control being displayed.
 
 Handing this message will override the <left swipe control> property.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeShowControlForIndexAndSide (command),
-RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
-(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
-(message), RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden
-(message), RowRightSwipeControlHidden (message), GetRightSwipeControl (message)
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), 
+RowSwipedLeft (message), RowLeftSwipeControlClicked (message), 
+RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked (message), 
+RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden (message), 
+GetRightSwipeControl (message)
 
 
 Name: GetRightSwipeControl
@@ -3483,12 +3497,13 @@ result in no control being displayed.
 
 Handing this message will override the <right swipe control> property.
 
-Related: enable swipe (property), left swipe control (property), right swipe
-control (property), RowSwipeShowControlForIndexAndSide (command),
-RowSwipeHideControl (message), RowSwipedRight (message), RowSwipedLeft
-(message), RowLeftSwipeControlClicked (message), RowLeftSwipeControlClicked
-(message), RowRightSwipeControlClicked (message), RowLeftSwipeControlHidden
-(message), RowRightSwipeControlHidden (message), GetLeftSwipeControl (message)
+Related: enable swipe (property), left swipe control (property), 
+right swipe control (property), RowSwipeShowControlForIndexAndSide (command),
+RowSwipeHideControl (message), RowSwipedRight (message), 
+RowSwipedLeft (message), RowLeftSwipeControlClicked (message), 
+RowLeftSwipeControlClicked (message), RowRightSwipeControlClicked (message), 
+RowLeftSwipeControlHidden (message), RowRightSwipeControlHidden (message), 
+GetLeftSwipeControl (message)
 
 
 Name: EditModeReorderStarted
@@ -3510,10 +3525,10 @@ Description:
 <EditModeReorderStarted> is sent to your data grid when a user starts a dynamic
 reordering.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-action select control (property), edit mode reorder control (property),
-EditModeShowActionControlForIndex (command), EditModeHideActionControl
-(command), EditModeActionSelectControlClicked (message),
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message),
 EditModeActionControlClicked (message), EditModeActionControlHidden (message),
 GetEditModeActionControl (message), GetEditModeActionSelectControl (message),
 GetEditModeReorderControl (message)
@@ -3539,11 +3554,10 @@ Description:
 <EditModeReorderCompleted> is sent to your data grid when a user completes a
 dynamic reordering.
 
-Related: dgEditMode(property), edit mode action control (property), edit mode
-action select control (property), edit mode reorder control (property),
-EditModeShowActionControlForIndex (command), EditModeHideActionControl
-(command), EditModeActionSelectControlClicked (message),
-EditModeActionControlClicked (message), EditModeActionControlHidden (message),
-GetEditModeActionControl (message), GetEditModeActionSelectControl (message),
-GetEditModeReorderControl (message)
+Related: dgEditMode(property), edit mode action control (property), 
+edit mode action select control (property), edit mode reorder control (property),
+EditModeShowActionControlForIndex (command), EditModeHideActionControl (command), 
+EditModeActionSelectControlClicked (message), EditModeActionControlClicked (message), 
+EditModeActionControlHidden (message), GetEditModeActionControl (message), 
+GetEditModeActionSelectControl (message), GetEditModeReorderControl (message)
 

@@ -1,0 +1,1 @@
+# Remove `cantModify` from stack basic properties palette

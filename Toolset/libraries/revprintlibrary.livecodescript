@@ -41,8 +41,11 @@ on revPrintText pText,pHeader,pFooter,pSourceFieldRef,pHeaderFldRef,pFooterFldRe
    local tPrintMargins --margins stored in array for script simplification
    local tPageWidth,tPageHeight --height and width of the page
    local tScrolling,tPageLine,tScrollList --scroll values for text height calculations
+   local tDefaultStack
    lock messages
    --General Initialization
+   put the defaultStack into tDefaultStack
+   
    if the printPageNumber is empty then
       if lAnswerPrinter is empty then put true into lAnswerPrinter
       if lPageSetUp is empty then put true into lPageSetup
@@ -176,6 +179,7 @@ on revPrintText pText,pHeader,pFooter,pSourceFieldRef,pHeaderFldRef,pFooterFldRe
    close printing
    if there is a stack "revTempHeader" then delete stack "revTempHeader"
    if there is a stack "revTempFooter" then delete stack "revTempFooter"
+   set the defaultStack to tDefaultStack
    delete stack gREVPrintFileName
    reset the templateStack
    reset the templateField

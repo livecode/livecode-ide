@@ -198,10 +198,10 @@ on mouseUp
    if the long id of the target contains the long id of sSwipeControl then
       switch sSwipeControlSide
          case "left"
-            dispatch DG2_GetMessageNameForTag("RowLeftSwipeControlClicked") to tRowControl
+            dispatch DG2_GetMessageNameForTag("RowLeftSwipeControlClicked") to tRowControl with the target
             break
          case "right"
-            dispatch DG2_GetMessageNameForTag("RowRightSwipeControlClicked") to tRowControl
+            dispatch DG2_GetMessageNameForTag("RowRightSwipeControlClicked") to tRowControl with the target
             break
       end switch
    else
