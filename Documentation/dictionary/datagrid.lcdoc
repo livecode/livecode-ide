@@ -1787,6 +1787,42 @@ Description:
 Returns the index associated with the given line.
 
 
+Name: dgRectOfIndex
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgRectOfIndex[pIndex] of group "DataGrid"
+
+Summary: Get/set the rect of the control associated with the given index
+
+Description:
+
+Returns the rect of the control connected with pIndex. Rect
+is relative to this group but takes into account the current vScroll.
+This may not prove very useful if you don't have control caching on.
+
+
+
+
+Name: dgRectOfLine
+
+Type: property
+
+Associations: datagrid
+
+Syntax: get the dgRectOfLine[pLine] of group "DataGrid"
+
+Summary: Get/set the rect of the control associated with the given line
+
+Description:
+
+Returns the rect of the control connected with pLine. Rect
+is relative to this group but takes into account the current vScroll.
+This may not prove very useful if you don't have control caching on.
+
+
 
 Name: dgVScroll
 
