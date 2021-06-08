@@ -3,7 +3,8 @@ on preOpenStack
    set the text of field "FilterText" to "Search"
    set the filterString of widget "iconList" of me to empty
    set the showSelectedElement of widget "iconList" of me to false
-   set the iconSize of widget "iconList" of me to 45
+   set the iconSize of widget "iconList" of me to 55
+   set the showNames of widget "iconList" of me to true
    set the selectedIcon of widget "iconList" of me to the dialogData
    
    set the behavior of me to the long id of stack "com.livecode.pi.svgiconfilter.behavior"
