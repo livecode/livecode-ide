@@ -1065,6 +1065,7 @@ end getAbsoluteRow
 function getVisibleRow pLongID
    local tRow
    put getRow(pLongID) into tRow
+   set the wholeMatches to true
    return itemOffset(tRow, sDisplayArray["visible object keys"])
 end getVisibleRow
 

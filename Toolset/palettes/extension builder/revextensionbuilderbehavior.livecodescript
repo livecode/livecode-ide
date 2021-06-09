@@ -354,11 +354,11 @@ private on displayExtensionData pData
    end if
    
    # Userguide 
-   if pData["user_guide"] is not empty then put "Yes" into field "message_guide" of me
+   if pData["guide_file"] is not empty then put "Yes" into field "message_guide" of me
    else put "No user guide found" into field "message_guide" of me
    
    # Default script
-   if pData["defaultscript"] is not empty then put pData["defaultscript"] into field "defaultscript" of me
+   if pData["defaultscript_file"] is not empty then put pData["defaultscript_file"] into field "defaultscript" of me
    else put "No default script found" into field "defaultscript" of me
    
    # Clear the console

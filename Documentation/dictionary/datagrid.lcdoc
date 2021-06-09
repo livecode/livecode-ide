@@ -1787,6 +1787,21 @@ Description:
 Returns the index associated with the given line.
 
 
+Name: dgLineOfIndex
+
+Type: property
+
+Associations: datagrid
+
+Syntax: put the dgLineOfIndex[pIndex] of group "DataGrid"
+
+Summary: Returns the line associated with the given index.
+
+
+Description:
+
+Returns the line associated with the given index.
+
 
 Name: dgVScroll
 
