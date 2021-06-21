@@ -1781,7 +1781,6 @@ Syntax: put the dgIndexOfLine[pLine] of group "DataGrid"
 
 Summary: Returns the index associated with the given line.
 
-
 Description:
 
 Returns the index associated with the given line.
@@ -1804,8 +1803,6 @@ is relative to this group but takes into account the current vScroll.
 This may not prove very useful if you don't have control caching on.
 
 
-
-
 Name: dgRectOfLine
 
 Type: property
@@ -1822,6 +1819,21 @@ Returns the rect of the control connected with pLine. Rect
 is relative to this group but takes into account the current vScroll.
 This may not prove very useful if you don't have control caching on.
 
+
+
+Name: dgLineOfIndex
+
+Type: property
+
+Associations: datagrid
+Syntax: put the dgLineOfIndex[pIndex] of group "DataGrid"
+
+Summary: Returns the line associated with the given index.
+
+
+Description:
+
+Returns the line associated with the given index.
 
 
 Name: dgVScroll
