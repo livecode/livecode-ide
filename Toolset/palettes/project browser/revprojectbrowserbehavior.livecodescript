@@ -80,7 +80,8 @@ on preOpenStack
    
    # Preferences
    addFrameItem "pb_indicator", "header", "preference", "Object type indicator", "enum","Text,Icon", "preferenceChanged", the long id of me   
-   addFrameItem "pb_sections", "header", "preference", "Show Sections", "set","Front Scripts,Stacks,Back Scripts,Stacks in use", "preferenceChanged", the long id of me
+# [[ 2019.09.06 mdw Allow hiding script-only stacks ]]
+   addFrameItem "pb_sections", "header", "preference", "Show Sections", "set","Front Scripts,Stacks,Back Scripts,Stacks in use,Script-Only Stacks", "preferenceChanged", the long id of me
    addFrameItem "pb_stackSort","header","preference","Order stacks by","enum","Name - ascending,Name - descending,Layer - ascending,Layer - descending","preferenceChanged",the long id of me
    addFrameItem "pb_cardSort","header","preference","Order cards by","enum","Name - ascending,Name - descending,Layer - ascending,Layer - descending","preferenceChanged",the long id of me
    addFrameItem "pb_controlSort","header","preference","Order controls by","enum","Name - ascending,Name - descending,Layer - ascending,Layer - descending","preferenceChanged",the long id of me
@@ -446,7 +447,7 @@ command buildProjectView pRememberExpansion
    sort lines of tOldExpandedControls by item 2 of each
    
    repeat with x  = 1 to the number of items in tSections
-      if item x of tSections is not among the items of "Front Scripts,Stacks,Back Scripts,Stacks in use" then
+      if item x of tSections is not among the items of "Front Scripts,Stacks,Back Scripts,Stacks in use,Script-Only Stacks" then
          delete item x of tSections
       end if
    end repeat
@@ -466,8 +467,9 @@ command buildProjectView pRememberExpansion
       end if
    end if
    
+# [[ 2019.09.06 mdw Allow hiding script-only stacks ]]
    if "Stacks" is among the items of tSections then
-      put revIDEStacksForDataView(tIndex) into tStacks
+      put revIDEStacksForDataView(tIndex, "Script-Only Stacks" is not among the items of tSections) into tStacks
    end if
    
    if "Back Scripts" is among the items of tSections then
