@@ -2343,6 +2343,8 @@ function getClickText
    --   if tTo < tFrom then
    getCaretToken true
    put the result into tText
+# MDW 2019.10.06 [[ fix_find_definition ]] allow quoted handler names, as in "dispatch" and "send"
+   replace quote with empty in tText
    --else
    --   put char tFrom to tTo of textGetScript() into tText
    --end if

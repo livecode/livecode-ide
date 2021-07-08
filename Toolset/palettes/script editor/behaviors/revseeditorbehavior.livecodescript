@@ -1024,6 +1024,8 @@ local sDefinitionMatches
 private command prepareContextMenu
    local tSelectedText
    put getClickText() into tSelectedText
+# MDW 2019.10.06 [[ fix_find_definition ]] allow quoted handler names, as in "dispatch" and "send"
+   replace quote with empty in tSelectedText
    
    local tLine, tSelectedHandler
    put word 2 of the selectedLine into tLine
