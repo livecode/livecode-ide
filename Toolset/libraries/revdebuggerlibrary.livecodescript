@@ -1948,6 +1948,8 @@ end __ActivateBreakpoints
 #   being resolved is in the stack script.
 private function __ResolveId pId, pStack
    local tID
+# [[2020.08.31 MDW fix_resolveID_crash_in_debugger]]
+    try
    if pId is 0 then
       put the long id of pStack into tID
    else
@@ -1958,6 +1960,8 @@ private function __ResolveId pId, pStack
          put the long id of control id pId of pStack into tID
       end if
    end if
+    catch e
+    end try
    return tID
 end __ResolveId
 
