@@ -76,7 +76,8 @@ on preOpenStack
    addFrameItem "groupControl","footer", "action", "Group controls", "folder open alt", "","groupControls", the long id of me
    addFrameItem "cloneControl","footer", "action", "Clone control", "files alt", "","cloneControls", the long id of me
    addFrameItem "deleteControl","footer", "action", "Delete control", "trash", "","deleteControls", the long id of me
-   
+   addFrameItem "refreshControl","footer", "action", "Refresh display", "refresh", "","panic", the long id of me
+
    
    # Preferences
    addFrameItem "pb_indicator", "header", "preference", "Object type indicator", "enum","Text,Icon", "preferenceChanged", the long id of me   
@@ -130,6 +131,19 @@ on preOpenStack
    set the rect of group "content" of card 1 of me to the contentRect of me
    ideSelectedObjectChanged
 end preOpenStack
+
+private command doRefreshProjectView
+   local tStacks, tCards
+   
+   lock screen
+   setUpProjectView # bn's implementation
+   buildProjectView true
+   unlock screen
+end doRefreshProjectView
+ 
+on panic
+   doRefreshProjectView
+end panic
 
 on resizeStack
    lock screen
