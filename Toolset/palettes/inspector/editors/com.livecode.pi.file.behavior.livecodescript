@@ -61,3 +61,18 @@ on mouseUp pButton
       end if
    end if
 end mouseUp
+
+on dragEnter
+   if the dragData["files"] is empty then
+      pass dragEnter
+   end if
+   set the dragAction to "link"
+end dragEnter
+
+on dragDrop
+   if the dragData["files"] is empty then
+      pass dragDrop
+   end if
+   set the text of field 1 of me to line 1 of the dragData["files"]
+   valueChanged
+end dragDrop

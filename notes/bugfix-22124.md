@@ -1,0 +1,1 @@
+# Replace content of file property editors when a file is dropped onto the field
