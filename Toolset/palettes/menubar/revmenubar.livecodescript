@@ -2182,9 +2182,23 @@ function revMenuBarStandardContextMenu pObject, pIndent, pSelectable
    put tIndent & "Property Inspector" & return after tText
    put tIndent & "-" & return after tText
    put tIndent & enableMenuItem("Cut", pSelectable) & return after tText
-   put tIndent & enableMenuItem("Copy", pSelectable) after tText
+   put tIndent & enableMenuItem("Copy", pSelectable) & return after tText
+   put tIndent & "-" & return after tText
+   put tIndent & buildArrangeSubmenu() after tText
    return tText
 end revMenuBarStandardContextMenu
+
+private function buildArrangeSubmenu
+   local tArrange
+   put "Arrange" & return after tArrange 
+   put tab & "Send to Back" & return after tArrange
+   put tab & "Move Backward" & return after tArrange
+   put tab & "Move Forward" & return after tArrange
+   put tab & "Bring to Front" after tArrange
+   return tArrange
+end buildArrangeSubmenu
+
+
 
 function revBuildContextSensitiveMenu pExtraText, pTarget, pType, pSelectable
    local tText
@@ -2549,7 +2563,7 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
    
    set the itemdelimiter to "|"
    switch item 1 of pWhich
-      ######## OBJECTS #########
+            ######## OBJECTS #########
       case "Edit Script"
          revIDEEditScriptOfObjects pTarget
          break
@@ -2695,6 +2709,21 @@ on revMenubarContextMenuPickTarget pWhich, pTarget
          break
       case "Stack"
          revMenubarContextMenuPickTarget item 2 to 3 of pWhich, tTargetStack
+         break
+   end switch
+   ######## ARRANGESUBMENU #########
+   switch item 2 of pWhich
+      case "Send to Back"
+         revIDEActionSendToBack
+         break
+      case "Move Backward"
+         revIDEActionMoveBackward
+         break
+      case "Move forward"
+         revIDEActionMoveForward
+         break
+      case "Bring to Front"
+         revIDEActionBringToFront
          break
       default
          break
