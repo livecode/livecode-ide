@@ -9253,10 +9253,28 @@ command DeleteFieldEditor pSaveContents
       ## Did user want us to automatically save?
       if theIndex is an integer and (theKey is not empty and theKey is not an array) then
          if contentHasChanged then
-            
+            local tText
             ## Give the developer a chance to stop value from being set
             try
-               dispatch "CloseFieldEditor" to theField with theEditor
+               switch the dgTextType of theEditor
+                  case "html"
+                     put the HTMLText of theEditor into tText
+                     break
+                  case "rtf"
+                     put the RTFText of theEditor into tText
+                     break
+                  case "unicode"
+                     put the unicodeText of theEditor into tText
+                     break
+                  case "utf8"
+                     put the unicodeText of theEditor into tText
+                     put uniDecode(tText, "utf8") into tText
+                     break
+                  default
+                     put the text of theEditor into tText
+               end switch
+               
+               dispatch "CloseFieldEditor" to theField with theEditor 
                if it is "handled" then
                   put the result into theResult
                end if
@@ -9264,25 +9282,8 @@ command DeleteFieldEditor pSaveContents
                if theResult is not "cancel" then
                   local theDataA
                   put sDataArray[theIndex] into theDataA
-                  
-                  switch the dgTextType of theEditor
-                     case "html"
-                        put the HTMLText of theEditor into theDataA[theKey]
-                        break
-                     case "rtf"
-                        put the RTFText of theEditor into theDataA[theKey]
-                        break
-                     case "unicode"
-                        put the unicodeText of theEditor into theDataA[theKey]
-                        break
-                     case "utf8"
-                        put the unicodeText of theEditor into theDataA[theKey]
-                        put uniDecode(theDataA[theKey], "utf8") into theDataA[theKey]
-                        break
-                     default
-                        put the text of theEditor into theDataA[theKey]
-                  end switch
-                  set the dgDataOfIndex [theIndex] of me to theDataA
+                  put tText into theDataA[theKey]
+                  set the dgDataOfIndex[theIndex] of me to theDataA
                end if
             catch e
                put e into theError
