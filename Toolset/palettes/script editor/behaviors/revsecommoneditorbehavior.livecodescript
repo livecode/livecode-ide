@@ -2052,6 +2052,26 @@ function autoCompleteIFsAreBalanced pLineNumber, pScript
    end repeat
 
    put line 1 to tCounter of pScript into pScript
+   
+   local tWorkText, tOldDelim
+
+   -- remove quoted literals
+   put the itemDelimiter into tOldDelim
+   set the itemDelimiter to quote
+   repeat for each line aLine in pScript
+      if aLine contains quote then
+         repeat with i = 1 to the number of items of aLine
+            if i mod 2 = 0 then
+               put empty into item i of aLine
+            end if
+         end repeat
+      end if
+      put aLine & cr after tWorkText
+   end repeat
+   delete char -1 of tWorkText
+   set the itemDelimiter to tOldDelim
+   put tWorkText into pScript
+
 
    -- remove slash asterisk comments
    local tBeginAsterix, tEndAsterix, tCharBegin, tCharEnd
@@ -2062,6 +2082,8 @@ function autoCompleteIFsAreBalanced pLineNumber, pScript
       put offset(tBeginAsterix, pScript) into tCharBegin
       if tCharBegin is 0 then exit repeat
       put offset(tEndAsterix, pScript) into tCharEnd
+      if tCharEnd = 0 then exit repeat
+      if tCharBegin > tCharEnd then exit repeat
       delete char tCharBegin to tCharEnd of pScript
    end repeat
 
