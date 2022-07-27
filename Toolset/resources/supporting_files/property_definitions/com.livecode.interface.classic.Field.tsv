@@ -27,6 +27,10 @@ multipleHilites							false
 nonContiguousHilites							false					
 toggleHilites							false					
 firstIndent							0					
+leftIndent							0					
+rightIndent							0					
+spaceAbove							0					
+spaceBelow							0					
 dontSearch							false					
 layerMode												
 behavior												
