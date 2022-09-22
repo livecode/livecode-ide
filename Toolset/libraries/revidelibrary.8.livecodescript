@@ -1,4 +1,3 @@
-﻿script "revidelibrary"
 /**
 Main IDE library providing functionality for palettes and other IDE add-ons.
 
@@ -1125,15 +1124,22 @@ on __readGroupedPropertiesOfControl pGroupsA, @pDataA
       end repeat
    end repeat
    
+# MDW 2019.10.02 [[ feature_fast_stack_introspection ]] rewrote to take __classicObjectProperties out of the loop
+   local tObjID
+   put the long id of the target into tObjID
+   
+   local tProperties
+   put __classicObjectProperties(tObjID) into tProperties
+
    local tDataA
    set the itemdelimiter to ";"
    repeat for each key tKey in tPropMappingA
       if the number of items in tKey > 1 then
          repeat for each item tRealProp in tKey
-            __fetchPropertyOfControl tRealProp, tDataA[tKey]
+            __fetchPropertyOfControl tRealProp, tDataA[tKey], tProperties
          end repeat
       else
-         __fetchPropertyOfControl tKey, tDataA
+         __fetchPropertyOfControl tKey, tDataA, tProperties
       end if
    end repeat
    
@@ -1168,18 +1174,20 @@ private command __fetchPropertyCustomGetter pGetter, pObject, pProperty, @xPropA
    end if
 end __fetchPropertyCustomGetter
 
-private on __fetchPropertyOfControl pProp, @xData
+# MDW 2019.10.02 [[ feature_fast_stack_introspection ]] added pProperties parameter for speed
+private on __fetchPropertyOfControl pProp, @xData, pProperties
    local tError
    put empty into tError
    
    local tObjID
    put the long id of the target into tObjID
    
-   local tProperties
-   put __classicObjectProperties(tObjID) into tProperties
+   if pProperties is empty then
+      put __classicObjectProperties(tObjID) into pProperties
+   end if
    
-   if tProperties["properties"][pProp]["getter"] is not empty then
-      __fetchPropertyCustomGetter tProperties["properties"][pProp]["getter"], \
+   if pProperties["properties"][pProp]["getter"] is not empty then
+      __fetchPropertyCustomGetter pProperties["properties"][pProp]["getter"], \
             tObjId, pProp, xData
       exit __fetchPropertyOfControl
    end if
@@ -1241,18 +1249,24 @@ end __fetchPropertyOfControl
 # Used internall but not private. This function is dispatched to the object and reads the properties
 # In the list. Sending it to the object allows the use of the target which reduces the lookup time
 # for each of the properties
-function __readPropertiesOfControl pList, @pData
-   local tError
+# MDW 2019.10.02 [[ feature_fast_stack_introspection ]] rewrote to take __classicObjectProperties out of the loop
+function __readPropertiesOfControl pList, @pData, pProperties
    set the itemdelimiter to ";"
+   
+   if pProperties is empty then
+      local tObjID
+      put the long id of the target into tObjID
+      put __classicObjectProperties(tObjID) into pProperties
+   end if
    repeat for each line tProp in pList
       -- If this pseudo-property is actually multiple properties,
       -- the value is an array with keys the real property names
       if the number of items in tProp > 1 then
          repeat for each item tRealProp in tProp
-            __fetchPropertyOfControl tRealProp, pData[tRealProp]
+            __fetchPropertyOfControl tRealProp, pData[tRealProp], pProperties
          end repeat
       else
-         __fetchPropertyOfControl tProp, pData
+         __fetchPropertyOfControl tProp, pData, pProperties
       end if
    end repeat
 end __readPropertiesOfControl
@@ -2038,6 +2052,7 @@ function ideMainStacks
    local tShowIDEStacks
    put revIDEGetPreference("cShowRevolutionStacks") into tShowIDEStacks
    
+   local tStacks, tFilteredStacks
    if tShowIDEStacks then
       return the mainstacks
    else
@@ -2113,7 +2128,7 @@ private function __ideFilterObjectIDListWithPreference pObjectList
    return __ideRemoveIDEObjectIDsFromList(pObjectList)
 end __ideFilterObjectIDListWithPreference
 
-function revIDEStacksForDataView pIndex
+function revIDEStacksForDataView pIndex, pHideScriptOnlyStacks
    local tSortType, tSortOrder
    revIDEGetPBSortPreferences "pb_stackSort", tSortType, tSortOrder
    
@@ -2121,6 +2136,16 @@ function revIDEStacksForDataView pIndex
    local tMainStacks, tInvertedMainStacks
    
    put ideMainStacks() into tMainStacks
+   if pHideScriptOnlyStacks is true then
+      local tStacks
+      repeat for each line tStack in tMainStacks
+         if "livecodescript" is in the long id of stack tStack then
+         else
+           put tStack & cr after tStacks
+         end if
+      end repeat
+      put tStacks into tMainStacks
+   end if
    if tSortType is "name" then
       if tSortOrder is "ascending" then
          sort lines of tMainStacks ascending
@@ -12317,3 +12342,4 @@ command ideSetWindowBoundingRect
       set the windowBoundingRect to tWindowRect
    end if
 end ideSetWindowBoundingRect
+
