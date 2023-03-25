@@ -519,26 +519,28 @@ on appleEvent p1, p2, p3
       request AppleEvent data
       put it into tData
       
-      local tExists
-      local tCanonical
-      repeat for each line l in tData
-         lock messages
-         put utilityCanonicalizePath(l) into tCanonical
-         put (there is a stack tCanonical) into tExists
-         unlock messages
-         // AL-2014-10-27: [[ Bug 12558 ]] Stack opened in apple event should report correct error
-         if not tExists then 
-            answer error "Unable to open stack:" && the result
-         else 
-            go stack tCanonical
-            ideMessageSend "ideOpenStack", the long id of stack tCanonical
-         end if
+      local tFile
+      repeat for each line tFile in tData
+         revTryToOpenStackFromFile tFile, false
       end repeat
       
       exit appleEvent
    end if
    pass appleEvent
 end appleEvent
+
+command revTryToOpenStackFromFile pFile, pFailSilently
+   local tExists
+   local tCanonical
+   lock messages
+   put utilityCanonicalizePath(pFile) into tCanonical
+   put (there is a stack tCanonical) into tExists
+   unlock messages
+   if tExists or (not tExists and not pFailSilently) then
+      -- revIDEOpenStack presents appropriate failure dialogs
+      revIDEOpenStack tCanonical
+   end if
+end revTryToOpenStackFromFile
 
 # OK-2007-11-27 : Tidied up
 on revSave pWhichStack

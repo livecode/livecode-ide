@@ -289,7 +289,16 @@ on revInternal__openStack
       
       -- Now the home stack has loaded, we can allow interrupts..
       set the allowInterrupts to true
+      
+      revInternal__OpenCommandLineFiles
 end revInternal__openStack
+
+command revInternal__OpenCommandLineFiles
+   local tFile
+   repeat for each element tFile in the commandArguments
+      revTryToOpenStackFromFile tFile, true
+   end repeat
+end revInternal__OpenCommandLineFiles
 
 on revInternal__setSplashStatus pMessage
 	revInternal__Log "Message", pMessage

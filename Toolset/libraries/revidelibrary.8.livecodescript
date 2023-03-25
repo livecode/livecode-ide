@@ -6488,10 +6488,19 @@ on revIDEOpenStack pFilePath
       
       # AL-2015-06-09: [[ Bug 14831 ]] If stack is script only, open in script editor
       if the scriptOnly of stack pFilePath then
-         revIDEEditScriptOfObject the long id of stack pFilePath
+         local tStack
+         put the long id of stack pFilePath into tStack
+         send "__CheckScriptOnlyStackIsVisible tStack" to me in 100 milliseconds
       end if
    end if
 end revIDEOpenStack
+
+command __CheckScriptOnlyStackIsVisible pStack
+   if the invisible of pStack then
+      revIDEEditScriptOfObject pStack
+   end if
+end __CheckScriptOnlyStackIsVisible
+      
 
 on revIDEHelpKeyPressed
    --send "menuPick" && quote & "Help Contents" & quote to btn "Help" of stack "revMenuBar"
